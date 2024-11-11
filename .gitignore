@@ -1,0 +1,44 @@
+# Build output directories
+/build/
+/Debug/
+/Release/
+
+# CMake files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Visual Studio files
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+*.ipch
+*.opensdf
+*.sdf
+*.cache
+*.log
+*.pdb
+*.obj
+*.tlog
+*.idb
+*.dir/
+
+# Compiled Object files and Libraries
+*.o
+*.a
+*.so
+*.lib
+*.dll
+*.exe
+
+# System files
+.DS_Store
+Thumbs.db
+
+# GitHub and Git configuration files
+*.log
+*.swp
+*.lock
+*.tmp
