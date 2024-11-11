@@ -1,44 +1,45 @@
-# Build output directories
+# Compiled source and build directories
 /build/
-/Debug/
-/Release/
+*.o
+*.a
+*.so
+*.exe
+*.dll
+*.dylib
 
 # CMake files
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
-Makefile
 
-# Visual Studio files
-*.vcxproj
-*.vcxproj.filters
-*.vcxproj.user
-*.sln
-*.ipch
-*.opensdf
-*.sdf
-*.cache
-*.log
-*.pdb
-*.obj
-*.tlog
-*.idb
-*.dir/
-
-# Compiled Object files and Libraries
-*.o
-*.a
-*.so
-*.lib
-*.dll
-*.exe
-
-# System files
+# Operating system files
 .DS_Store
 Thumbs.db
 
-# GitHub and Git configuration files
+# IDE/editor directories and settings
+.vscode/
+.idea/
+*.suo
+*.user
+*.opensdf
+*.sdf
+*.cache
+
+# Log files
 *.log
+
+# Temporary files
+*.tmp
+*.temp
 *.swp
 *.lock
-*.tmp
+
+# Dependency directories
+node_modules/
+vendor/bundle/
+__pycache__/
+
+# Sensitive files
+.env
+*.pem
+*.key

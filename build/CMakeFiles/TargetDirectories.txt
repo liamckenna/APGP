@@ -1,3 +1,0 @@
-W:/VSCode Projects/OpenGL/build/CMakeFiles/epic.dir
-W:/VSCode Projects/OpenGL/build/CMakeFiles/ALL_BUILD.dir
-W:/VSCode Projects/OpenGL/build/CMakeFiles/ZERO_CHECK.dir
