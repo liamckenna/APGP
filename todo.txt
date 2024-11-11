@@ -1,0 +1,6 @@
+- stop downwards rotation at -90 and upwards at 90
+- point indication for a light
+- shadow mapping
+- texture testing
+- only recompile changed files (requires changing to cmake)
+- identical material name conflict
