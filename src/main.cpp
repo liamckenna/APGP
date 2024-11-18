@@ -28,8 +28,6 @@
 #include <glm/gtx/string_cast.hpp>
 #undef GLM_ENABLE_EXPERIMENTAL
 
-const unsigned int SCR_WIDTH = 1920;
-const unsigned int SCR_HEIGHT = 1440;
 
 //Uniform IDs
 
@@ -297,8 +295,8 @@ static void MouseCallback(User*& user, Scene*& scene)
 {
 	user->input->cursor->Update();
 	
-	user->input->cursor->offset_x *= user->input->cursor->sensitivity * delta_time / SCR_WIDTH 	* 100000.f;
-	user->input->cursor->offset_y *= user->input->cursor->sensitivity * delta_time / SCR_HEIGHT 	* 100000.f;
+	user->input->cursor->offset_x *= user->input->cursor->sensitivity * delta_time / user->window->width 	* 100000.f;
+	user->input->cursor->offset_y *= user->input->cursor->sensitivity * delta_time / user->window->height	* 100000.f;
 
 	
 	scene->GetObjectByName("camera shell")->t->local.RotateYaw(user->input->cursor->offset_x);
