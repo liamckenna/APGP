@@ -1,7 +1,8 @@
 #pragma once
-#include "mouse.h"
+#include "cursor.h"
 struct Input {
 
-	Mouse* mouse;
+	Cursor* cursor;
 
+	Input(Window* window, float mouse_sensitivity);
 };

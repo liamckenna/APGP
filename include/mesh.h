@@ -72,7 +72,7 @@ struct Mesh : public Object {
 		glUniformMatrix4fv(current_scene->user->matrix_id, 1, GL_FALSE, &(camera->projection * camera->view * model)[0][0]);
 		glUniformMatrix4fv(current_scene->user->model_matrix_id, 1, GL_FALSE, &model[0][0]);
 		glBindVertexArray(current_scene->buffers->vertex_arrays[idx]);
-		if (draw_mode == GL_TRIANGLES) glDrawArrays(GL_TRIANGLES, 0, triangles.size() * 3);
+		if (draw_mode == GL_TRIANGLES) glDrawArrays(GL_TRIANGLES, 0, GLsizei(triangles.size() * 3));
 		else if (draw_mode == GL_LINES) glDrawArrays(GL_LINES, 0, edges.size() * 2);
 
 	

@@ -1,9 +1,13 @@
 #pragma once
-#include <GLFW/glfw3.h>
+
 #include "input.h"
+#include "window.h"
+#include <GLFW/glfw3.h>
 struct User { //local user variables all packaged in one convenient place
 	
-	GLFWwindow* window;
+	
+
+	Window* window;
 	Input* input;
 	
 	GLuint matrix_id;

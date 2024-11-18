@@ -1,7 +1,7 @@
 #pragma once
-#include <GLFW/glfw3.h>
+#include "window.h"
 
-struct Mouse {
+struct Cursor {
 	float last_x;
 	float last_y;
 
@@ -13,11 +13,13 @@ struct Mouse {
 
 	float sensitivity;
 
-	GLFWwindow* window;
+	Window* window;
 
 	bool first;
 
-	Mouse(float screen_width, float screen_height, GLFWwindow* window, float sensitivity = 3.f);
+
+
+	Cursor(Window* window, float sensitivity = 3.f);
 	
 	void Update();
 };

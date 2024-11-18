@@ -1,18 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 project(OpenGL_Project)
-set(CMAKE_VERBOSE_MAKEFILE ON)
-set(VCPKG_ROOT "C:/Users/lmcmc/vcpkg")
-set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+
 # Specify C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Set vcpkg path for dependencies
-set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};C:/Users/lmcmc/vcpkg/installed/x64-windows")
-set(CMAKE_FIND_DEBUG_MODE TRUE)
-
-# Use multi-threaded DLL runtime (/MD)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MD")
+# Enable verbose makefile if debugging build issues
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # Define paths
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
@@ -28,31 +22,28 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
 file(GLOB_RECURSE SOURCES "${SRC_DIR}/*.cpp")
 
 # Add the executable target
-add_executable(epic ${SOURCES})
+add_executable(APGP ${SOURCES})
 
-# Link include directories for target
-target_include_directories(epic PRIVATE ${INCLUDE_DIR} ${LIBS_DIR})
+# Include local libraries (e.g., json.hpp, stb_image.h)
+target_include_directories(APGP PRIVATE ${INCLUDE_DIR} ${LIBS_DIR})
 
-# Attempt to find and link GLFW using vcpkg
+# Find and link GLFW
 find_package(glfw3 CONFIG REQUIRED)
 if(glfw3_FOUND)
     message(STATUS "GLFW found at: ${GLFW3_DIR}")
-    target_link_libraries(epic PRIVATE glfw)
+    target_link_libraries(APGP PRIVATE glfw)
 else()
-    message(FATAL_ERROR "GLFW not found! Please install GLFW (e.g., via vcpkg) and try again.")
+    message(FATAL_ERROR "GLFW not found! Please install GLFW (e.g., via your package manager or vcpkg) and try again.")
 endif()
 
-# Attempt to find and link GLEW using vcpkg
-find_package(glew CONFIG REQUIRED PATHS "C:/Users/lmcmc/vcpkg/installed/x64-windows")
+# Find and link GLEW
+find_package(glew CONFIG REQUIRED)
 if(TARGET GLEW::GLEW)
-    target_link_libraries(epic PRIVATE GLEW::GLEW)
+    target_link_libraries(APGP PRIVATE GLEW::GLEW)
 else()
-    message(FATAL_ERROR "GLEW not found! Please install GLEW (e.g., via vcpkg) and try again.")
+    message(FATAL_ERROR "GLEW not found! Please install GLEW (e.g., via your package manager or vcpkg) and try again.")
 endif()
 
-# Link additional Windows-specific libraries
-target_link_libraries(epic PRIVATE
-    gdi32
-    opengl32
-    legacy_stdio_definitions  # For resolving sscanf and vsnprintf
-)
+# Link OpenGL and other platform-specific libraries
+find_package(OpenGL REQUIRED)
+target_link_libraries(APGP PRIVATE OpenGL::GL gdi32 legacy_stdio_definitions)

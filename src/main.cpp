@@ -2,9 +2,6 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/string_cast.hpp>
-#undef GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/type_ptr.hpp>
 #include "json.hpp"
 #include <iostream>
@@ -15,16 +12,21 @@
 #include "transform.h"
 #include "vertex.h"
 #include "mesh.h"
+#include "window.h"
 #include "camera.h"
 #include "scene.h"
-#include "mouse.h"
+#include "cursor.h"
 #include "light.h"
 #include "input.h"
 #include "user.h"
 #include "shaders.h"
 #include "json.h"
 #include "object_parser.h"
+#include "program.h"
 #include <vector>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
+#undef GLM_ENABLE_EXPERIMENTAL
 
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1440;
@@ -37,14 +39,12 @@ int frame_count = 0;
 float delta_time = 0.f;
 
 //forward declarations of functions
-static User* InitializeUser();
-static void ProgramInitialization(User*& user);
+static User* UserGeneration(std::string file);
+static Program* ProgramGeneration(std::string program_filepath);
 std::string LoadShader(const char* filepath);
 GLuint createShader(GLenum type, const char* shaderSource);
 static void error_callback(int error, const char* description);
-static Mouse* InitializeMouse(GLFWwindow*& window);
 static void MouseCallback(User*& user, Scene*& scene);
-void CameraInitialization(Camera*& camera);
 static bool ShaderInitialization(Scene*& scene, nlohmann::json data);
 static Scene* SceneGeneration(std::string file);
 static void BufferArrayInitialization(Scene*& scene);
@@ -52,17 +52,14 @@ static void ProcessInput(User*& user, Scene*& scene);
 void CalculateFrameRate();
 void CalculateDeltaTime();
 static void DebugPrinting(GLuint& shader_program, GLuint& vertex_array, GLFWwindow*& window, Camera*& camera, Mesh*& mesh);
-static glm::mat4 CalculateMVP(Camera*& camera, Mesh*& mesh);
 static void RenderScene(User*& user, Scene*& scene);
 static void Cleanup(User*& user, Scene*& scene);
-static Input* InitializeInput();
 static void CameraGeneration(Scene*& scene, nlohmann::json data);
 static void LightGeneration(Scene*& scene, nlohmann::json data);
 static void MeshGeneration(Scene*& scene, nlohmann::json data);
 static void ObjectGeneration(Scene*& scene, nlohmann::json data);
 static void UpdateCameraUniforms(Camera*& camera);
 static void UpdateLightUniforms(Scene*& scene);
-static void UpdateUniforms(Scene*& scene, Camera*& camera, Mesh*& mesh);
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 static void DefaultMaterialGeneration(Scene*& scene, nlohmann::json data);
 static void UpdateTextureUniforms(Scene*& scene);
@@ -75,25 +72,11 @@ glm::vec3 launch_vector;
 float launch_force;
 
 int main() {
-	User* user;
-	Scene* scene;
-	
-	user = InitializeUser();
 
-	std::cout << "initialized program" << std::endl;
+	Program* program = ProgramGeneration("../data/jsons/program.json");
 
-	scene = SceneGeneration("../data/jsons/scene.json");
-	scene->user = user;
-
-	std::cout << "initialized scene" << std::endl;
-
-	glfwSetWindowUserPointer(user->window, scene);
-
-	nlohmann::json data = ReadJsonFromFile("../data/jsons/scene.json");
-	if (!ShaderInitialization(scene, data)) {
-		std::cout << "uh oh" << std::endl;
-		return -1;
-	}
+	Scene* scene = program->scene;
+	User* user = program->user;
 
 	std::cout << "initialized shader" << std::endl;
 
@@ -118,68 +101,161 @@ int main() {
 	exit(EXIT_SUCCESS);
 }
 
-static User* InitializeUser() {
+static User* UserGeneration(std::string file) {
+	
+	nlohmann::json data = ReadJsonFromFile(file);
+
 	User* user = new User();
-	user->input = new Input();
-
-	ProgramInitialization(user);
-
-	user->input->mouse = InitializeMouse(user->window);
-
-	return user;
 	
-}
+	user->window = new Window(	data["window"].contains("width")		? data["window"]["width"]			: 1920,
+								data["window"].contains("height")		? data["window"]["height"]			: 1080,
+								data["window"].contains("msaa")			? data["window"]["msaa"]			: 1,
+								data["window"].contains("pos_x")		? data["window"]["pos_x"]			: 0,
+								data["window"].contains("pos_y")		? data["window"]["pos_y"]			: 0,
+								data["window"].contains("resizable")	? data["window"]["resizable"]		: true,
+								data["window"].contains("decorated")	? data["window"]["decorated"]		: true,
+								data["window"].contains("focused")		? data["window"]["focused"]			: true,
+								data["window"].contains("visible")		? data["window"]["visible"]			: true,
+								data["window"].contains("display_mode") ? data["window"]["display_mode"]	: "windowed",
+								data["window"].contains("title")		? data["window"]["title"]			: "Window Title" );
+	user->input = new Input(user->window, 
+							(data["settings"].contains("input") && data["settings"]["input"].contains("cursor") && data["settings"]["input"]["cursor"].contains("sensitivity")) 
+							? data["settings"]["input"]["cursor"]["sensitivity"]	: 3.f);
 
-static void ProgramInitialization(User*& user) {
+
 	glfwSetErrorCallback(error_callback);
-	
+
 	if (!glfwInit()) {
 		std::cout << "Failed to initialize GLFW" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
-	GLFWmonitor* primary_monitor = glfwGetPrimaryMonitor();
-	const GLFWvidmode* video_mode = glfwGetVideoMode(primary_monitor);
-
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_SAMPLES, 16);
 
 
-	user->window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Epic Style", NULL, NULL);
-	if (!user->window) {
+	glfwWindowHint(GLFW_SAMPLES, user->window->msaa);
+	glfwWindowHint(GLFW_RESIZABLE, user->window->resizable ? GLFW_TRUE : GLFW_FALSE);
+	glfwWindowHint(GLFW_DECORATED, user->window->decorated ? GLFW_TRUE : GLFW_FALSE);
+	glfwWindowHint(GLFW_FOCUSED, user->window->focused ? GLFW_TRUE : GLFW_FALSE);
+	glfwWindowHint(GLFW_VISIBLE, user->window->visible ? GLFW_TRUE : GLFW_FALSE);
+
+
+	if (user->window->display_mode == FULLSCREEN) {
+		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode* video_mode = glfwGetVideoMode(monitor);
+		user->window->window = glfwCreateWindow(user->window->width, user->window->height, user->window->title.c_str(), monitor, NULL);
+	}
+	else if (user->window->display_mode == WINDOWED_FULLSCREEN) {
+		glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode* video_mode = glfwGetVideoMode(monitor);
+		user->window->window = glfwCreateWindow(user->window->width, user->window->height, user->window->title.c_str(), NULL, NULL);
+		glfwSetWindowPos(user->window->window, 0, 0);
+	}
+	else {
+		user->window->window = glfwCreateWindow(user->window->width, user->window->height, user->window->title.c_str(), NULL, NULL);
+		glfwSetWindowPos(user->window->window, user->window->pos_x, user->window->pos_y);
+	}
+
+
+	if (!user->window->window) {
 		std::cout << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
 
-	glfwMakeContextCurrent(user->window);
+	glfwMakeContextCurrent(user->window->window);
+	glfwSetScrollCallback(user->window->window, scroll_callback);
 
-
-	//glewExperimental = GL_TRUE;
-
+	if (data.contains("settings")) {
+		if (data["settings"].contains("gl")) {
+			if (data["settings"]["gl"].contains("profile")) {
+				if (data["settings"]["gl"]["profile"] == "any") glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+				else if (data["settings"]["gl"]["profile"] == "core") glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+				else if (data["settings"]["gl"]["profile"] == "compat") glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+			}
+			if (data["settings"]["gl"].contains("depth_test") && data["settings"]["gl"]["depth_test"]) glEnable(GL_DEPTH_TEST);
+			if (data["settings"]["gl"].contains("depth_function")) {
+				if (data["settings"]["gl"]["depth_function"] == "false") glDepthFunc(GL_NEVER);
+				else if (data["settings"]["gl"]["depth_function"] == "<") glDepthFunc(GL_LESS);
+				else if (data["settings"]["gl"]["depth_function"] == "==") glDepthFunc(GL_EQUAL);
+				else if (data["settings"]["gl"]["depth_function"] == "<=") glDepthFunc(GL_LEQUAL);
+				else if (data["settings"]["gl"]["depth_function"] == ">") glDepthFunc(GL_GREATER);
+				else if (data["settings"]["gl"]["depth_function"] == "!=") glDepthFunc(GL_NOTEQUAL);
+				else if (data["settings"]["gl"]["depth_function"] == ">=") glDepthFunc(GL_GEQUAL);
+				else if (data["settings"]["gl"]["depth_function"] == "true") glDepthFunc(GL_ALWAYS);
+			}
+			if (data["settings"]["gl"].contains("depth_mask")) glDepthMask(data["settings"]["gl"]["depth_mask"] ? GL_TRUE : GL_FALSE);
+			if (data["settings"]["gl"].contains("cull_face") && data["settings"]["gl"]["cull_face"]) glEnable(GL_CULL_FACE);
+			if (data["settings"]["gl"].contains("cull_side")) {
+				if (data["settings"]["gl"]["cull_side"] == "front") glCullFace(GL_FRONT);
+				else if (data["settings"]["gl"]["cull_side"] == "back") glCullFace(GL_BACK);
+				else if (data["settings"]["gl"]["cull_side"] == "front and back") glCullFace(GL_FRONT_AND_BACK);
+			}
+			if (data["settings"]["gl"].contains("front_face")) {
+				if (data["settings"]["gl"]["front_face"] == "cw") glFrontFace(GL_CW);
+				else if (data["settings"]["gl"]["front_face"] == "ccw") glFrontFace(GL_CCW);
+			}
+			if (data["settings"]["gl"].contains("line_width")) glLineWidth(data["settings"]["gl"]["line_width"]);
+		}
+		if (data["settings"].contains("glfw")) {
+			if (data["settings"]["glfw"].contains("version_major")) glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, data["settings"]["glfw"]["version_major"]);
+			if (data["settings"]["glfw"].contains("version_minor")) glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, data["settings"]["glfw"]["version_minor"]);
+			if (data["settings"]["glfw"].contains("swap_interval")) glfwSwapInterval(data["settings"]["glfw"]["swap_interval"]);
+		}
+		if (data["settings"].contains("input")) {
+			if (data["settings"]["input"].contains("cursor")) {
+				if (data["settings"]["input"]["cursor"].contains("mode")) {
+					if (data["settings"]["input"]["cursor"]["mode"] == "normal") glfwSetInputMode(user->window->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+					else if (data["settings"]["input"]["cursor"]["mode"] == "hidden") glfwSetInputMode(user->window->window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+					else if (data["settings"]["input"]["cursor"]["mode"] == "disabled") glfwSetInputMode(user->window->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+				}
+			}
+		}
+		if (data["settings"].contains("glew")) {
+			if (data["settings"]["glew"].contains("experimental")) glewExperimental = data["settings"]["glew"]["experimental"] ? GL_TRUE : GL_FALSE;
+		}
+	}
 
 	if (glewInit() != GLEW_OK) {
 		std::cerr << "Failed to initialize GLEW" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
-	glfwSetScrollCallback(user->window, scroll_callback);
+	return user;
+	
+}
 
+static Program* ProgramGeneration(std::string program_filepath) {
 
-	std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
+	nlohmann::json program_json = ReadJsonFromFile(program_filepath);
 
-	glfwSwapInterval(0);
-	glfwSetInputMode(user->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	Program* program = new Program();
 
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-	glDepthMask(GL_TRUE);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-	glFrontFace(GL_CW);
-	glLineWidth(2.0f);
+	std::string user_filepath = "../data/jsons/users/" + std::string(program_json["user"]);
+	std::string scene_filepath = "../data/jsons/scenes/" + std::string(program_json["scene"]);
+
+	User* user = UserGeneration(user_filepath);
+	program->user = user;
+
+	std::cout << "initialized user" << std::endl;
+
+	Scene* scene = SceneGeneration(scene_filepath);
+	program->scene = scene;
+	scene->user = user;
+
+	std::cout << "initialized scene" << std::endl;
+
+	glfwSetWindowUserPointer(user->window->window, scene);
+
+	nlohmann::json scene_json = ReadJsonFromFile(scene_filepath);
+	ShaderInitialization(scene, scene_json);
+
+	std::cout << "initialized program" << std::endl;
+
+	return program;
 }
 
 std::string LoadShader(const char* filepath) {
@@ -217,21 +293,16 @@ static void error_callback(int error, const char* description)
 	fprintf(stderr, "Error: %s\n", description);
 }
 
-static Mouse* InitializeMouse(GLFWwindow*& window) {
-	Mouse* mouse = new Mouse(SCR_WIDTH, SCR_HEIGHT, window, 3.f);
-	return mouse;
-}
-
 static void MouseCallback(User*& user, Scene*& scene)
 {
-	user->input->mouse->Update();
+	user->input->cursor->Update();
 	
-	user->input->mouse->offset_x *= user->input->mouse->sensitivity * delta_time / SCR_WIDTH 	* 100000.f;
-	user->input->mouse->offset_y *= user->input->mouse->sensitivity * delta_time / SCR_HEIGHT 	* 100000.f;
+	user->input->cursor->offset_x *= user->input->cursor->sensitivity * delta_time / SCR_WIDTH 	* 100000.f;
+	user->input->cursor->offset_y *= user->input->cursor->sensitivity * delta_time / SCR_HEIGHT 	* 100000.f;
 
 	
-	scene->GetObjectByName("camera shell")->t->local.RotateYaw(user->input->mouse->offset_x);
-	scene->GetObjectByName("camera shell")->t->local.RotatePitch(user->input->mouse->offset_y);
+	scene->GetObjectByName("camera shell")->t->local.RotateYaw(user->input->cursor->offset_x);
+	scene->GetObjectByName("camera shell")->t->local.RotatePitch(user->input->cursor->offset_y);
 	scene->GetObjectByName("camera shell")->UpdateTree();
 }
 
@@ -243,15 +314,15 @@ static bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE) {
 		return false;
 	}
 	GLuint ss;
-	if (TYPE == SHADER_TYPE::VERTEX) {
+	if (TYPE == VERTEX) {
 		ss = createShader(GL_VERTEX_SHADER, src.c_str());
 		Shader s = Shader(src, ss, VERTEX);
 		scene->shaders->vertex_shaders.push_back(s);
-	} else if (TYPE == SHADER_TYPE::GEOMETRY) {
+	} else if (TYPE == GEOMETRY) {
 		ss = createShader(GL_GEOMETRY_SHADER, src.c_str());
 		Shader s = Shader(src, ss, GEOMETRY);
 		scene->shaders->geometry_shaders.push_back(s);
-	} else if (TYPE == SHADER_TYPE::FRAGMENT) {
+	} else if (TYPE == FRAGMENT) {
 		ss = createShader(GL_FRAGMENT_SHADER, src.c_str());
 		Shader s = Shader(src, ss, FRAGMENT);
 		scene->shaders->fragment_shaders.push_back(s);
@@ -262,6 +333,7 @@ static bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE) {
 }
 
 static bool ShaderInitialization(Scene*& scene, nlohmann::json data) {
+
 	scene->shaders->shader_program = glCreateProgram();
 	for (int i = 0; i < data["shaders"]["vertex_shaders"].size(); i++) {
 		std::string fn = "../shaders/" + std::string(data["shaders"]["vertex_shaders"][i]["file"]);
@@ -328,6 +400,8 @@ static Scene* SceneGeneration(std::string file) {
 	scene->SetHeldObject(scene->GetObjectByName("camera shell"));
 	scene->buffers = new Buffers();
 	scene->shaders = new Shaders();
+
+
 	std::cout << "scene generation completed" << std::endl;
 	return scene;
 }
@@ -596,17 +670,17 @@ static void RenderScene(User*& user, Scene*& scene) {
 		
 		scene->DrawObjectTrees();
 
-		glfwSwapBuffers(user->window);
+		glfwSwapBuffers(user->window->window);
 
 		glfwPollEvents();
 		
-	} while (!glfwWindowShouldClose(user->window));
+	} while (!glfwWindowShouldClose(user->window->window));
 }
 
 static void Cleanup(User*& user, Scene*& scene) {
 	scene->buffers->CleanupBuffers();
 	scene->shaders->CleanupShaders();
-	glfwDestroyWindow(user->window);
+	glfwDestroyWindow(user->window->window);
 	glfwTerminate();
 }
 
@@ -640,10 +714,10 @@ static void AttachCamera(Scene*& scene, Object* new_parent) {
 
 static void ProcessInput(User*& user, Scene*& scene) {
 	if (scene->held_object != nullptr) {
-		if (glfwGetKey(user->window, GLFW_KEY_W) == GLFW_PRESS) { //w, translate forward
-			if (glfwGetKey(user->window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
+		if (glfwGetKey(user->window->window, GLFW_KEY_W) == GLFW_PRESS) { //w, translate forward
+			if (glfwGetKey(user->window->window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
 				scene->GetObjectByName("camera shell")->t->local.TranslateForward(scene->main_camera->velocity * 0.5f, delta_time);
-			} else if (glfwGetKey(user->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+			} else if (glfwGetKey(user->window->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
 				scene->GetObjectByName("camera shell")->t->local.TranslateForward(scene->main_camera->velocity * 2.f, delta_time);
 			} else {
 				scene->GetObjectByName("camera shell")->t->local.TranslateForward(scene->main_camera->velocity, delta_time);
@@ -651,57 +725,57 @@ static void ProcessInput(User*& user, Scene*& scene) {
 		}
 
 		
-		if (glfwGetKey(user->window, GLFW_KEY_S) == GLFW_PRESS) { //s, translate backward
-			if (glfwGetKey(user->window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
+		if (glfwGetKey(user->window->window, GLFW_KEY_S) == GLFW_PRESS) { //s, translate backward
+			if (glfwGetKey(user->window->window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
 				scene->GetObjectByName("camera shell")->t->local.TranslateForward(scene->main_camera->velocity * 0.5f * -1.f, delta_time);
-			} else if (glfwGetKey(user->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+			} else if (glfwGetKey(user->window->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
 				scene->GetObjectByName("camera shell")->t->local.TranslateForward(scene->main_camera->velocity * 2.f * -1.f, delta_time);
 			} else {
 				scene->GetObjectByName("camera shell")->t->local.TranslateForward(scene->main_camera->velocity * -1.f, delta_time);
 			}
 		}
 
-		if (glfwGetKey(user->window, GLFW_KEY_A) == GLFW_PRESS) { //a, translate left
-			if (glfwGetKey(user->window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
+		if (glfwGetKey(user->window->window, GLFW_KEY_A) == GLFW_PRESS) { //a, translate left
+			if (glfwGetKey(user->window->window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
 				scene->GetObjectByName("camera shell")->t->local.TranslateRight(scene->main_camera->velocity * 0.5f * -1.f, delta_time);
-			} else if (glfwGetKey(user->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+			} else if (glfwGetKey(user->window->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
 				scene->GetObjectByName("camera shell")->t->local.TranslateRight(scene->main_camera->velocity * 2.f * -1.f, delta_time);
 			} else {
 				scene->GetObjectByName("camera shell")->t->local.TranslateRight(scene->main_camera->velocity * -1.f, delta_time);
 			}
 		}
 
-		if (glfwGetKey(user->window, GLFW_KEY_D) == GLFW_PRESS) { //d, translate right
-			if (glfwGetKey(user->window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
+		if (glfwGetKey(user->window->window, GLFW_KEY_D) == GLFW_PRESS) { //d, translate right
+			if (glfwGetKey(user->window->window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
 				scene->GetObjectByName("camera shell")->t->local.TranslateRight(scene->main_camera->velocity * 0.5f, delta_time);
-			} else if (glfwGetKey(user->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+			} else if (glfwGetKey(user->window->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
 				scene->GetObjectByName("camera shell")->t->local.TranslateRight(scene->main_camera->velocity * 2.f, delta_time);
 			} else {
 				scene->GetObjectByName("camera shell")->t->local.TranslateRight(scene->main_camera->velocity, delta_time);
 			}
 		}
 
-		if (glfwGetKey(user->window, GLFW_KEY_SPACE) == GLFW_PRESS) { //space, translate up
-			if (glfwGetKey(user->window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
+		if (glfwGetKey(user->window->window, GLFW_KEY_SPACE) == GLFW_PRESS) { //space, translate up
+			if (glfwGetKey(user->window->window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
 				scene->GetObjectByName("camera shell")->t->local.TranslateUp(scene->main_camera->velocity * 0.5f, delta_time);
-			} else if (glfwGetKey(user->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+			} else if (glfwGetKey(user->window->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
 				scene->GetObjectByName("camera shell")->t->local.TranslateUp(scene->main_camera->velocity * 2.f, delta_time);
 			} else {
 				scene->GetObjectByName("camera shell")->t->local.TranslateUp(scene->main_camera->velocity, delta_time);
 			}
 		}
 
-		if (glfwGetKey(user->window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) { //left ctrl, translate down
-			if (glfwGetKey(user->window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
+		if (glfwGetKey(user->window->window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) { //left ctrl, translate down
+			if (glfwGetKey(user->window->window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
 				scene->GetObjectByName("camera shell")->t->local.TranslateUp(scene->main_camera->velocity * 0.5f * -1.f, delta_time);
-			} else if (glfwGetKey(user->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+			} else if (glfwGetKey(user->window->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
 				scene->GetObjectByName("camera shell")->t->local.TranslateUp(scene->main_camera->velocity * 2.f * -1.f, delta_time);
 			} else {
 				scene->GetObjectByName("camera shell")->t->local.TranslateUp(scene->main_camera->velocity * -1.f, delta_time);
 			}
 		}
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_LEFT) == GLFW_PRESS) { //left arrow
+	if (glfwGetKey(user->window->window, GLFW_KEY_LEFT) == GLFW_PRESS) { //left arrow
 		if (scene->held_object == scene->GetObjectByName("base")) { //J0
 			scene->held_object->t->local.TranslateRight(-5.0f, delta_time);
 		} else if (scene->held_object == scene->GetObjectByName("top")) { //J1
@@ -710,13 +784,13 @@ static void ProcessInput(User*& user, Scene*& scene) {
 			//no action requried
 		} else if (scene->held_object == scene->GetObjectByName("arm2")) { //J3
 			//no action requried
-		} else if (scene->held_object == scene->GetObjectByName("pen") && glfwGetKey(user->window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS) { //J4
+		} else if (scene->held_object == scene->GetObjectByName("pen") && glfwGetKey(user->window->window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS) { //J4
 			scene->held_object->parent->parent->t->local.RotateYaw(-45.f * delta_time);
 		} else if (scene->held_object == scene->GetObjectByName("pen")) { //J6
 			scene->held_object->t->local.RotateRoll(-45.f * delta_time);
 		}
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_RIGHT) == GLFW_PRESS) { //right arrow
+	if (glfwGetKey(user->window->window, GLFW_KEY_RIGHT) == GLFW_PRESS) { //right arrow
 		if (scene->held_object == scene->GetObjectByName("base")) { //J0
 			scene->held_object->t->local.TranslateRight(5.0f, delta_time);
 		} else if (scene->held_object == scene->GetObjectByName("top")) { //J1
@@ -725,13 +799,13 @@ static void ProcessInput(User*& user, Scene*& scene) {
 			//no action requried
 		} else if (scene->held_object == scene->GetObjectByName("arm2")) { //J3
 			//no action requried
-		} else if (scene->held_object == scene->GetObjectByName("pen") && glfwGetKey(user->window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS) { //J4
+		} else if (scene->held_object == scene->GetObjectByName("pen") && glfwGetKey(user->window->window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS) { //J4
 			scene->held_object->parent->parent->t->local.RotateYaw(45.f * delta_time);
 		} else if (scene->held_object == scene->GetObjectByName("pen")) { //J6
 			scene->held_object->t->local.RotateRoll(45.f * delta_time);
 		}
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_DOWN) == GLFW_PRESS) { //down arrow
+	if (glfwGetKey(user->window->window, GLFW_KEY_DOWN) == GLFW_PRESS) { //down arrow
 		if (scene->held_object == scene->GetObjectByName("base")) { //J0
 			scene->held_object->t->local.TranslateForward(-5.0f, delta_time);
 		} else if (scene->held_object == scene->GetObjectByName("top")) { //J1
@@ -744,7 +818,7 @@ static void ProcessInput(User*& user, Scene*& scene) {
 			scene->held_object->parent->t->local.RotatePitch(-45.f * delta_time);
 		}
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_UP) == GLFW_PRESS) { //up arrow
+	if (glfwGetKey(user->window->window, GLFW_KEY_UP) == GLFW_PRESS) { //up arrow
 		if (scene->held_object == scene->GetObjectByName("base")) { //J0
 			scene->held_object->t->local.TranslateForward(5.0f, delta_time);
 		} else if (scene->held_object == scene->GetObjectByName("top")) { //J1
@@ -757,64 +831,64 @@ static void ProcessInput(User*& user, Scene*& scene) {
 			scene->held_object->parent->t->local.RotatePitch(45.f * delta_time);
 		}
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_COMMA) == GLFW_PRESS) { //comma ","
+	if (glfwGetKey(user->window->window, GLFW_KEY_COMMA) == GLFW_PRESS) { //comma ","
 		
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_PERIOD) == GLFW_PRESS) { //period "."
+	if (glfwGetKey(user->window->window, GLFW_KEY_PERIOD) == GLFW_PRESS) { //period "."
 		
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_ESCAPE) == GLFW_PRESS) { //escape "esc"
-		glfwSetWindowShouldClose(user->window, GL_TRUE);
+	if (glfwGetKey(user->window->window, GLFW_KEY_ESCAPE) == GLFW_PRESS) { //escape "esc"
+		glfwSetWindowShouldClose(user->window->window, GL_TRUE);
 	}
 	//p2
-	if (glfwGetKey(user->window, GLFW_KEY_B) == GLFW_PRESS) { //b
+	if (glfwGetKey(user->window->window, GLFW_KEY_B) == GLFW_PRESS) { //b
 		scene->SetHeldObject(scene->GetObjectByName("base"));
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_T) == GLFW_PRESS) { //t
+	if (glfwGetKey(user->window->window, GLFW_KEY_T) == GLFW_PRESS) { //t
 		scene->SetHeldObject(scene->GetObjectByName("top"));
 	}
 	
-	if (glfwGetKey(user->window, GLFW_KEY_P) == GLFW_PRESS) { //p
+	if (glfwGetKey(user->window->window, GLFW_KEY_P) == GLFW_PRESS) { //p
 		scene->SetHeldObject(scene->GetObjectByName("pen"));
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_1) == GLFW_PRESS) { //one "1"
+	if (glfwGetKey(user->window->window, GLFW_KEY_1) == GLFW_PRESS) { //one "1"
 		scene->SetHeldObject(scene->GetObjectByName("arm1"));
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_2) == GLFW_PRESS) { //two "2"
+	if (glfwGetKey(user->window->window, GLFW_KEY_2) == GLFW_PRESS) { //two "2"
 		scene->SetHeldObject(scene->GetObjectByName("arm2"));
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_3) == GLFW_PRESS) { //three "3"
+	if (glfwGetKey(user->window->window, GLFW_KEY_3) == GLFW_PRESS) { //three "3"
 		scene->shading_mode = 1;
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_4) == GLFW_PRESS) { //four "4"
+	if (glfwGetKey(user->window->window, GLFW_KEY_4) == GLFW_PRESS) { //four "4"
 		scene->shading_mode = 2;
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_5) == GLFW_PRESS) { //five "5"
+	if (glfwGetKey(user->window->window, GLFW_KEY_5) == GLFW_PRESS) { //five "5"
 		scene->shading_mode = 3;
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_6) == GLFW_PRESS) { //six "6"
+	if (glfwGetKey(user->window->window, GLFW_KEY_6) == GLFW_PRESS) { //six "6"
 		scene->shading_mode = 4;
 	}
 
-	if (glfwGetMouseButton(user->window, GLFW_MOUSE_BUTTON_5) == GLFW_PRESS) { //mouse button 5 (far thumb button)
+	if (glfwGetMouseButton(user->window->window, GLFW_MOUSE_BUTTON_5) == GLFW_PRESS) { //mouse button 5 (far thumb button)
 		scene->GetObjectByName("quadrant lights")->SetActiveLocalTree(true); //turn on quadrant lights
 	}
-	if (glfwGetMouseButton(user->window, GLFW_MOUSE_BUTTON_4) == GLFW_PRESS) { //mouse button 4 (close thumb button)
+	if (glfwGetMouseButton(user->window->window, GLFW_MOUSE_BUTTON_4) == GLFW_PRESS) { //mouse button 4 (close thumb button)
 		scene->GetObjectByName("quadrant lights")->SetActiveLocalTree(false); //turn off quadrant lights
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) { //caps lock
+	if (glfwGetKey(user->window->window, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS) { //caps lock
 		scene->PrintObjectTrees();
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_F1) == GLFW_PRESS) { //function 1 "f1"
+	if (glfwGetKey(user->window->window, GLFW_KEY_F1) == GLFW_PRESS) { //function 1 "f1"
 		
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_F) == GLFW_PRESS) { //f
+	if (glfwGetKey(user->window->window, GLFW_KEY_F) == GLFW_PRESS) { //f
 		dynamic_cast<Light*>(scene->GetObjectByName("camera shell")->GetChildByNameTree("camera")->GetChildByNameTree("flashlight"))->SetActiveLocalTree(true); //turn on flashlight
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_G) == GLFW_PRESS) { //g
+	if (glfwGetKey(user->window->window, GLFW_KEY_G) == GLFW_PRESS) { //g
 		dynamic_cast<Light*>(scene->GetObjectByName("camera shell")->GetChildByNameTree("camera")->GetChildByNameTree("flashlight"))->SetActiveLocalTree(false); //turn off flashlight
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_R) == GLFW_PRESS) { //r
+	if (glfwGetKey(user->window->window, GLFW_KEY_R) == GLFW_PRESS) { //r
 		Object* camera_shell = scene->GetObjectByName("camera shell");
 		if (camera_shell->parent == nullptr) {
 
@@ -828,13 +902,13 @@ static void ProcessInput(User*& user, Scene*& scene) {
 		AttachCamera(scene, nullptr); //reset camera to origin and detach from any parents
 
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_L) == GLFW_PRESS) { //l
+	if (glfwGetKey(user->window->window, GLFW_KEY_L) == GLFW_PRESS) { //l
 		if (!scene->GetMeshByName("ink_blot")->visible) {
 			scene->GetMeshByName("ink_blot")->visible = true;
 			Launch(scene, scene->GetObjectByName("ink"));
 		}
 	}
-	if (glfwGetKey(user->window, GLFW_KEY_ENTER) == GLFW_PRESS) { //enter "return"
+	if (glfwGetKey(user->window->window, GLFW_KEY_ENTER) == GLFW_PRESS) { //enter "return"
 		AttachCamera(scene, scene->held_object); //reset camera to origin and detach from any parents
 	}
 

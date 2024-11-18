@@ -3,9 +3,9 @@
 #include "GL/glew.h"
 #include "byte.h"
 enum SHADER_TYPE {
-	VERTEX = 0x00,
-	GEOMETRY = 0X01,
-	FRAGMENT = 0X10
+	VERTEX = 0x01,
+	GEOMETRY = 0x02,
+	FRAGMENT = 0x03
 };
 
 struct Shader{
