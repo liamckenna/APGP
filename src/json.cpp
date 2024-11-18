@@ -2,7 +2,8 @@
 #include <fstream>
 #include <iostream>
 std::unique_ptr<nlohmann::json> ReadJsonPointerFromFile(const std::string& filename) {
-	std::ifstream file(filename, std::ifstream::binary);
+	std::string absolute_filepath = std::filesystem::current_path().string() + filename;
+	std::ifstream file(absolute_filepath, std::ifstream::binary);
 	auto root = std::make_unique<nlohmann::json>();
 	if (file.is_open()) {
 		file >> *root;
@@ -13,8 +14,8 @@ std::unique_ptr<nlohmann::json> ReadJsonPointerFromFile(const std::string& filen
 
 nlohmann::json ReadJsonFromFile(const std::string& filename) {
 
-	
-	std::ifstream file(filename, std::ifstream::binary);
+	std::string absolute_filepath = std::filesystem::current_path().string() + filename;
+	std::ifstream file(absolute_filepath, std::ifstream::binary);
 	if (!file.is_open()) {
 
 		return nlohmann::json(); 

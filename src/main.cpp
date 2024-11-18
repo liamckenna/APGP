@@ -9,6 +9,8 @@
 #include <sstream>
 #include <string>
 #include <memory>
+#include <filesystem>
+#include <vector>
 #include "transform.h"
 #include "vertex.h"
 #include "mesh.h"
@@ -23,7 +25,6 @@
 #include "json.h"
 #include "object_parser.h"
 #include "program.h"
-#include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 #undef GLM_ENABLE_EXPERIMENTAL
@@ -39,6 +40,7 @@ float delta_time = 0.f;
 //forward declarations of functions
 static User* UserGeneration(std::string file);
 static Program* ProgramGeneration(std::string program_filepath);
+std::string GetExecutableDirectory();
 std::string LoadShader(const char* filepath);
 GLuint createShader(GLenum type, const char* shaderSource);
 static void error_callback(int error, const char* description);
@@ -71,7 +73,7 @@ float launch_force;
 
 int main() {
 
-	Program* program = ProgramGeneration("../data/jsons/program.json");
+	Program* program = ProgramGeneration("/data/jsons/program.json");
 
 	Scene* scene = program->scene;
 	User* user = program->user;
@@ -105,20 +107,20 @@ static User* UserGeneration(std::string file) {
 
 	User* user = new User();
 	
-	user->window = new Window(	data["window"].contains("width")		? data["window"]["width"]			: 1920,
-								data["window"].contains("height")		? data["window"]["height"]			: 1080,
-								data["window"].contains("msaa")			? data["window"]["msaa"]			: 1,
-								data["window"].contains("pos_x")		? data["window"]["pos_x"]			: 0,
-								data["window"].contains("pos_y")		? data["window"]["pos_y"]			: 0,
-								data["window"].contains("resizable")	? data["window"]["resizable"]		: true,
-								data["window"].contains("decorated")	? data["window"]["decorated"]		: true,
-								data["window"].contains("focused")		? data["window"]["focused"]			: true,
-								data["window"].contains("visible")		? data["window"]["visible"]			: true,
-								data["window"].contains("display_mode") ? data["window"]["display_mode"]	: "windowed",
-								data["window"].contains("title")		? data["window"]["title"]			: "Window Title" );
+	user->window = new Window(	data["window"].contains("width")		? int(data["window"]["width"])					: 1920,
+								data["window"].contains("height")		? int(data["window"]["height"])					: 1080,
+								data["window"].contains("msaa")			? int(data["window"]["msaa"])					: 1,
+								data["window"].contains("pos_x")		? int(data["window"]["pos_x"])					: 0,
+								data["window"].contains("pos_y")		? int(data["window"]["pos_y"])					: 0,
+								data["window"].contains("resizable")	? bool(data["window"]["resizable"])				: true,
+								data["window"].contains("decorated")	? bool(data["window"]["decorated"])				: true,
+								data["window"].contains("focused")		? bool(data["window"]["focused"])				: true,
+								data["window"].contains("visible")		? bool(data["window"]["visible"])				: true,
+								data["window"].contains("display_mode") ? std::string(data["window"]["display_mode"])	: "windowed",
+								data["window"].contains("title")		? std::string(data["window"]["title"])			: "Window Title" );
 	user->input = new Input(user->window, 
 							(data["settings"].contains("input") && data["settings"]["input"].contains("cursor") && data["settings"]["input"]["cursor"].contains("sensitivity")) 
-							? data["settings"]["input"]["cursor"]["sensitivity"]	: 3.f);
+							? float(data["settings"]["input"]["cursor"]["sensitivity"]) : 3.f);
 
 
 	glfwSetErrorCallback(error_callback);
@@ -232,8 +234,8 @@ static Program* ProgramGeneration(std::string program_filepath) {
 
 	Program* program = new Program();
 
-	std::string user_filepath = "../data/jsons/users/" + std::string(program_json["user"]);
-	std::string scene_filepath = "../data/jsons/scenes/" + std::string(program_json["scene"]);
+	std::string user_filepath = "/data/jsons/users/" + std::string(program_json["user"]);
+	std::string scene_filepath = "/data/jsons/scenes/" + std::string(program_json["scene"]);
 
 	User* user = UserGeneration(user_filepath);
 	program->user = user;
@@ -256,8 +258,13 @@ static Program* ProgramGeneration(std::string program_filepath) {
 	return program;
 }
 
+std::string GetExecutableDirectory() {
+	return std::filesystem::current_path().string();
+}
+
 std::string LoadShader(const char* filepath) {
-	std::ifstream file(filepath);
+	std::string absolute_filepath = std::filesystem::current_path().string() + filepath;
+	std::ifstream file(absolute_filepath);
 	if (!file.is_open()) {
 		std::cerr << "Failed to open shader file: " << filepath << std::endl;
 		return "";
@@ -334,16 +341,17 @@ static bool ShaderInitialization(Scene*& scene, nlohmann::json data) {
 
 	scene->shaders->shader_program = glCreateProgram();
 	for (int i = 0; i < data["shaders"]["vertex_shaders"].size(); i++) {
-		std::string fn = "../shaders/" + std::string(data["shaders"]["vertex_shaders"][i]["file"]);
+		std::string fn = "/shaders/" + std::string(data["shaders"]["vertex_shaders"][i]["file"]);
+		
 		if (!ProcessShader(scene, fn, VERTEX)) return false;
 	}
 	for (int i = 0; i < data["shaders"]["geometry_shaders"].size(); i++) {
 		std::cout << "tryingto call geom shaders" << std::endl;
-		std::string fn = "../shaders/" + std::string(data["shaders"]["geometry_shaders"][i]["file"]);
+		std::string fn = "/shaders/" + std::string(data["shaders"]["geometry_shaders"][i]["file"]);
 		if (!ProcessShader(scene, fn, GEOMETRY)) return false;
 	}
 	for (int i = 0; i < data["shaders"]["fragment_shaders"].size(); i++) {
-		std::string fn = "../shaders/" + std::string(data["shaders"]["fragment_shaders"][i]["file"]);
+		std::string fn = "/shaders/" + std::string(data["shaders"]["fragment_shaders"][i]["file"]);
 		if (!ProcessShader(scene, fn, FRAGMENT)) return false;
 	}
 	glLinkProgram(scene->shaders->shader_program);
@@ -432,7 +440,7 @@ static void MeshGeneration(Scene*& scene, nlohmann::json data) {
 		glm::vec3 scl = glm::vec3(	data["meshes"][i]["transform"]["scale"][0],
 									data["meshes"][i]["transform"]["scale"][1],
 									data["meshes"][i]["transform"]["scale"][2]);
-		std::string fn = "../data/objects/" + std::string(data["meshes"][i]["file"]);
+		std::string fn = "/data/objects/" + std::string(data["meshes"][i]["file"]);
 		Mesh* m = new Mesh();
 		m->visible = data["meshes"][i]["visible"];
 		m->current_scene = scene;

@@ -2,15 +2,19 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "object_parser.h"
-#include "material.h"
+
 #include <fstream>
 #include <sstream>
-#include <iostream>
+#include <filesystem>
+#include "object_parser.h"
+#include "material.h"
 #include "scene.h"
 
+
 void ObjectParser::ParseObjFile(const std::string& filepath, Mesh*& mesh) {
-	std::ifstream file(filepath);
+	std::string absolute_filepath = std::filesystem::current_path().string() + filepath;
+	std::ifstream file(absolute_filepath);
+
 	if (!file.is_open()) {
 		std::cerr << "Failed to open .obj file: " << filepath << std::endl;
 		return;
@@ -24,7 +28,7 @@ void ObjectParser::ParseObjFile(const std::string& filepath, Mesh*& mesh) {
 		if (line.substr(0, 7) == "mtllib ") { //extract material library file name
 			
 			material_library = line.substr(7);
-			material_library = "../data/materials/" + material_library;
+			material_library = "/data/materials/" + material_library;
 			ParseMtlFile(material_library, mesh);
 		} else if (line.substr(0, 7) == "usemtl ") { //extract material name to apply to subsequent faces
 			current_material = line.substr(7);
@@ -156,9 +160,10 @@ std::vector<std::string> ObjectParser::Split(const std::string& str, char delimi
 }
 
 void ObjectParser::ParseMtlFile(const std::string& filepath, Mesh*& mesh) {
-	std::ifstream file(filepath);
+	std::string absolute_filepath = std::filesystem::current_path().string() + filepath;
+	std::ifstream file(absolute_filepath);
 	if (!file.is_open()) {
-		std::cerr << "Failed to open .mtl file: " << filepath << std::endl;
+		std::cerr << "Failed to open .mtl file: " << absolute_filepath << std::endl;
 		return;
 	}
 
@@ -233,6 +238,7 @@ void ObjectParser::ParseMtlFile(const std::string& filepath, Mesh*& mesh) {
 
 Texture* ObjectParser::ParseTxtFile(const std::string& filepath, Mesh*& mesh, Material*& material, TEXTURE_TYPES type) {
 	std::string fp = "../data/textures/" + filepath;
+	std::string absolute_filepath = std::filesystem::current_path().string() + fp;
 	Texture* txt = new Texture(fp, type);
 	txt->index = mesh->current_scene->textures.size();
 	mesh->current_scene->textures.push_back(txt);
