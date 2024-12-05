@@ -35,4 +35,5 @@ struct FlattenedVertex {
 	glm::vec4 color;
 	glm::vec2 tex_coord;
 	int material_index;
+	int draw_mode;
 };

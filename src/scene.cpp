@@ -40,8 +40,6 @@ std::vector<FlattenedMaterial> Scene::flattenMaterials() {
 		flat_material.tris		= material->tris;
 		flat_material.edges		= material->edges;
 		flat_material.dif_color = material->colors.dif;
-		if (material->dif_only) flat_material.dif_only = 1; 
-		else flat_material.dif_only = 0;
 		flat_material.amb_color = material->colors.amb;
 		flat_material.spc_color = material->colors.spc;
 		flat_material.ems_color = material->colors.ems;

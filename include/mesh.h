@@ -31,8 +31,6 @@ struct Mesh : public Object {
 
 	int idx;
 
-	bool dif_only;
-
 	bool verbose;
 	bool visible;
 
@@ -49,6 +47,7 @@ struct Mesh : public Object {
 	void InsertTriangleWithAllData(int vp0, int vp1, int vp2, int vn0, int vn1, int vn2, int vt0, int vt1, int vt2);
 
 	void InsertEdge(int v0, int v1);
+	void InsertEdgeWithTexCoords(int vp0, int vp1, int vt0, int vt1);
 
 	void SetTriColor(COLORS color_name);
 	void SetTriColor(Color c);
@@ -60,6 +59,7 @@ struct Mesh : public Object {
 	void SetCurrentMaterial(const std::string& material_name);
 	void SetDrawMode(const std::string& draw_mode);
 	void SetDefaultDrawMode();
+	int GetDrawModeIdx();
 
 	void UpdateSelf(bool rendering) override {
 		UpdateModelMatrix();

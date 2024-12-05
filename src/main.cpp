@@ -11,6 +11,7 @@
 #include <memory>
 #include <filesystem>
 #include <vector>
+#include <algorithm>
 #include "transform.h"
 #include "vertex.h"
 #include "mesh.h"
@@ -66,7 +67,7 @@ static void UpdateTextureUniforms(Scene*& scene);
 static void AttachCamera(Scene*& scene, Object* new_parent);
 static void Launch(Scene*& scene, Object* object);
 static void ProcessPhysics(Scene*& scene);
-
+static void UpdateMeshBuffer(Scene*& scene, Mesh* mesh);
 glm::vec3 gravity;
 glm::vec3 launch_vector;
 float launch_force;
@@ -461,9 +462,6 @@ static void MeshGeneration(Scene*& scene, nlohmann::json data) {
 		m->idx = i;
 		if (data["meshes"][i].contains("draw_mode")) m->SetDrawMode(data["meshes"][i]["draw_mode"]);
 		else m->SetDefaultDrawMode();
-		if (data["meshes"][i].contains("dif_only")) {
-			m->dif_only = data["meshes"][i]["dif_only"];
-		} else m->dif_only = false;
 		ObjectParser::ParseObjFile(fn, m);
 		scene->meshes.push_back(m);
 		std::cout << m->name << " mesh completed" << std::endl;
@@ -580,7 +578,7 @@ static void BufferArrayInitialization(Scene*& scene) {
 
 		glGenBuffers(1, &scene->buffers->vertex_buffers[i]);
 		glBindBuffer(GL_ARRAY_BUFFER, scene->buffers->vertex_buffers[i]);
-		glBufferData(GL_ARRAY_BUFFER, flattened_vert_array.size() * sizeof(FlattenedVertex), flattened_vert_array.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, flattened_vert_array.size() * sizeof(FlattenedVertex), flattened_vert_array.data(), GL_DYNAMIC_DRAW);
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, position));
 		glEnableVertexAttribArray(0);
@@ -592,6 +590,8 @@ static void BufferArrayInitialization(Scene*& scene) {
 		glEnableVertexAttribArray(3);
 		glVertexAttribIPointer(4, 1, GL_INT, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, material_index));
 		glEnableVertexAttribArray(4);
+		glVertexAttribIPointer(5, 1, GL_INT, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, draw_mode));
+		glEnableVertexAttribArray(5);
 		
 	}
 	std::cout << "buffer array generation completed" << std::endl;
@@ -624,6 +624,30 @@ static void DebugPrinting(GLuint& shader_program, GLuint& vertex_array, GLFWwind
 	// std::cout << "rt: " << glm::to_string(camera->t->local.rt) << std::endl;
 	// std::cout << "up: " << glm::to_string(camera->t->local.up) << std::endl;
 	//std::cout << "mesh pos: " << glm::to_string(mesh->vertices[0]->t->pos) << std::endl;
+}
+
+void UpdateMeshBuffer(Scene*& scene, Mesh* mesh) {
+	glBindBuffer(GL_ARRAY_BUFFER, scene->buffers->vertex_buffers[mesh->idx]);
+	std::vector<FlattenedVertex> flattened_vert_array = scene->meshes[mesh->idx]->flattenVertices();
+
+	GLint buffer_size = 0;
+	glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &buffer_size);
+
+	size_t new_size = flattened_vert_array.size() * sizeof(FlattenedVertex);
+
+	if (new_size > buffer_size) {
+		// Resize buffer with extra space to minimize future resizing
+		size_t allocated_size = std::max(new_size, static_cast<size_t>(buffer_size) * 2);
+		std::cout << "Resizing buffer: old size = " << buffer_size << ", new size = " << allocated_size << std::endl;
+
+		// Orphan old buffer and upload new data
+		glBufferData(GL_ARRAY_BUFFER, allocated_size, nullptr, GL_DYNAMIC_DRAW);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, new_size, flattened_vert_array.data());
+	}
+	else {
+		// Use glBufferSubData for in-place update
+		glBufferSubData(GL_ARRAY_BUFFER, 0, new_size, flattened_vert_array.data());
+	}
 }
 
 static void UpdateCameraUniforms(Camera*& camera) {
@@ -702,7 +726,6 @@ static void RenderScene(User*& user, Scene*& scene) {
 		glUseProgram(scene->shaders->shader_program);
 		
 		scene->UpdateObjectTrees(true);
-
 
 		UpdateLightUniforms(scene);
 		
@@ -941,9 +964,16 @@ static void ProcessInput(User*& user, Scene*& scene) {
 
 	}
 	if (glfwGetKey(user->window->window, GLFW_KEY_L) == GLFW_PRESS) { //l
-		if (!scene->GetMeshByName("ink_blot")->visible) {
-			scene->GetMeshByName("ink_blot")->visible = true;
-			Launch(scene, scene->GetObjectByName("ink"));
+		if (scene->GetMeshByName("face")->draw_mode != GL_TRIANGLES) {
+			scene->GetMeshByName("face")->SetDrawMode("GL_TRIANGLES");
+			UpdateMeshBuffer(scene, scene->GetMeshByName("face"));
+		}
+		
+	}
+	if (glfwGetKey(user->window->window, GLFW_KEY_SEMICOLON) == GLFW_PRESS) { //;
+		if (scene->GetMeshByName("face")->draw_mode != GL_LINES) {
+			scene->GetMeshByName("face")->SetDrawMode("GL_LINES");
+			UpdateMeshBuffer(scene, scene->GetMeshByName("face"));
 		}
 	}
 	if (glfwGetKey(user->window->window, GLFW_KEY_ENTER) == GLFW_PRESS) { //enter "return"

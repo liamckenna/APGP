@@ -16,7 +16,7 @@ struct Material {
 	float pad1;				// 4 bytes padding (total 16 bytes)
 
     vec3 dif_color;	        // 12 bytes
-    int dif_only;			// 4 bytes (total 16 bytes)
+    float pad2;			    // 4 bytes (total 16 bytes)
 
     vec3 amb_color;	        // 12 bytes
     float pad3;				// 4 bytes padding (total 16 bytes)
@@ -72,6 +72,7 @@ in vec3 frag_normal;
 in vec4 frag_color;
 in vec2 frag_tex_coords;
 flat in int frag_material_index;
+flat in int frag_draw_mode;
 flat in vec3 no_interpolation_normal;
 
 out vec4 FragColor;
@@ -102,8 +103,9 @@ void main() {
     vec3 ambient_value              = material.amb_color;
 
     
-
-	if (shading_mode == 1) {
+    if (frag_draw_mode != 4) {
+        FragColor = vec4(diffuse_value, frag_color.a);
+    } else if (shading_mode == 1) {
 		FragColor = frag_color;
 	} else if (shading_mode == 2) {
 		// Smooth shading (Phong shading)
@@ -169,7 +171,4 @@ void main() {
 	} else {
 		FragColor = frag_color;
 	}
-    if (material.dif_only == 1) {
-        FragColor = vec4(material.dif_color, frag_color.a);
-    }
 }

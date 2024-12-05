@@ -114,6 +114,18 @@ void ObjectParser::ParseFace(const std::string& line, Mesh*& mesh) {
 				mesh->InsertTriangleWithAllData(vertex_indices[0], vertex_indices[i + 1], vertex_indices[i],
 												normal_indices[0], normal_indices[i + 1], normal_indices[i],
 												texture_indices[0], texture_indices[i + 1], texture_indices[i]);
+				if (i % 2 == 1) { //if we are on an odd cycle
+					mesh->InsertEdgeWithTexCoords(	vertex_indices[0], vertex_indices[i],
+													texture_indices[0], texture_indices[i]);
+					mesh->InsertEdgeWithTexCoords(	vertex_indices[i], vertex_indices[i + 1], 
+													texture_indices[i], texture_indices[i + 1]);
+				} else { //even cycle
+					mesh->InsertEdgeWithTexCoords(	vertex_indices[0], vertex_indices[i + 1],
+													texture_indices[0], texture_indices[i + 1]);
+					mesh->InsertEdgeWithTexCoords(	vertex_indices[i + 1], vertex_indices[i],
+													texture_indices[i + 1], texture_indices[i]);
+				}
+				
 			}
 			else if (normal_indices.size() > 0) { //check if only normal indices are available
 				mesh->InsertTriangleWithNormals(vertex_indices[0], vertex_indices[i + 1], vertex_indices[i],
@@ -176,7 +188,6 @@ void ObjectParser::ParseMtlFile(const std::string& filepath, Mesh*& mesh) {
 		if (line.substr(0, 7) == "newmtl ") {
 			if (material != nullptr) mesh->current_scene->materials.push_back(material);
 			material = new Material();  //start a new material
-			material->dif_only = mesh->dif_only;
 			material->name = line.substr(7);
 			material->index = mesh->current_scene->materials.size();
 		} else if (line.substr(0, 3) == "Kd ") { //diffuse color

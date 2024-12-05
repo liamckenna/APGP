@@ -30,8 +30,7 @@
 			"file": "grid.obj",
 			"verbose": false,
 			"visible": true,
-			"draw_mode": "GL_LINES",
-			"dif_only": true
+			"draw_mode": "GL_LINES"
 		},
 		{
 			"transform": {
@@ -43,8 +42,7 @@
 			"file": "transform.obj",
 			"verbose": false,
 			"visible": true,
-			"draw_mode": "GL_LINES",
-			"dif_only": true
+			"draw_mode": "GL_LINES"
 		},
 		{
 			"transform":{

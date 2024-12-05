@@ -34,6 +34,7 @@ std::vector<FlattenedVertex> Mesh::flattenVertices() {
 				flatVertex.color = triangle->c.ToVec4();
 				flatVertex.tex_coord = vertex->tex_coord;
 				flatVertex.material_index = triangle->mtl->index;
+				flatVertex.draw_mode = GetDrawModeIdx();
 				flatVertices.push_back(flatVertex);
 			}
 		}
@@ -46,6 +47,7 @@ std::vector<FlattenedVertex> Mesh::flattenVertices() {
 				flatVertex.color = edge->c.ToVec4();
 				flatVertex.tex_coord = vertex->tex_coord;
 				flatVertex.material_index = edge->mtl->index;
+				flatVertex.draw_mode = GetDrawModeIdx();
 				flatVertices.push_back(flatVertex);
 			}
 		}
@@ -114,6 +116,14 @@ void Mesh::InsertEdge(int v0, int v1) {
 	edges.push_back(new Edge(vertices[v0], vertices[v1], this));
 }
 
+void Mesh::InsertEdgeWithTexCoords(int vp0, int vp1, int vt0, int vt1) {
+	Vertex* v0 = new Vertex(vertex_positions[vp0], this->t);
+	v0->tex_coord = texture_coords[vt0];
+	Vertex* v1 = new Vertex(vertex_positions[vp1], this->t);
+	v1->tex_coord = texture_coords[vt1];
+	edges.push_back(new Edge(v0, v1, this));
+}
+
 void Mesh::SetTriColor(COLORS color_name) {
 	tri_color = Color(color_name);
 }
@@ -170,14 +180,24 @@ void Mesh::SetCurrentMaterial(const std::string& material_name) {
 }
 
 
-void Mesh::SetDrawMode(const std::string& mode) {
-	if (mode == "GL_POINTS") draw_mode = GL_POINTS;
-	else if (mode == "GL_LINES") draw_mode = GL_LINES;
-	else if (mode == "GL_LINE_STRIP") draw_mode = GL_LINE_STRIP;
-	else if (mode == "GL_LINE_LOOP") draw_mode = GL_LINE_LOOP;
-	else if (mode == "GL_TRIANGLES") draw_mode = GL_TRIANGLES;
-	else if (mode == "GL_TRIANGLE_STRIP") draw_mode = GL_TRIANGLE_STRIP;
-	else if (mode == "GL_TRIANGLE_FAN") draw_mode = GL_TRIANGLE_FAN;
+void Mesh::SetDrawMode(const std::string& mode) { //draw mode indices
+	if (mode == "GL_POINTS") draw_mode = GL_POINTS; //0
+	else if (mode == "GL_LINES") draw_mode = GL_LINES; //1
+	else if (mode == "GL_LINE_STRIP") draw_mode = GL_LINE_STRIP; //2
+	else if (mode == "GL_LINE_LOOP") draw_mode = GL_LINE_LOOP; //3
+	else if (mode == "GL_TRIANGLES") draw_mode = GL_TRIANGLES; //4
+	else if (mode == "GL_TRIANGLE_STRIP") draw_mode = GL_TRIANGLE_STRIP; //5
+	else if (mode == "GL_TRIANGLE_FAN") draw_mode = GL_TRIANGLE_FAN; //6
+}
+
+int Mesh::GetDrawModeIdx() {
+	if (draw_mode == GL_POINTS) return 0;
+	else if (draw_mode == GL_LINES) return 1;
+	else if (draw_mode == GL_LINE_STRIP) return 2;
+	else if (draw_mode == GL_LINE_LOOP) return 3;
+	else if (draw_mode == GL_TRIANGLES) return 4;
+	else if (draw_mode == GL_TRIANGLE_STRIP) return 5;
+	else if (draw_mode == GL_TRIANGLE_FAN) return 6;
 }
 
 void Mesh::SetDefaultDrawMode() {

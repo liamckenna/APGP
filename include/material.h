@@ -20,8 +20,6 @@ struct Material {
 	float opacity;
 	int tris;
 	int edges;
-	bool dif_only; //bool for grid
-
 
 
 	struct Textures {
@@ -49,7 +47,7 @@ struct FlattenedMaterial {
 	float pad1;				//4 bytes padding (total 16 bytes)
 
 	glm::vec3 dif_color;	//12 bytes
-	int dif_only;			//4 bytes padding (total 16 bytes)
+	float pad2;				//4 bytes padding (total 16 bytes)
 
 	glm::vec3 amb_color;	//12 bytes
 	float pad3;				//4 bytes padding (total 16 bytes)
