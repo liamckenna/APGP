@@ -52,7 +52,6 @@ static void BufferArrayInitialization(Scene*& scene);
 static void ProcessInput(User*& user, Scene*& scene);
 void CalculateFrameRate();
 void CalculateDeltaTime();
-static void DebugPrinting(GLuint& shader_program, GLuint& vertex_array, GLFWwindow*& window, Camera*& camera, Mesh*& mesh);
 static void RenderScene(User*& user, Scene*& scene);
 static void Cleanup(User*& user, Scene*& scene);
 static void CameraGeneration(Scene*& scene, nlohmann::json data);
@@ -615,17 +614,6 @@ void CalculateDeltaTime() {
 	last_time = current_time;
 }
 
-static void DebugPrinting(GLuint& shader_program, GLuint& vertex_array, GLFWwindow*& window, Camera*& camera, Mesh*& mesh) {
-
-	// std::cout << "x: " << camera->t->local.pos_x << std::endl;
-	// std::cout << "y: " << camera->t->local.pos_y << std::endl;
-	// std::cout << "z: " << camera->t->local.pos_z << std::endl;
-	// std::cout << "fwd: " << glm::to_string(camera->t->local.fwd) << std::endl;
-	// std::cout << "rt: " << glm::to_string(camera->t->local.rt) << std::endl;
-	// std::cout << "up: " << glm::to_string(camera->t->local.up) << std::endl;
-	//std::cout << "mesh pos: " << glm::to_string(mesh->vertices[0]->t->pos) << std::endl;
-}
-
 void UpdateMeshBuffer(Scene*& scene, Mesh* mesh) {
 	glBindBuffer(GL_ARRAY_BUFFER, scene->buffers->vertex_buffers[mesh->idx]);
 	std::vector<FlattenedVertex> flattened_vert_array = scene->meshes[mesh->idx]->flattenVertices();
@@ -636,16 +624,13 @@ void UpdateMeshBuffer(Scene*& scene, Mesh* mesh) {
 	size_t new_size = flattened_vert_array.size() * sizeof(FlattenedVertex);
 
 	if (new_size > buffer_size) {
-		// Resize buffer with extra space to minimize future resizing
 		size_t allocated_size = std::max(new_size, static_cast<size_t>(buffer_size) * 2);
 		std::cout << "Resizing buffer: old size = " << buffer_size << ", new size = " << allocated_size << std::endl;
 
-		// Orphan old buffer and upload new data
 		glBufferData(GL_ARRAY_BUFFER, allocated_size, nullptr, GL_DYNAMIC_DRAW);
 		glBufferSubData(GL_ARRAY_BUFFER, 0, new_size, flattened_vert_array.data());
 	}
 	else {
-		// Use glBufferSubData for in-place update
 		glBufferSubData(GL_ARRAY_BUFFER, 0, new_size, flattened_vert_array.data());
 	}
 }
@@ -671,14 +656,11 @@ static void UpdateLightUniforms(Scene*& scene) {
 }
 
 static void UpdateTextureUniforms(Scene*& scene) {
-	// Ensure we are using the correct shader program
 	glUseProgram(scene->shaders->shader_program);
 
-	// Get the maximum number of available texture units
 	GLint maxTextures;
 	glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTextures);
 
-	// Iterate through the textures
 	for (size_t i = 0; i < scene->textures.size(); ++i) {
 		if (i >= maxTextures) {
 			std::cerr << "Warning: Texture count exceeds maximum supported units (" << maxTextures << ")" << std::endl;
@@ -688,7 +670,6 @@ static void UpdateTextureUniforms(Scene*& scene) {
 		GLenum texture_unit = GL_TEXTURE0 + i;
 		scene->textures[i]->Bind(texture_unit);
 
-		// Get the uniform location dynamically if needed
 		GLint location = glGetUniformLocation(scene->shaders->shader_program, ("textures[" + std::to_string(i) + "]").c_str());
 		if (location == -1) {
 			std::cerr << "Warning: Uniform 'textures[" << i << "]' not found in shader!" << std::endl;

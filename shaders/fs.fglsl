@@ -32,7 +32,6 @@ struct Material {
     float opacity;			// 4 bytes
     float pad6;				// 4 bytes padding (total 16 bytes)
 
-    // Texture indices or flags
     int dif_texture_index;	// 4 bytes
     int nrm_texture_index;	// 4 bytes
     int bmp_texture_index;	// 4 bytes
@@ -50,7 +49,7 @@ struct Material {
 };
 
 uniform vec3 camera_position;
-uniform int shading_mode;      // 1 = Flat, 2 = Smooth (Phong), 3 = Normals, 4 = Custom
+uniform int shading_mode;
 uniform int phong_exponent;
 uniform float ambient_intensity;
 
@@ -103,72 +102,56 @@ void main() {
     vec3 ambient_value              = material.amb_color;
 
     
-    if (frag_draw_mode != 4) {
+    if (frag_draw_mode != 4) { //wireframe
         FragColor = vec4(diffuse_value, frag_color.a);
     } else if (shading_mode == 1) {
 		FragColor = frag_color;
-	} else if (shading_mode == 2) {
-		// Smooth shading (Phong shading)
+	} else if (shading_mode == 2) { //smooth shading (Phong)
 		
-        vec3 finalLighting = vec3(0.0);  // Accumulator for lighting
+		
+        vec3 finalLighting = vec3(0.0);
         vec3 norm = normalize(frag_normal);
 
-        // Loop over each light to calculate its contribution
         for (int i = 0; i < light_count; i++) {
             if (lights[i].is_active == 0) continue;
-            // Get light properties
             vec3 light_position = lights[i].position;
             float light_strength = lights[i].strength;
             vec3 light_color = lights[i].color;
 
-            // Calculate distance attenuation
             float adjustedStrength = light_strength / 100.0;
             float distance = length(light_position - frag_position);
             float attenuation = adjustedStrength / (distance * distance);
 
-            // Calculate normalized direction vectors
             vec3 lightDir = normalize(light_position - frag_position);
             vec3 viewDir = normalize(camera_position - frag_position);
 
-            // Lambertian reflection (Diffuse)
             float diff = max(dot(norm, lightDir), 0.0);
-            vec3 diffuse = diff * light_color * diffuse_value * attenuation;  // Diffuse lighting modulated by light color
+            vec3 diffuse = diff * light_color * diffuse_value * attenuation;
 
-            // Phong reflection (Specular)
             vec3 reflectDir = reflect(-lightDir, norm);
             float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-            vec3 specular = spec * light_color * specular_value * attenuation;  // Specular lighting modulated by light color
+            vec3 specular = spec * light_color * specular_value * attenuation;  
 
-            // Combine diffuse and specular lighting
             finalLighting += diffuse + specular;
         }
 
-        // Add ambient light (simple ambient term)
         vec3 ambient;
         if (diffuse_value == vec3(0.0)) ambient = ambient_value * ambient_intensity * diffuse_value;
         else ambient = ambient_value * ambient_intensity * normalize(diffuse_value);
 
-        // Combine ambient and all lights
         vec3 lighting = ambient + finalLighting;
 
-        // Final color = face color modulated by lighting
         vec3 finalColor = lighting;
 
-        // Clamp the result to avoid exceeding 1.0
         finalColor = min(finalColor, vec3(1.0));
 
-        // Output the final color
         FragColor = vec4(finalColor, frag_color.a);
 		
-
-        //if (normal_value == no_interpolation_normal) FragColor = vec4(1.0);
-		//FragColor = vec4(frag_tex_coords, 0.0, 1.0); // Visualize UVs
-
-	} else if (shading_mode == 3) {
+	} else if (shading_mode == 3) { //visualize Normals
 		FragColor = vec4(normalize(frag_normal) * 0.5 + 0.5, 1.0);
-	} else if (shading_mode == 4) {
-		FragColor = frag_color;
+	} else if (shading_mode == 4) { //visualize UVs
+		FragColor = vec4(frag_tex_coords, 0.0, 1.0);
 	} else {
-		FragColor = frag_color;
-	}
+        FragColor = frag_color;
+    }
 }

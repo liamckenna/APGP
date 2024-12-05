@@ -52,7 +52,7 @@ void Transform::Values::RotatePitch(float angle) { //around x axis
 void Transform::Values::RotateRoll(float angle) { //around z axis
 	glm::vec3 fwd = orn * glm::vec3(0.f, 0.f, -1.f);
 	glm::quat rol = glm::angleAxis(glm::radians(angle), fwd);
-	orn = rol * orn;  // Apply the roll rotation
+	orn = rol * orn;
 }
 
 void Transform::Values::Rotate(float yaw, float pitch, float roll) {
