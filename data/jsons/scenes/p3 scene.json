@@ -1,5 +1,5 @@
 {
-	"name": "Liam's Test Scene",
+	"name": "Project 3 Scene",
 	"shaders": {
 		"vertex_shaders": [
 			{
@@ -20,17 +20,6 @@
 		"active_fragment_shader": 0
 	},
 	"meshes": [
-		{
-			"transform": {
-				"position": [ 0.0, -1.0, 2.0 ],
-				"rotation": [ -90.0, 0.0, 0.0 ],
-				"scale": [ 0.25, 0.25, 0.25 ]
-			},
-			"name": "cow",
-			"file": "cow.obj",
-			"verbose": false,
-			"visible": true
-		},
 		{
 			"transform": {
 				"position": [ 0.0, 0.0, 0.0 ],
@@ -61,65 +50,10 @@
 			"transform": {
 				"position": [ 0.0, 0.0, 0.0 ],
 				"rotation": [ 0.0, 0.0, 0.0 ],
-				"scale": [ 0.25, 0.25, 0.25 ]
+				"scale": [ 1, 1, 1 ]
 			},
-			"name": "eagle",
-			"file": "eagle.obj",
-			"verbose": false,
-			"visible": true
-		},
-		{
-			"transform": {
-				"position": [ 0.0, 2.0, 0.0 ],
-				"rotation": [ 0.0, 0.0, 0.0 ],
-				"scale": [ 0.25, 0.25, 0.25 ]
-			},
-			"name": "castle",
-			"file": "castle.obj",
-			"verbose": false,
-			"visible": true
-		},
-		{
-			"transform": {
-				"position": [ -2.0, 1.25, 0.0 ],
-				"rotation": [ 0.0, 0.0, 0.0 ],
-				"scale": [ 0.1, 0.1, 0.1 ]
-			},
-			"name": "flowers",
-			"file": "flowers.obj",
-			"verbose": false,
-			"visible": true
-		},
-		{
-			"transform": {
-				"position": [ 2.0, 1.25, 1.0 ],
-				"rotation": [ 0.0, 0.0, 0.0 ],
-				"scale": [ 0.025, 0.025, 0.025 ]
-			},
-			"name": "shark",
-			"file": "shark.obj",
-			"verbose": false,
-			"visible": true
-		},
-		{
-			"transform": {
-				"position": [ 0.0, 0.0, 0.0 ],
-				"rotation": [ 0.0, 0.0, 0.0 ],
-				"scale": [ 0.1, 0.1, 0.1 ]
-			},
-			"name": "pokeball",
-			"file": "pokeball.obj",
-			"verbose": false,
-			"visible": true
-		},
-		{
-			"transform": {
-				"position": [ 0.0, 0.0, 0.0 ],
-				"rotation": [ 0.0, 0.0, 0.0 ],
-				"scale": [ 1.0, 1.0, 1.0 ]
-			},
-			"name": "robot_full",
-			"file": "robot_full.obj",
+			"name": "face",
+			"file": "Face.obj",
 			"verbose": false,
 			"visible": true
 		}
@@ -148,12 +82,12 @@
 		{
 			"name": "transform light",
 			"transform": {
-				"position": [ 0.0, 5.0, 0.0 ],
+				"position": [ 10.0, 0.0, 0.0 ],
 				"rotation": [ 0.0, 0.0, 0.0 ],
 				"scale": [ 1.0, 1.0, 1.0 ]
 			},
 			"strength": 3000.0,
-			"color": [ 255, 200, 255 ],
+			"color": [ 255, 255, 255 ],
 			"active": true
 		},
 		{
@@ -163,7 +97,7 @@
 				"rotation": [ 0.0, 0.0, 0.0 ],
 				"scale": [ 1.0, 1.0, 1.0 ]
 			},
-			"strength": 200.0,
+			"strength": 10.0,
 			"color": [ 255, 255, 255 ],
 			"active": false
 		}
@@ -238,60 +172,21 @@
 			]
 		},
 		{
-			"name": "cow",
+			"name": "face",
 			"transform": {
-				"position": [ 2.0, 0.9, 2.0 ],
-				"rotation": [ 45.0, 0.0, 0.0 ],
-				"scale": [ 1.0, 1.0, 1.0 ]
-			},
-			"children": [
-
-			]
-		},
-		{
-			"name": "hawk tuah",
-			"transform": {
-				"position": [ 2.0, 2.0, -2.0 ],
-				"rotation": [ -115.0, 0.0, 0.0 ],
+				"position": [ 0.0, 0.0, 0.0 ],
+				"rotation": [ 0.0, 0.0, 0.0 ],
 				"scale": [ 1.0, 1.0, 1.0 ]
 			},
 			"children": [
 				{
 					"type": "mesh",
-					"name": "eagle"
-				}
-			]
-		},
-		{
-			"name": "castle",
-			"transform": {
-				"position": [ 0.0, 0.0, -10.0 ],
-				"rotation": [ 180.0, 0.0, 0.0 ],
-				"scale": [ 1.0, 1.0, 1.0 ]
-			},
-			"children": [
-				{
-					"type": "mesh",
-					"name": "castle"
-				}
-			]
-		},
-		{
-			"name": "pokeball",
-			"transform": {
-				"position": [ -2.5, 1.0, 3.0 ],
-				"rotation": [ -150.0, 0.0, 0.0 ],
-				"scale": [ 10.0, 10.0, 10.0 ]
-			},
-			"children": [
-				{
-					"type": "mesh",
-					"name": "pokeball"
+					"name": "face"
 				}
 			]
 		}
 	],
-	"ambient_intensity": 0.1,
+	"ambient_intensity": 0.0,
 	"default_material": {
 		"name": "default",
 		"dif": [ 1.0, 1.0, 1.0 ],

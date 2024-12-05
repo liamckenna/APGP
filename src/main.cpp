@@ -90,6 +90,16 @@ int main() {
 
 	scene->PrintObjectTrees();
 
+	std::cout << "texture count: " << scene->textures.size() << std::endl;
+	std::cout << "texture filepath:" << scene->textures[0]->file_path << std::endl;
+	std::cout << "texture index:" << scene->textures[0]->index << std::endl;
+	int textureUniformLoc = glGetUniformLocation(scene->shaders->shader_program, "textures[0]");
+	if (textureUniformLoc == -1) {
+		std::cerr << "Uniform 'textures[0]' not found in the shader!" << std::endl;
+	}
+	else {
+		std::cerr << "Uniform 'textures[0]' WAS FOUND in the shader!" << std::endl;
+	}
 	RenderScene(user, scene);
 
 	std::cout << "finished rendering scene" << std::endl;
@@ -134,7 +144,8 @@ static User* UserGeneration(std::string file) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glfwWindowHint(GLFW_SAMPLES, user->window->msaa);
 	glfwWindowHint(GLFW_RESIZABLE, user->window->resizable ? GLFW_TRUE : GLFW_FALSE);
 	glfwWindowHint(GLFW_DECORATED, user->window->decorated ? GLFW_TRUE : GLFW_FALSE);
@@ -636,10 +647,31 @@ static void UpdateLightUniforms(Scene*& scene) {
 }
 
 static void UpdateTextureUniforms(Scene*& scene) {
+	// Ensure we are using the correct shader program
+	glUseProgram(scene->shaders->shader_program);
+
+	// Get the maximum number of available texture units
+	GLint maxTextures;
+	glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTextures);
+
+	// Iterate through the textures
 	for (size_t i = 0; i < scene->textures.size(); ++i) {
+		if (i >= maxTextures) {
+			std::cerr << "Warning: Texture count exceeds maximum supported units (" << maxTextures << ")" << std::endl;
+			break;
+		}
+
 		GLenum texture_unit = GL_TEXTURE0 + i;
 		scene->textures[i]->Bind(texture_unit);
-		glUniform1i(scene->user->textures_id + i, i);
+
+		// Get the uniform location dynamically if needed
+		GLint location = glGetUniformLocation(scene->shaders->shader_program, ("textures[" + std::to_string(i) + "]").c_str());
+		if (location == -1) {
+			std::cerr << "Warning: Uniform 'textures[" << i << "]' not found in shader!" << std::endl;
+			continue;
+		}
+
+		glUniform1i(location, i);
 	}
 }
 

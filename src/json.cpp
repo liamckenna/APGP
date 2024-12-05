@@ -15,7 +15,11 @@ std::unique_ptr<nlohmann::json> ReadJsonPointerFromFile(const std::string& filen
 nlohmann::json ReadJsonFromFile(const std::string& filename) {
 
 	std::string absolute_filepath = std::filesystem::current_path().string() + filename;
+
+
+
 	std::ifstream file(absolute_filepath, std::ifstream::binary);
+	
 	if (!file.is_open()) {
 
 		return nlohmann::json(); 
@@ -31,7 +35,7 @@ nlohmann::json ReadJsonFromFile(const std::string& filename) {
 
 		std::cout << "Error reading JSON data: " << e.what() << std::endl;
 		file.close();
-		return nlohmann::json(); 
+		return nlohmann::json();
 	}
 
 

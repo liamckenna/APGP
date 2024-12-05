@@ -87,7 +87,13 @@ void Mesh::InsertTriangleWithNormals(int vp0, int vp1, int vp2, int vn0, int vn1
 
 void Mesh::InsertTriangleWithTexCoords(int vp0, int vp1, int vp2, int vt0, int vt1, int vt2) {
 
-	triangles.push_back(new Triangle(vertices[vp0], vertices[vp1], vertices[vp2], false, this));
+	Vertex* v0 = new Vertex(vertex_positions[vp0], this->t);
+	v0->tex_coord = texture_coords[vt0];
+	Vertex* v1 = new Vertex(vertex_positions[vp1], this->t);
+	v1->tex_coord = texture_coords[vt1];
+	Vertex* v2 = new Vertex(vertex_positions[vp2], this->t);
+	v2->tex_coord = texture_coords[vt2];
+	triangles.push_back(new Triangle(v0, v1, v2, false, this));
 	
 }
 

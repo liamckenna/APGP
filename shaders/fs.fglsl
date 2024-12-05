@@ -78,7 +78,8 @@ out vec4 FragColor;
 
 vec3 GrabTextureCoordinate(int texture_index, vec3 fallback_color) {
     if (texture_index >= 0) {
-        vec4 texColor = texture(textures[texture_index], frag_tex_coords);
+        if (frag_tex_coords.x < 0.0 || frag_tex_coords.y < 0.0) return vec3(1.0, 0.0, 0.0); 
+        vec4 texColor = texture(textures[texture_index], vec2(frag_tex_coords.x, 1.0 - frag_tex_coords.y));
         return texColor.xyz;
     } else {
         return fallback_color;
@@ -159,7 +160,7 @@ void main() {
 		
 
         //if (normal_value == no_interpolation_normal) FragColor = vec4(1.0);
-		
+		//FragColor = vec4(frag_tex_coords, 0.0, 1.0); // Visualize UVs
 
 	} else if (shading_mode == 3) {
 		FragColor = vec4(normalize(frag_normal) * 0.5 + 0.5, 1.0);

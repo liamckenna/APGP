@@ -161,6 +161,7 @@ std::vector<std::string> ObjectParser::Split(const std::string& str, char delimi
 
 void ObjectParser::ParseMtlFile(const std::string& filepath, Mesh*& mesh) {
 	std::string absolute_filepath = std::filesystem::current_path().string() + filepath;
+	std::cout << "MTL FILEPATH: " << absolute_filepath << std::endl;
 	std::ifstream file(absolute_filepath);
 	if (!file.is_open()) {
 		std::cerr << "Failed to open .mtl file: " << absolute_filepath << std::endl;
@@ -237,9 +238,10 @@ void ObjectParser::ParseMtlFile(const std::string& filepath, Mesh*& mesh) {
 
 
 Texture* ObjectParser::ParseTxtFile(const std::string& filepath, Mesh*& mesh, Material*& material, TEXTURE_TYPES type) {
-	std::string fp = "../data/textures/" + filepath;
+	std::string fp = "/data/textures/" + filepath;
 	std::string absolute_filepath = std::filesystem::current_path().string() + fp;
-	Texture* txt = new Texture(fp, type);
+	std::cout << "TEXTURE FILEPATH: " << absolute_filepath << std::endl;
+	Texture* txt = new Texture(absolute_filepath, type);
 	txt->index = mesh->current_scene->textures.size();
 	mesh->current_scene->textures.push_back(txt);
 	txt->LoadTexture();
