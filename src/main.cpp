@@ -889,7 +889,9 @@ static void ProcessInput(User*& user, Scene*& scene) {
 	if (glfwGetKey(user->window->window, GLFW_KEY_T) == GLFW_PRESS) { //t
 		scene->SetHeldObject(scene->GetObjectByName("top"));
 	}
-	
+	if (glfwGetKey(user->window->window, GLFW_KEY_U) == GLFW_PRESS) { //u
+		scene->shading_mode = 5;
+	}
 	if (glfwGetKey(user->window->window, GLFW_KEY_P) == GLFW_PRESS) { //p
 		scene->SetHeldObject(scene->GetObjectByName("pen"));
 	}
