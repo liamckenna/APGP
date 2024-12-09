@@ -15,76 +15,14 @@
     </Filter>
     <Filter Include="Shader Files">
       <UniqueIdentifier>{A8D7C6B3-F4D8-4878-BE5D-9E2BB24F6A47}</UniqueIdentifier>
-      <Extensions>vert;frag;geom;tesc;tese;comp;glsl;spv;vglsl;gglsl;fglsl;</Extensions>
+      <Extensions>vert;frag;geom;tesc;tese;comp;glsl;spv;vglsl;gglsl;fglsl</Extensions>
     </Filter>
+	  <Filter Include="Data Files">
+		  <UniqueIdentifier>{A8D7C6B4-F4D8-4878-BE5D-9E2BB24F6A48}</UniqueIdentifier>
+		  <Extensions>json;mtl;obj;png</Extensions>
+	  </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\**\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\**\*.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -93,91 +31,11 @@
     <ClInclude Include="include\**\*.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\**\*.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\**\*.*">
       <Filter>Shader Files</Filter>
     </None>
-    <None Include="shaders\**\*.*">
-      <Filter>Shader Files</Filter>
-    </None>
-    <None Include="shaders\**\*.*">
-      <Filter>Shader Files</Filter>
-    </None>
   </ItemGroup>
+    
 </Project>
