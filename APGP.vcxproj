@@ -141,7 +141,10 @@
     <None Include="shaders\**\*.*" />
     <!-- Include all files in shaders and its subfolders -->
   </ItemGroup>
-  
+	<ItemGroup>
+		<None Include="data\**\*.*" />
+		<!-- Include all files in data and its subfolders -->
+	</ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
 </Project>

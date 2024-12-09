@@ -211,9 +211,9 @@ void ObjectParser::ParseMtlFile(const std::string& filepath, Mesh*& mesh) {
 		} else if (line.substr(0, 8) == "map_bump" || line.substr(0, 9) == "map_Bump ") { //bump map (normal map)
 			std::string texture_file = line.substr(line.find(' ') + 1);
 			material->textures.bmp = ParseTxtFile(texture_file, mesh, material, TXT_BUMP);
-		} else if (line.substr(0, 7) == "map_Ns ") { //glossiness texture
+		} else if (line.substr(0, 7) == "map_Ns ") { //roughness texture
 			std::string texture_file = line.substr(7);
-			material->textures.gls = ParseTxtFile(texture_file, mesh, material, TXT_GLOSSINESS);
+			material->textures.rgh = ParseTxtFile(texture_file, mesh, material, TXT_ROUGHNESS);
 		} else if (line.substr(0, 5) == "map_d ") { //opacity (alpha) texture
 			std::string texture_file = line.substr(5);
 			material->textures.opc = ParseTxtFile(texture_file, mesh, material, TXT_OPACITY);

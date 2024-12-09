@@ -3,7 +3,7 @@
 	"shaders": {
 		"vertex_shaders": [
 			{
-				"file": "vs.vglsl"
+				"file": "vs.glsl"
 			}
 		],
 
@@ -12,7 +12,7 @@
 		],
 		"fragment_shaders": [
 			{
-				"file": "fs.fglsl"
+				"file": "fs.glsl"
 			}
 		],
 		"active_vertex_shader": 0,
@@ -193,8 +193,9 @@
 		"spc": [ 1.0, 1.0, 1.0 ],
 		"ems": [ 0.0, 0.0, 0.0 ],
 		"shininess": 32.0,
-		"glossiness": 1.0,
-		"opacity": 1.0
+		"roughness": 1.0,
+		"opacity": 1.0,
+		"metallic":  0.0
 	},
 	"default_draw_mode": "GL_TRIANGLES",
 	"launch_force": 5.0

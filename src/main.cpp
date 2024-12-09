@@ -432,7 +432,7 @@ static void DefaultMaterialGeneration(Scene*& scene, nlohmann::json data) {
 	mtl->colors.spc = glm::vec3(data["default_material"]["spc"][0], data["default_material"]["spc"][1], data["default_material"]["spc"][2]);
 	mtl->colors.ems = glm::vec3(data["default_material"]["ems"][0], data["default_material"]["ems"][1], data["default_material"]["ems"][2]);
 	mtl->shininess 	= data["default_material"]["shininess"];
-	mtl->glossiness = data["default_material"]["glossiness"];
+	mtl->roughness = data["default_material"]["roughness"];
 	mtl->opacity 	= data["default_material"]["opacity"];
 	scene->default_material = mtl;
 	scene->current_material = scene->default_material;

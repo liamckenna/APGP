@@ -44,18 +44,21 @@ std::vector<FlattenedMaterial> Scene::flattenMaterials() {
 		flat_material.spc_color = material->colors.spc;
 		flat_material.ems_color = material->colors.ems;
 		flat_material.shininess = material->shininess;
-		flat_material.glossiness= material->glossiness;
+		flat_material.roughness = material->roughness;
 		flat_material.opacity 	= material->opacity;
+		flat_material.metallic	= material->metallic;
 		flat_material.dif_texture_index = (material->textures.dif == nullptr) ? -1 : material->textures.dif->index;
 		flat_material.nrm_texture_index = (material->textures.nrm == nullptr) ? -1 : material->textures.nrm->index;
 		flat_material.bmp_texture_index = (material->textures.bmp == nullptr) ? -1 : material->textures.bmp->index;
 		flat_material.spc_texture_index = (material->textures.spc == nullptr) ? -1 : material->textures.spc->index;
-		flat_material.gls_texture_index = (material->textures.gls == nullptr) ? -1 : material->textures.gls->index;
+		flat_material.rgh_texture_index = (material->textures.rgh == nullptr) ? -1 : material->textures.rgh->index;
 		flat_material.dsp_texture_index = (material->textures.dsp == nullptr) ? -1 : material->textures.dsp->index;
 		flat_material.aoc_texture_index = (material->textures.aoc == nullptr) ? -1 : material->textures.aoc->index;
 		flat_material.opc_texture_index = (material->textures.opc == nullptr) ? -1 : material->textures.opc->index;
 		flat_material.ems_texture_index = (material->textures.ems == nullptr) ? -1 : material->textures.ems->index;
 		flat_material.hgt_texture_index = (material->textures.hgt == nullptr) ? -1 : material->textures.hgt->index;
+		flat_material.met_texture_index = (material->textures.met == nullptr) ? -1 : material->textures.met->index;
+
 		flat_materials.push_back(flat_material);
 	}
 	return flat_materials;

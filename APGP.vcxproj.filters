@@ -9,17 +9,25 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
     <Filter Include="Shader Files">
       <UniqueIdentifier>{A8D7C6B3-F4D8-4878-BE5D-9E2BB24F6A47}</UniqueIdentifier>
       <Extensions>vert;frag;geom;tesc;tese;comp;glsl;spv;vglsl;gglsl;fglsl</Extensions>
     </Filter>
-	  <Filter Include="Data Files">
-		  <UniqueIdentifier>{A8D7C6B4-F4D8-4878-BE5D-9E2BB24F6A48}</UniqueIdentifier>
-		  <Extensions>json;mtl;obj;png</Extensions>
+	  <Filter Include="Json Files">
+		  <UniqueIdentifier>{A8D7C6B3-F4D8-4878-BE5D-9E2BB24F6A48}</UniqueIdentifier>
+		  <Extensions>json</Extensions>
+	  </Filter>
+	  <Filter Include="Material Files">
+		  <UniqueIdentifier>{A8D7C6B3-F4D8-4878-BE5D-9E2BB24F6A49}</UniqueIdentifier>
+		  <Extensions>mtl</Extensions>
+	  </Filter>
+	  <Filter Include="Object Files">
+		  <UniqueIdentifier>{A8D7C6B3-F4D8-4878-BE5D-9E2BB24F6A4A}</UniqueIdentifier>
+		  <Extensions>obj</Extensions>
+	  </Filter>
+	  <Filter Include="Texture Files">
+		  <UniqueIdentifier>{A8D7C6B3-F4D8-4878-BE5D-9E2BB24F6A4B}</UniqueIdentifier>
+		  <Extensions>png;jpeg;jpg</Extensions>
 	  </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -37,5 +45,24 @@
       <Filter>Shader Files</Filter>
     </None>
   </ItemGroup>
-    
+	<ItemGroup>
+		<None Include="data\jsons\**\*.*">
+			<Filter>Json Files</Filter>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="data\materials\**\*.*">
+			<Filter>Material Files</Filter>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="data\objects\**\*.*">
+			<Filter>Object Files</Filter>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="data\textures\**\*.*">
+			<Filter>Texture Files</Filter>
+		</None>
+	</ItemGroup>
 </Project>

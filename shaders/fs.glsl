@@ -2,6 +2,7 @@
 #define MAX_LIGHTS 100
 #define MAX_MATERIALS 100
 #define MAX_TEXTURES 10
+
 struct Light {
     vec3 position;
     float strength;
@@ -28,22 +29,22 @@ struct Material {
 	float pad5;				// 4 bytes padding (total 16 bytes)
 
     float shininess;		// 4 bytes
-    float glossiness;		// 4 bytes
+    float roughness;		// 4 bytes
     float opacity;			// 4 bytes
-    float pad6;				// 4 bytes padding (total 16 bytes)
+    float metallic;			// 4 bytes (total 16 bytes)
 
     int dif_texture_index;	// 4 bytes
     int nrm_texture_index;	// 4 bytes
     int bmp_texture_index;	// 4 bytes
     int spc_texture_index;	// 4 bytes (total 16 bytes)
 
-    int gls_texture_index;	// 4 bytes
+    int rgh_texture_index;	// 4 bytes
     int dsp_texture_index;	// 4 bytes
     int aoc_texture_index;	// 4 bytes
     int opc_texture_index;	// 4 bytes (total 16 bytes)
     int ems_texture_index;	// 4 bytes
     int hgt_texture_index;	// 4 bytes
-    int pad7;				// 4 bytes padding
+    int met_texture_index;	// 4 bytes padding
     int pad8;				// 4 bytes padding (total 16 bytes)
 };
 
@@ -75,9 +76,8 @@ flat in vec3 no_interpolation_normal;
 
 out vec4 FragColor;
 
-vec3 GrabTextureCoordinate(int texture_index, vec3 fallback_color) {
+vec3 GrabTextureCoordinateColor(int texture_index, vec3 fallback_color) {
     if (texture_index >= 0) {
-        if (frag_tex_coords.x < 0.0 || frag_tex_coords.y < 0.0) return vec3(1.0, 0.0, 0.0); 
         vec4 texColor = texture(textures[texture_index], vec2(frag_tex_coords.x, 1.0 - frag_tex_coords.y));
         return texColor.xyz;
     } else {
@@ -85,20 +85,31 @@ vec3 GrabTextureCoordinate(int texture_index, vec3 fallback_color) {
     }
 }
 
+float GrabTextureCoordinateValue(int texture_index, float fallback_value) {
+    if (texture_index >= 0) {
+        vec4 texColor = texture(textures[texture_index], vec2(frag_tex_coords.x, 1.0 - frag_tex_coords.y));
+        return texColor.x;
+    } else {
+        return fallback_value;
+    }
+}
+
 void main() {
     Material material = materials[frag_material_index];
     
-    vec3 diffuse_value              = GrabTextureCoordinate(material.dif_texture_index, material.dif_color);
-    vec3 normal_value               = GrabTextureCoordinate(material.nrm_texture_index, frag_normal.xyz);
-    vec3 bump_value                 = GrabTextureCoordinate(material.bmp_texture_index, vec3(0.0));
-    vec3 specular_value             = GrabTextureCoordinate(material.spc_texture_index, material.spc_color);
-    vec3 glossiness_value           = GrabTextureCoordinate(material.gls_texture_index, vec3(0.0));
-    vec3 displacement_value         = GrabTextureCoordinate(material.dsp_texture_index, vec3(0.0));
-    vec3 ambient_occlusion_value    = GrabTextureCoordinate(material.aoc_texture_index, vec3(0.0));
-    vec3 opacity_value              = GrabTextureCoordinate(material.opc_texture_index, vec3(1.0));
-    vec3 emissive_value             = GrabTextureCoordinate(material.ems_texture_index, material.ems_color);
-    vec3 height_value               = GrabTextureCoordinate(material.hgt_texture_index, vec3(0.0));
-    vec3 ambient_value              = material.amb_color;
+    vec3 diffuse_value              = GrabTextureCoordinateColor(material.dif_texture_index, material.dif_color);       //used
+    vec3 normal_value               = GrabTextureCoordinateColor(material.nrm_texture_index, frag_normal.xyz);          //used
+    vec3 bump_value                 = GrabTextureCoordinateColor(material.bmp_texture_index, vec3(0.0));                //NOT used
+    vec3 specular_value             = GrabTextureCoordinateColor(material.spc_texture_index, material.spc_color);       //used
+    float roughness_value           = GrabTextureCoordinateValue(material.rgh_texture_index, material.roughness);       //NOT used
+    float metallic_value            = GrabTextureCoordinateValue(material.met_texture_index, material.metallic);        //NOT used
+    vec3 displacement_value         = GrabTextureCoordinateColor(material.dsp_texture_index, vec3(0.0));                //NOT used
+    float ambient_occlusion_value   = GrabTextureCoordinateValue(material.aoc_texture_index, 0.0);                      //NOT used
+    float opacity_value             = GrabTextureCoordinateValue(material.opc_texture_index, material.opacity);         //NOT used
+    vec3 emissive_value             = GrabTextureCoordinateColor(material.ems_texture_index, material.ems_color);       //NOT used
+    float height_value              = GrabTextureCoordinateValue(material.hgt_texture_index, 0.0);                      //NOT used
+    vec3 ambient_value              = material.amb_color;                                                               //used
+    float shininess_value           = material.shininess;                                                               //used
 
     
     if (frag_draw_mode != 4) { //wireframe
@@ -128,7 +139,7 @@ void main() {
             vec3 diffuse = diff * light_color * diffuse_value * attenuation;
 
             vec3 reflectDir = reflect(-lightDir, norm);
-            float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+            float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess_value);
             vec3 specular = spec * light_color * specular_value * attenuation;  
 
             finalLighting += diffuse + specular;

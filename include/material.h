@@ -16,8 +16,9 @@ struct Material {
 	} colors;
 
 	float shininess; //phong exp
-	float glossiness;
+	float roughness;
 	float opacity;
+	float metallic;
 	int tris;
 	int edges;
 
@@ -27,13 +28,14 @@ struct Material {
 		Texture* nrm; //normal
 		Texture* bmp; //bump
 		Texture* spc; //specular
-		Texture* gls; //glossiness (roughness)
+		Texture* rgh; //roughness (glossiness inverse)
 		Texture* dsp; //displacement
 		Texture* aoc; //ambient occlusion
-		Texture* opc; //opacity (alpha)
+		Texture* opc; //opacity (transparency inverse, alpha)
 		Texture* ems; //emissive
 		Texture* hgt; //height
-	} textures;	
+		Texture* met; //metallic
+	} textures;
 
 	Material();
 
@@ -59,23 +61,23 @@ struct FlattenedMaterial {
 	float pad5;				//4 bytes padding (total 16 bytes)
 
 	float shininess;		//4 bytes
-	float glossiness;		//4 bytes
+	float roughness;		//4 bytes
 	float opacity;			//4 bytes
-	float pad6;				//4 bytes padding (total 16 bytes)
+	float metallic;			//4 bytes (total 16 bytes)
 
 	int dif_texture_index;	//4 bytes
 	int nrm_texture_index;	//4 bytes
 	int bmp_texture_index;	//4 bytes
 	int spc_texture_index;	//4 bytes (total 16 bytes)
 
-	int gls_texture_index;	//4 bytes
+	int rgh_texture_index;	//4 bytes
 	int dsp_texture_index;	//4 bytes
 	int aoc_texture_index;	//4 bytes
 	int opc_texture_index;	//4 bytes (total 16 bytes)
 
 	int ems_texture_index;	//4 bytes
 	int hgt_texture_index;	//4 bytes
-	int pad7;				//4 bytes padding
+	int met_texture_index;	//4 bytes padding
 	int pad8;				//4 bytes padding (total 16 bytes)
 };
 #pragma pack(pop)
