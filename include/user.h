@@ -25,4 +25,7 @@ struct User { //local user variables all packaged in one convenient place
 	GLuint light_active_id;
 	GLuint ambient_intensity_id;
 	GLuint textures_id;
+
+	GLuint accum_color_tex_id;
+	GLuint accum_alpha_tex_id;
 };

@@ -12,7 +12,17 @@
 		],
 		"fragment_shaders": [
 			{
-				"file": "fs.glsl"
+				"file": "pbr.glsl"
+			}
+		],
+		"composite_vertex_shaders": [
+			{
+				"file": "cvs.glsl"
+			}
+		],
+		"composite_fragment_shaders": [
+			{
+				"file": "cfs.glsl"
 			}
 		],
 		"active_vertex_shader": 0,
@@ -51,7 +61,7 @@
 				"scale": [ 1, 1, 1 ]
 			},
 			"name": "face",
-			"file": "Face.obj",
+			"file": "Smooth Face.obj",
 			"verbose": false,
 			"visible": true,
 			"draw_mode": "GL_TRIANGLES"
@@ -85,7 +95,7 @@
 				"rotation": [ 0.0, 0.0, 0.0 ],
 				"scale": [ 1.0, 1.0, 1.0 ]
 			},
-			"strength": 3000.0,
+			"strength": 1.0,
 			"color": [ 255, 255, 255 ],
 			"active": true
 		},
@@ -96,7 +106,7 @@
 				"rotation": [ 0.0, 0.0, 0.0 ],
 				"scale": [ 1.0, 1.0, 1.0 ]
 			},
-			"strength": 10.0,
+			"strength": 1.0,
 			"color": [ 255, 255, 255 ],
 			"active": false
 		}

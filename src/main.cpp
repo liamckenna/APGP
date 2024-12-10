@@ -67,6 +67,11 @@ static void AttachCamera(Scene*& scene, Object* new_parent);
 static void Launch(Scene*& scene, Object* object);
 static void ProcessPhysics(Scene*& scene);
 static void UpdateMeshBuffer(Scene*& scene, Mesh* mesh);
+static void FramebufferInitialization(User*& user, Scene*& scene);
+static void RenderFullScreenQuad(Scene*& scene);
+static bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE, bool composite);
+static void RenderDirectlyToScreen(Scene*& scene);
+static void RenderToFramebuffer(Scene*& scene);
 glm::vec3 gravity;
 glm::vec3 launch_vector;
 float launch_force;
@@ -78,7 +83,7 @@ int main() {
 	Scene* scene = program->scene;
 	User* user = program->user;
 
-	std::cout << "initialized shader" << std::endl;
+	FramebufferInitialization(user, scene);
 
 	BufferArrayInitialization(scene);
 
@@ -88,17 +93,17 @@ int main() {
 
 	std::cout << "initialized textures" << std::endl;
 
-	scene->PrintObjectTrees();
+	//scene->PrintObjectTrees();
 
-	std::cout << "texture count: " << scene->textures.size() << std::endl;
-	std::cout << "texture filepath:" << scene->textures[0]->file_path << std::endl;
-	std::cout << "texture index:" << scene->textures[0]->index << std::endl;
+	//std::cout << "texture count: " << scene->textures.size() << std::endl;
+	//std::cout << "texture filepath:" << scene->textures[0]->file_path << std::endl;
+	//std::cout << "texture index:" << scene->textures[0]->index << std::endl;
 	int textureUniformLoc = glGetUniformLocation(scene->shaders->shader_program, "textures[0]");
 	if (textureUniformLoc == -1) {
 		std::cerr << "Uniform 'textures[0]' not found in the shader!" << std::endl;
 	}
 	else {
-		std::cerr << "Uniform 'textures[0]' WAS FOUND in the shader!" << std::endl;
+		//std::cerr << "Uniform 'textures[0]' WAS FOUND in the shader!" << std::endl;
 	}
 	RenderScene(user, scene);
 
@@ -109,6 +114,49 @@ int main() {
 	std::cout << "finished cleanup" << std::endl;
 
 	exit(EXIT_SUCCESS);
+}
+
+static void FramebufferInitialization(User*& user, Scene*& scene) {
+	// Generate and bind framebuffer
+	glGenFramebuffers(1, &scene->buffers->framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, scene->buffers->framebuffer);
+
+	// Create and attach AccumColor texture
+	glGenTextures(1, &scene->buffers->accum_color_tex);
+	glBindTexture(GL_TEXTURE_2D, scene->buffers->accum_color_tex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, user->window->width, user->window->height, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, scene->buffers->accum_color_tex, 0);
+
+	// Create and attach AccumAlpha texture
+	glGenTextures(1, &scene->buffers->accum_alpha_tex);
+	glBindTexture(GL_TEXTURE_2D, scene->buffers->accum_alpha_tex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, user->window->width, user->window->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, scene->buffers->accum_alpha_tex, 0);
+
+	// Create and attach depth renderbuffer
+	glGenRenderbuffers(1, &scene->buffers->depth_attachment);
+	glBindRenderbuffer(GL_RENDERBUFFER, scene->buffers->depth_attachment);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, user->window->width, user->window->height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, scene->buffers->depth_attachment);
+
+	// Specify draw buffers
+	GLenum drawBuffers[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glDrawBuffers(2, drawBuffers);
+
+	// Check framebuffer completeness
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cerr << "Framebuffer is not complete!" << std::endl;
+	}
+	else {
+		std::cout << "Framebuffer successfully created!" << std::endl;
+	}
+
+	// Unbind framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 static User* UserGeneration(std::string file) {
@@ -210,6 +258,10 @@ static User* UserGeneration(std::string file) {
 				else if (data["settings"]["gl"]["front_face"] == "ccw") glFrontFace(GL_CCW);
 			}
 			if (data["settings"]["gl"].contains("line_width")) glLineWidth(data["settings"]["gl"]["line_width"]);
+			if (data["settings"]["gl"].contains("blend") && data["settings"]["gl"]["blend"]) {
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			}
 		}
 		if (data["settings"].contains("glfw")) {
 			if (data["settings"]["glfw"].contains("version_major")) glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, data["settings"]["glfw"]["version_major"]);
@@ -262,7 +314,9 @@ static Program* ProgramGeneration(std::string program_filepath) {
 	glfwSetWindowUserPointer(user->window->window, scene);
 
 	nlohmann::json scene_json = ReadJsonFromFile(scene_filepath);
-	ShaderInitialization(scene, scene_json);
+	if (ShaderInitialization(scene, scene_json)) {
+		std::cout << "yeah shaders are good" << std::endl;
+	}
 
 	std::cout << "initialized program" << std::endl;
 
@@ -322,7 +376,7 @@ static void MouseCallback(User*& user, Scene*& scene)
 	scene->GetObjectByName("camera shell")->UpdateTree();
 }
 
-static bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE) {
+static bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE, bool composite) {
 		
 	std::string src = LoadShader(file.c_str());
 	if (src.empty()) {
@@ -343,28 +397,39 @@ static bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE) {
 		Shader s = Shader(src, ss, FRAGMENT);
 		scene->shaders->fragment_shaders.push_back(s);
 	}
-	glAttachShader(scene->shaders->shader_program, ss);
-	glDeleteShader(ss);
+
+	if (composite) {
+		//attach composite shader to dedicated program
+		glAttachShader(scene->shaders->composite_program, ss);
+		glDeleteShader(ss);
+	} else {
+		glAttachShader(scene->shaders->shader_program, ss);
+		glDeleteShader(ss);
+	}
+	
 	return true;
 }
 
 static bool ShaderInitialization(Scene*& scene, nlohmann::json data) {
 
 	scene->shaders->shader_program = glCreateProgram();
+	scene->shaders->composite_program = glCreateProgram();
 	for (int i = 0; i < data["shaders"]["vertex_shaders"].size(); i++) {
 		std::string fn = "/shaders/" + std::string(data["shaders"]["vertex_shaders"][i]["file"]);
 		
-		if (!ProcessShader(scene, fn, VERTEX)) return false;
+		if (!ProcessShader(scene, fn, VERTEX, false)) return false;
 	}
 	for (int i = 0; i < data["shaders"]["geometry_shaders"].size(); i++) {
-		std::cout << "tryingto call geom shaders" << std::endl;
+		std::cout << "trying to call geom shaders" << std::endl;
 		std::string fn = "/shaders/" + std::string(data["shaders"]["geometry_shaders"][i]["file"]);
-		if (!ProcessShader(scene, fn, GEOMETRY)) return false;
+		if (!ProcessShader(scene, fn, GEOMETRY, false)) return false;
 	}
 	for (int i = 0; i < data["shaders"]["fragment_shaders"].size(); i++) {
 		std::string fn = "/shaders/" + std::string(data["shaders"]["fragment_shaders"][i]["file"]);
-		if (!ProcessShader(scene, fn, FRAGMENT)) return false;
+		if (!ProcessShader(scene, fn, FRAGMENT, false)) return false;
 	}
+	
+	
 	glLinkProgram(scene->shaders->shader_program);
 	int success;
 	char infoLog[512];
@@ -375,9 +440,6 @@ static bool ShaderInitialization(Scene*& scene, nlohmann::json data) {
 		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
 		return false;
 	}
-
-
-
 
 	scene->user->matrix_id = glGetUniformLocation(scene->shaders->shader_program, "MVP");
 	scene->user->view_matrix_id = glGetUniformLocation(scene->shaders->shader_program, "V");
@@ -395,6 +457,30 @@ static bool ShaderInitialization(Scene*& scene, nlohmann::json data) {
 	scene->user->ambient_intensity_id = glGetUniformLocation(scene->shaders->shader_program, "ambient_intensity");
 	scene->user->textures_id = glGetUniformLocation(scene->shaders->shader_program, "textures");
 
+	for (int i = 0; i < data["shaders"]["composite_vertex_shaders"].size(); i++) {
+		std::string fn = "/shaders/" + std::string(data["shaders"]["composite_vertex_shaders"][i]["file"]);
+		if (!ProcessShader(scene, fn, VERTEX, true)) return false;
+	}
+	for (int i = 0; i < data["shaders"]["composite_fragment_shaders"].size(); i++) {
+		std::string fn = "/shaders/" + std::string(data["shaders"]["composite_fragment_shaders"][i]["file"]);
+		if (!ProcessShader(scene, fn, FRAGMENT, true)) return false;
+	}
+
+	glLinkProgram(scene->shaders->composite_program);
+	int composite_success;
+	char composite_infoLog[512];
+	glGetProgramiv(scene->shaders->composite_program, GL_LINK_STATUS, &composite_success);
+
+	if (!composite_success) {
+		glGetProgramInfoLog(scene->shaders->composite_program, 512, NULL, composite_infoLog);
+		std::cout << "ERROR::SHADER::COMPOSITE::LINKING_FAILED\n" << composite_infoLog << std::endl;
+		return false;
+	}
+
+	scene->user->accum_color_tex_id = glGetUniformLocation(scene->shaders->composite_program, "accum_color_tex");
+	scene->user->accum_alpha_tex_id = glGetUniformLocation(scene->shaders->composite_program, "accum_alpha_tex");
+
+	std::cout << "initialized shaders" << std::endl;
 	return true;
 }
 
@@ -463,7 +549,7 @@ static void MeshGeneration(Scene*& scene, nlohmann::json data) {
 		else m->SetDefaultDrawMode();
 		ObjectParser::ParseObjFile(fn, m);
 		scene->meshes.push_back(m);
-		std::cout << m->name << " mesh completed" << std::endl;
+		//std::cout << m->name << " mesh completed" << std::endl;
 	}
 	std::cout << "mesh generation completed" << std::endl;
 }
@@ -493,7 +579,7 @@ static void ObjectGeneration(Scene*& scene, nlohmann::json data) {
 			}
 		}
 		scene->objects.push_back(o);
-		std::cout << o->name << " object completed" << std::endl;
+		//std::cout << o->name << " object completed" << std::endl;
 	}
 	std::cout << "object generation completed" << std::endl;
 }
@@ -520,7 +606,7 @@ static void CameraGeneration(Scene*& scene, nlohmann::json data) {
 		c->active = data["cameras"][i]["active"]; 
 		c->current_scene = scene;
 		scene->cameras.push_back(c);
-		std::cout << c->name << " camera completed" << std::endl;
+		//std::cout << c->name << " camera completed" << std::endl;
 
 	}
 	int active_camera = data["active_camera"];
@@ -546,7 +632,7 @@ static void LightGeneration(Scene*& scene, nlohmann::json data) {
 		Light* l = new Light(t, data["lights"][i]["strength"], c, data["lights"][i]["active"]);
 		l->name = data["lights"][i]["name"];
 		scene->lights.push_back(l);
-		std::cout << l->name << " light completed" << std::endl;
+		//std::cout << l->name << " light completed" << std::endl;
 	}
 	std::cout << "light generation completed" << std::endl;
 }
@@ -593,6 +679,31 @@ static void BufferArrayInitialization(Scene*& scene) {
 		glEnableVertexAttribArray(5);
 		
 	}
+
+	float quadVertices[] = {
+		// Positions   // TexCoords
+		-1.0f, -1.0f,  0.0f, 0.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f,
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		 1.0f,  1.0f,  1.0f, 1.0f,
+	};
+
+	glGenVertexArrays(1, &scene->buffers->framebuffer_vao);
+	glBindVertexArray(scene->buffers->framebuffer_vao);
+
+	glGenBuffers(1, &scene->buffers->framebuffer_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, scene->buffers->framebuffer_vbo);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 	std::cout << "buffer array generation completed" << std::endl;
 }
 
@@ -687,37 +798,87 @@ static void UpdateUniforms(Scene*& scene, Camera*& camera) {
 	UpdateTextureUniforms(scene);
 }
 
+void CheckAttachedShaders(GLuint program) {
+	GLint numShaders = 0;
+	glGetProgramiv(program, GL_ATTACHED_SHADERS, &numShaders);
+
+	if (numShaders == 0) {
+		std::cout << "No shaders are attached to the program." << std::endl;
+		return;
+	}
+
+	GLuint* shaders = new GLuint[numShaders];
+	glGetAttachedShaders(program, numShaders, NULL, shaders);
+
+	std::cout << "Shaders attached to program " << program << ":" << std::endl;
+	for (GLint i = 0; i < numShaders; i++) {
+		GLint shaderType;
+		glGetShaderiv(shaders[i], GL_SHADER_TYPE, &shaderType);
+
+		std::string typeStr;
+		if (shaderType == GL_VERTEX_SHADER) typeStr = "Vertex Shader";
+		else if (shaderType == GL_FRAGMENT_SHADER) typeStr = "Fragment Shader";
+		else if (shaderType == GL_GEOMETRY_SHADER) typeStr = "Geometry Shader";
+		else typeStr = "Unknown Shader Type";
+
+		std::cout << "  Shader ID: " << shaders[i] << " (" << typeStr << ")" << std::endl;
+	}
+
+	delete[] shaders;
+}
+
+void CheckShaderCompilation(GLuint shaderID) {
+	GLint success;
+	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
+	if (!success) {
+		char infoLog[512];
+		glGetShaderInfoLog(shaderID, 512, NULL, infoLog);
+		std::cerr << "Shader Compilation Error (ID " << shaderID << "):\n" << infoLog << std::endl;
+	}
+	else {
+		std::cout << "Shader (ID " << shaderID << ") compiled successfully." << std::endl;
+	}
+}
+
+void CheckOpenGLErrors(const std::string& context) {
+	GLenum err;
+	while ((err = glGetError()) != GL_NO_ERROR) {
+		std::cerr << "OpenGL Error in " << context << ": " << err << std::endl;
+	}
+}
+
 static void RenderScene(User*& user, Scene*& scene) {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	
-	do
-	{
+	glBindFramebuffer(GL_FRAMEBUFFER, scene->buffers->framebuffer);
+	GLenum fbStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (fbStatus != GL_FRAMEBUFFER_COMPLETE) {
+		std::cerr << "Framebuffer incomplete: " << fbStatus << std::endl;
+	}
+	else {
+		std::cout << "Framebuffer complete!" << std::endl;
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	std::cout << "Accum Color Texture ID: " << scene->buffers->accum_color_tex << std::endl;
+	do {
+		// Calculate frame timing
 		CalculateFrameRate();
-
 		CalculateDeltaTime();
 
-		// ProcessPhysics(scene); //comment out if running personal scene
-
+		RenderDirectlyToScreen(scene);
+		//RenderToFramebuffer(scene);
+		
+		// Process inputs and callbacks
 		ProcessInput(user, scene);
-
 		MouseCallback(user, scene);
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		glUseProgram(scene->shaders->shader_program);
-		
-		scene->UpdateObjectTrees(true);
-
-		UpdateLightUniforms(scene);
-		
-		scene->DrawObjectTrees();
-
+		// Swap buffers and poll events
 		glfwSwapBuffers(user->window->window);
-
 		glfwPollEvents();
-		
+
 	} while (!glfwWindowShouldClose(user->window->window));
+
 }
+
 
 static void Cleanup(User*& user, Scene*& scene) {
 	scene->buffers->CleanupBuffers();
@@ -731,12 +892,25 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) 
 	Object* camera = scene->GetObjectByName("camera");
 	
 	if (yoffset != 0 && camera->t->local.pos[2] >= 0) { //scrolling up
-		camera->t->local.TranslateForward(dynamic_cast<Camera*>(camera->GetChildByNameTree("camera 1"))->velocity * yoffset * 500.f, delta_time);
-		camera->t->UpdateGlobal();
+		if (glfwGetKey(scene->user->window->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+			scene->GetLightByName("flashlight")->strength += (yoffset * 1000.f * delta_time);
+			std::cout << "strength: " << scene->GetLightByName("flashlight")->strength << std::endl;
+		} else {
+			camera->t->local.TranslateForward(dynamic_cast<Camera*>(camera->GetChildByNameTree("camera 1"))->velocity * yoffset * 500.f, delta_time);
+			camera->t->UpdateGlobal();
+		}
+		
 	}
 	if (camera->t->local.pos[2] < 0) {
-		camera->t->local.SetValue(camera->t->local.pos, glm::vec3(camera->t->local.pos[0], camera->t->local.pos[1], 0));
-		camera->t->UpdateGlobal();
+		if (glfwGetKey(scene->user->window->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+			scene->GetLightByName("flashlight")->strength -= (yoffset * 1000.f * delta_time);
+			std::cout << "strength: " << scene->GetLightByName("flashlight")->strength << std::endl;
+		}
+		else {
+			camera->t->local.SetValue(camera->t->local.pos, glm::vec3(camera->t->local.pos[0], camera->t->local.pos[1], 0));
+			camera->t->UpdateGlobal();
+		}
+		
 	}
 	
 }
@@ -1007,3 +1181,89 @@ static void ProcessPhysics(Scene*& scene) {
 	}
 }
 
+static void RenderFullScreenQuad(Scene*& scene) {
+	glBindVertexArray(scene->buffers->framebuffer_vao);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glBindVertexArray(0);
+}
+
+static void RenderDirectlyToScreen(Scene*& scene) {
+	// Enable depth test and face culling for PBR pass
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+
+	// === First Pass: Render Scene to Framebuffer ===
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Check framebuffer completeness
+	GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (framebufferStatus != GL_FRAMEBUFFER_COMPLETE) {
+		std::cerr << "Framebuffer incomplete: " << framebufferStatus << std::endl;
+		return; // Exit the loop if the framebuffer is not valid
+	}
+
+	// Use the PBR shader program
+	glUseProgram(scene->shaders->shader_program);
+
+	// Update scene data and draw objects
+	scene->UpdateObjectTrees(true);
+	UpdateLightUniforms(scene);
+	scene->DrawObjectTrees();
+}
+
+static void RenderToFramebuffer(Scene*& scene) {
+	// Enable depth test and face culling for PBR pass
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+
+	// === First Pass: Render Scene to Framebuffer ===
+	glBindFramebuffer(GL_FRAMEBUFFER, scene->buffers->framebuffer);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Check framebuffer completeness
+	GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (framebufferStatus != GL_FRAMEBUFFER_COMPLETE) {
+		std::cerr << "Framebuffer incomplete: " << framebufferStatus << std::endl;
+		return; // Exit the loop if the framebuffer is not valid
+	}
+
+	// Use the PBR shader program
+	glUseProgram(scene->shaders->shader_program);
+
+	// Update scene data and draw objects
+	scene->UpdateObjectTrees(true);
+	UpdateLightUniforms(scene);
+	scene->DrawObjectTrees();
+
+	// Unbind framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// === Second Pass: Composite Pass ===
+
+	glDisable(GL_DEPTH_TEST); // Disable depth test for full-screen quad
+	glDisable(GL_CULL_FACE); // Disable face culling for the quad
+
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	// Check if the composite program is valid
+	if (!glIsProgram(scene->shaders->composite_program)) {
+		std::cerr << "Composite shader program is not valid!" << std::endl;
+		return; // Exit the loop if the program is invalid
+	}
+
+	// Use the composite shader program
+	glUseProgram(scene->shaders->composite_program);
+
+	// Bind accumulated textures
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, scene->buffers->accum_color_tex);
+	glUniform1i(glGetUniformLocation(scene->shaders->composite_program, "accum_color_tex"), 0);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, scene->buffers->accum_alpha_tex);
+	glUniform1i(glGetUniformLocation(scene->shaders->composite_program, "accum_alpha_tex"), 1);
+
+	// Render the full-screen quad
+	RenderFullScreenQuad(scene);
+}

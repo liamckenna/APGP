@@ -10,6 +10,7 @@ struct Shaders{
 	std::vector<Shader> fragment_shaders;
 
 	GLuint shader_program;
+	GLuint composite_program;
 
 	void CleanupShaders();
 };

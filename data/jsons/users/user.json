@@ -17,7 +17,8 @@
       "cull_face": true,
       "cull_side": "back",
       "front_face": "cw",
-      "line_width": 2.0
+      "line_width": 2.0,
+      "blend": true
     },
     "glfw": {
       "version_major": 3,

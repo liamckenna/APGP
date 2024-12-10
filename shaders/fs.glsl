@@ -14,7 +14,7 @@ struct Material {
     int index;				// 4 bytes
     int tris;				// 4 bytes
 	int edges; 			    // 4 bytes
-	float pad1;				// 4 bytes padding (total 16 bytes)
+	float refractive_index;	// 4 bytes (total 16 bytes)
 
     vec3 dif_color;	        // 12 bytes
     float pad2;			    // 4 bytes (total 16 bytes)
@@ -44,7 +44,7 @@ struct Material {
     int opc_texture_index;	// 4 bytes (total 16 bytes)
     int ems_texture_index;	// 4 bytes
     int hgt_texture_index;	// 4 bytes
-    int met_texture_index;	// 4 bytes padding
+    int met_texture_index;	// 4 bytes
     int pad8;				// 4 bytes padding (total 16 bytes)
 };
 

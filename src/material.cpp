@@ -6,11 +6,12 @@ Material::Material() {
 	colors.spc 	= glm::vec3(1.f, 1.f, 1.f);
 	colors.ems 	= glm::vec3(0.f, 0.f, 0.f);
 	shininess  	= 32.f;
-	roughness 	= 1.f;
+	roughness 	= 0.5f;
 	opacity		= 1.f;
 	metallic	= 0.f;
 	tris 		= 0;
 	edges		= 0;
+	refractive_index = 1.45f;
 	textures.dif = nullptr;
 	textures.nrm = nullptr;
 	textures.bmp = nullptr;

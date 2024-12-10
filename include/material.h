@@ -19,6 +19,7 @@ struct Material {
 	float roughness;
 	float opacity;
 	float metallic;
+	float refractive_index;
 	int tris;
 	int edges;
 
@@ -46,7 +47,7 @@ struct FlattenedMaterial {
 	int index;				//4 bytes
 	int tris;				//4 bytes
 	int edges;				//4 bytes
-	float pad1;				//4 bytes padding (total 16 bytes)
+	float refractive_index;	//4 bytes (total 16 bytes)
 
 	glm::vec3 dif_color;	//12 bytes
 	float pad2;				//4 bytes padding (total 16 bytes)

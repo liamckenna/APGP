@@ -17,7 +17,16 @@ struct Buffers {
 
 	GLuint texture_uniform_buffer;
 	GLuint texture_binding_point;
-	
+
+	GLuint framebuffer_vao;
+	GLuint framebuffer_vbo;
+	GLuint framebuffer;
+	GLuint color_attachment;
+	GLuint depth_attachment;
+	GLuint accum_color_tex;
+	GLuint accum_alpha_tex;
+
+
 	Buffers();
 	void GenerateBuffers(); //todo
 	void CleanupBuffers(); //todo

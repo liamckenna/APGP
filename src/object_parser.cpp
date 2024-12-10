@@ -33,7 +33,7 @@ void ObjectParser::ParseObjFile(const std::string& filepath, Mesh*& mesh) {
 		} else if (line.substr(0, 7) == "usemtl ") { //extract material name to apply to subsequent faces
 			current_material = line.substr(7);
 			mesh->SetCurrentMaterial(current_material);
-			if (mesh->name == "grid") std::cout << "Current material: " << mesh->current_scene->current_material->name << std::endl;
+			//if (mesh->name == "grid") std::cout << "Current material: " << mesh->current_scene->current_material->name << std::endl;
 		} else if (line.substr(0, 2) == "v ") {
 			ParseVertex(line, mesh);
 		} else if (line.substr(0, 3) == "vn ") {
@@ -173,7 +173,6 @@ std::vector<std::string> ObjectParser::Split(const std::string& str, char delimi
 
 void ObjectParser::ParseMtlFile(const std::string& filepath, Mesh*& mesh) {
 	std::string absolute_filepath = std::filesystem::current_path().string() + filepath;
-	std::cout << "MTL FILEPATH: " << absolute_filepath << std::endl;
 	std::ifstream file(absolute_filepath);
 	if (!file.is_open()) {
 		std::cerr << "Failed to open .mtl file: " << absolute_filepath << std::endl;
@@ -230,6 +229,9 @@ void ObjectParser::ParseMtlFile(const std::string& filepath, Mesh*& mesh) {
 			std::istringstream s(line.substr(3));
 			s >> material->shininess;
 			material->shininess = glm::clamp(material->shininess / 1000.0f * 128.0f, 1.0f, 128.0f);
+		} else if (line.substr(0, 3) == "Ni ") { //refractive index
+			std::istringstream s(line.substr(3));
+			s >> material->refractive_index;
 		} else if (line.substr(0, 2) == "d ") { //opacity (transparency)
 			std::istringstream s(line.substr(2));
 			s >> material->opacity;
@@ -251,7 +253,6 @@ void ObjectParser::ParseMtlFile(const std::string& filepath, Mesh*& mesh) {
 Texture* ObjectParser::ParseTxtFile(const std::string& filepath, Mesh*& mesh, Material*& material, TEXTURE_TYPES type) {
 	std::string fp = "/data/textures/" + filepath;
 	std::string absolute_filepath = std::filesystem::current_path().string() + fp;
-	std::cout << "TEXTURE FILEPATH: " << absolute_filepath << std::endl;
 	Texture* txt = new Texture(absolute_filepath, type);
 	txt->index = mesh->current_scene->textures.size();
 	mesh->current_scene->textures.push_back(txt);

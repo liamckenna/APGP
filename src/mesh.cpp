@@ -51,8 +51,8 @@ std::vector<FlattenedVertex> Mesh::flattenVertices() {
 				flatVertices.push_back(flatVertex);
 			}
 		}
-		std::cout << "finished flattening edges" << std::endl;
-		std::cout << flatVertices.size() << std::endl;
+		//std::cout << "finished flattening edges" << std::endl;
+		//std::cout << flatVertices.size() << std::endl;
 	}
 
 	

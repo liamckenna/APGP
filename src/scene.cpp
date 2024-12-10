@@ -39,6 +39,7 @@ std::vector<FlattenedMaterial> Scene::flattenMaterials() {
 		flat_material.index		= material->index;
 		flat_material.tris		= material->tris;
 		flat_material.edges		= material->edges;
+		flat_material.refractive_index = material->refractive_index;
 		flat_material.dif_color = material->colors.dif;
 		flat_material.amb_color = material->colors.amb;
 		flat_material.spc_color = material->colors.spc;
