@@ -52,6 +52,7 @@ uniform vec3 camera_position;
 uniform int shading_mode;
 uniform int phong_exponent;
 uniform float ambient_intensity;
+uniform int light_count;
 
 layout(std140, binding = 0) uniform LightData {
     Light lights[MAX_LIGHTS];
@@ -64,7 +65,6 @@ layout(std140, binding = 1) uniform MaterialBuffer {
 layout(binding = 2) uniform sampler2D textures[MAX_TEXTURES];
 
 
-uniform int light_count;
 
 in vec3 frag_position;
 in vec3 frag_normal;

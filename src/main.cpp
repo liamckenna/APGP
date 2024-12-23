@@ -63,9 +63,6 @@ static void UpdateLightUniforms(Scene*& scene);
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 static void DefaultMaterialGeneration(Scene*& scene, nlohmann::json data);
 static void UpdateTextureUniforms(Scene*& scene);
-static void AttachCamera(Scene*& scene, Object* new_parent);
-static void Launch(Scene*& scene, Object* object);
-static void ProcessPhysics(Scene*& scene);
 static void UpdateMeshBuffer(Scene*& scene, Mesh* mesh);
 static void FramebufferInitialization(User*& user, Scene*& scene);
 static void RenderFullScreenQuad(Scene*& scene);
@@ -105,10 +102,13 @@ int main() {
 	else {
 		//std::cerr << "Uniform 'textures[0]' WAS FOUND in the shader!" << std::endl;
 	}
+
+	//----------		RENDER CALL			----------//
 	RenderScene(user, scene);
 
 	std::cout << "finished rendering scene" << std::endl;
-
+	
+	//----------		CLEANUP CALL		----------//
 	Cleanup(user, scene);
 
 	std::cout << "finished cleanup" << std::endl;
@@ -457,28 +457,34 @@ static bool ShaderInitialization(Scene*& scene, nlohmann::json data) {
 	scene->user->ambient_intensity_id = glGetUniformLocation(scene->shaders->shader_program, "ambient_intensity");
 	scene->user->textures_id = glGetUniformLocation(scene->shaders->shader_program, "textures");
 
+	bool contains_composite_shaders = false;
+
 	for (int i = 0; i < data["shaders"]["composite_vertex_shaders"].size(); i++) {
+		contains_composite_shaders = true;
 		std::string fn = "/shaders/" + std::string(data["shaders"]["composite_vertex_shaders"][i]["file"]);
 		if (!ProcessShader(scene, fn, VERTEX, true)) return false;
 	}
 	for (int i = 0; i < data["shaders"]["composite_fragment_shaders"].size(); i++) {
+		contains_composite_shaders = true;
 		std::string fn = "/shaders/" + std::string(data["shaders"]["composite_fragment_shaders"][i]["file"]);
 		if (!ProcessShader(scene, fn, FRAGMENT, true)) return false;
 	}
+	if (contains_composite_shaders) {
+		glLinkProgram(scene->shaders->composite_program);
+		int composite_success;
+		char composite_infoLog[512];
+		glGetProgramiv(scene->shaders->composite_program, GL_LINK_STATUS, &composite_success);
 
-	glLinkProgram(scene->shaders->composite_program);
-	int composite_success;
-	char composite_infoLog[512];
-	glGetProgramiv(scene->shaders->composite_program, GL_LINK_STATUS, &composite_success);
+		if (!composite_success) {
+			glGetProgramInfoLog(scene->shaders->composite_program, 512, NULL, composite_infoLog);
+			std::cout << "ERROR::SHADER::COMPOSITE::LINKING_FAILED\n" << composite_infoLog << std::endl;
+			return false;
+		}
 
-	if (!composite_success) {
-		glGetProgramInfoLog(scene->shaders->composite_program, 512, NULL, composite_infoLog);
-		std::cout << "ERROR::SHADER::COMPOSITE::LINKING_FAILED\n" << composite_infoLog << std::endl;
-		return false;
+		scene->user->accum_color_tex_id = glGetUniformLocation(scene->shaders->composite_program, "accum_color_tex");
+		scene->user->accum_alpha_tex_id = glGetUniformLocation(scene->shaders->composite_program, "accum_alpha_tex");
 	}
-
-	scene->user->accum_color_tex_id = glGetUniformLocation(scene->shaders->composite_program, "accum_color_tex");
-	scene->user->accum_alpha_tex_id = glGetUniformLocation(scene->shaders->composite_program, "accum_alpha_tex");
+	
 
 	std::cout << "initialized shaders" << std::endl;
 	return true;
@@ -915,19 +921,6 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) 
 	
 }
 
-static void AttachCamera(Scene*& scene, Object* new_parent) {
-	Object* camera = scene->GetObjectByName("camera shell");
-	if (camera == new_parent || camera->parent == new_parent) return;
-	camera->t->local.SetValue(camera->t->local.pos, glm::vec3(0.0, 0.0, 0.0));
-	camera->t->local.SetQuatValue(camera->t->local.orn, glm::quat(1.0, 0.0, 0.0, 0.0));
-	camera->UpdateTree();
-	if (new_parent == nullptr) camera->parent->DetatchChild(camera);
-	else {
-		if (camera->parent != nullptr) camera->parent->DetatchChild(camera);
-		new_parent->AttachChild(camera);
-	}
-}
-
 static void ProcessInput(User*& user, Scene*& scene) {
 	if (scene->held_object != nullptr) {
 		if (glfwGetKey(user->window->window, GLFW_KEY_W) == GLFW_PRESS) { //w, translate forward
@@ -1106,20 +1099,7 @@ static void ProcessInput(User*& user, Scene*& scene) {
 	if (glfwGetKey(user->window->window, GLFW_KEY_G) == GLFW_PRESS) { //g
 		dynamic_cast<Light*>(scene->GetObjectByName("camera shell")->GetChildByNameTree("camera")->GetChildByNameTree("flashlight"))->SetActiveLocalTree(false); //turn off flashlight
 	}
-	if (glfwGetKey(user->window->window, GLFW_KEY_R) == GLFW_PRESS) { //r
-		Object* camera_shell = scene->GetObjectByName("camera shell");
-		if (camera_shell->parent == nullptr) {
-
-			camera_shell->t->local.SetValue(camera_shell->t->local.pos, glm::vec3(0.0f));
-			camera_shell->t->local.SetQuatValue(camera_shell->t->local.orn, glm::quat(1.0, 0.0, 0.0, 0.0));
-			camera_shell->t->local.Rotate(45.f, -45.f, 0.f);
-			Object* camera = camera_shell->GetChildByNameTree("camera");
-			camera->t->local.SetValue(camera->t->local.pos, glm::vec3(0.f, 0.f, 10.f));
-
-		}
-		AttachCamera(scene, nullptr); //reset camera to origin and detach from any parents
-
-	}
+	
 	if (glfwGetKey(user->window->window, GLFW_KEY_L) == GLFW_PRESS) { //l
 		if (scene->GetMeshByName("face")->draw_mode != GL_TRIANGLES) {
 			scene->GetMeshByName("face")->SetDrawMode("GL_TRIANGLES");
@@ -1133,53 +1113,9 @@ static void ProcessInput(User*& user, Scene*& scene) {
 			UpdateMeshBuffer(scene, scene->GetMeshByName("face"));
 		}
 	}
-	if (glfwGetKey(user->window->window, GLFW_KEY_ENTER) == GLFW_PRESS) { //enter "return"
-		AttachCamera(scene, scene->held_object); //reset camera to origin and detach from any parents
-	}
 
 }
 
-static void Launch(Scene*& scene, Object* object) {
-
-	glm::vec3 launch_point = scene->GetObjectByName("ink")->t->global.pos;
-	launch_vector = scene->GetObjectByName("pen")->t->global.orn * glm::vec3(1.f, 0, 0) * launch_force;
-	scene->GetObjectByName("pen")->DetatchChild(scene->GetObjectByName("ink"));
-
-	scene->GetObjectByName("ink")->t->local.SetQuatValue(scene->GetObjectByName("ink")->t->local.orn, glm::quat(1.f, 0.f, 0.f, 0.f));
-	glm::vec3 old_pos = scene->GetObjectByName("ink")->t->global.pos;
-	scene->GetObjectByName("ink")->t->global.SetValue(scene->GetObjectByName("ink")->t->global.pos, launch_point);
-	scene->GetObjectByName("ink")->t->UpdateLocalPositionFromGlobal(old_pos);
-	
-
-	gravity = glm::vec3(0.f);
-
-
-	
-	
-
-
-}
-
-static void ProcessPhysics(Scene*& scene) {
-
-	if (scene->GetMeshByName("ink_blot")->visible) {
-		scene->GetMeshByName("ink_blot")->t->local.TranslateGlobalUp(gravity[1], delta_time);
-		scene->GetMeshByName("ink_blot")->t->local.TranslateGlobal(launch_vector[0], launch_vector[1], launch_vector[2], delta_time);
-		scene->GetObjectByName("ink")->UpdateTree();
-		gravity -= glm::vec3(0, 9.8f * delta_time, 0);
-	}
-
-	if (scene->GetMeshByName("ink_blot")->t->global.pos[1] <= 0) {
-		scene->GetMeshByName("ink_blot")->visible = false;
-
-		scene->GetObjectByName("base")->t->local.SetValue(scene->GetObjectByName("base")->t->local.pos, scene->GetMeshByName("ink_blot")->t->global.pos + glm::vec3(0.f, 1.f, 0.f));
-		scene->GetObjectByName("pen")->AttachChild(scene->GetObjectByName("ink"));
-		scene->GetObjectByName("ink")->t->local.SetValue(scene->GetObjectByName("ink")->t->local.pos, glm::vec3(0.f, 0.f, -1.f));
-		scene->GetMeshByName("ink_blot")->t->local.SetValue(scene->GetMeshByName("ink_blot")->t->local.pos, glm::vec3(0.f, 0.f, 0.f));
-		
-		scene->UpdateObjectTrees();
-	}
-}
 
 static void RenderFullScreenQuad(Scene*& scene) {
 	glBindVertexArray(scene->buffers->framebuffer_vao);
