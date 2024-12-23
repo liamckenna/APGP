@@ -61,7 +61,7 @@
 				"scale": [ 1, 1, 1 ]
 			},
 			"name": "face",
-			"file": "Smooth Face.obj",
+			"file": "Face.obj",
 			"verbose": false,
 			"visible": true,
 			"draw_mode": "GL_TRIANGLES"
