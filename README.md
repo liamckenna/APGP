@@ -13,18 +13,18 @@ vcpkg install glfw3
 vcpkg install glew
 ```
 
-### Installation [TODO]
+### Installation
 
-Firstly, clone the repository to your desired location.
+Clone the repo using Visual Studio's built-in codebase manager.
 
 ```powershell
 git clone https://github.com/liamckenna/APGP.git
 cd APGP
 ```
 
-then blah blah blah
+Once cloned, you should be able to launch the program in debug mode. APGP should run properly so long as you downloaded glfw3 and glew first. 
 
-## Usage [TODO]
+## Usage 
 
 Build and see the explanation of the json format below.
 
