@@ -69,6 +69,8 @@ static void RenderFullScreenQuad(Scene*& scene);
 static bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE, bool composite);
 static void RenderDirectlyToScreen(Scene*& scene);
 static void RenderToFramebuffer(Scene*& scene);
+static void DebugPrinter(Scene*& scene);
+static void PollTimers(User*& user, Scene*& scene);
 glm::vec3 gravity;
 glm::vec3 launch_vector;
 float launch_force;
@@ -869,6 +871,7 @@ static void RenderScene(User*& user, Scene*& scene) {
 		// Calculate frame timing
 		CalculateFrameRate();
 		CalculateDeltaTime();
+		PollTimers(user, scene);
 
 		RenderDirectlyToScreen(scene);
 		//RenderToFramebuffer(scene);
@@ -880,6 +883,9 @@ static void RenderScene(User*& user, Scene*& scene) {
 		// Swap buffers and poll events
 		glfwSwapBuffers(user->window->window);
 		glfwPollEvents();
+
+		// Print all debugs
+		DebugPrinter(scene);
 
 	} while (!glfwWindowShouldClose(user->window->window));
 
@@ -1051,22 +1057,36 @@ static void ProcessInput(User*& user, Scene*& scene) {
 	}
 	//p2
 	if (glfwGetKey(user->window->window, GLFW_KEY_B) == GLFW_PRESS) { //b
-		scene->SetHeldObject(scene->GetObjectByName("base"));
+		
 	}
 	if (glfwGetKey(user->window->window, GLFW_KEY_T) == GLFW_PRESS) { //t
-		scene->SetHeldObject(scene->GetObjectByName("top"));
+		if (user->timers.size() == 0) {
+			std::cout << "adding timer" << std::endl;
+			user->timers.push_back(new Timer(10.f));
+		}
+	}
+	if (glfwGetKey(user->window->window, GLFW_KEY_Y) == GLFW_PRESS) { //y
+		user->timers.push_back(new Timer(5.f, false));
 	}
 	if (glfwGetKey(user->window->window, GLFW_KEY_U) == GLFW_PRESS) { //u
-		scene->shading_mode = 5;
+		std::cout << "timers in vector: " << user->timers.size() << std::endl;
+		for (auto& timer : user->timers) {
+			if (timer->ringing)
+				if (timer->Silence()) std::cout << "silenced timer" << std::endl;
+		}
+		
 	}
-	if (glfwGetKey(user->window->window, GLFW_KEY_P) == GLFW_PRESS) { //p
-		scene->SetHeldObject(scene->GetObjectByName("pen"));
+	if (glfwGetKey(user->window->window, GLFW_KEY_I) == GLFW_PRESS) { //i
+		float current = glfwGetTime();
+		for (auto& timer : user->timers) {
+			std::cout << timer->Remaining(current) << std::endl;
+		}
 	}
 	if (glfwGetKey(user->window->window, GLFW_KEY_1) == GLFW_PRESS) { //one "1"
-		scene->SetHeldObject(scene->GetObjectByName("arm1"));
+		
 	}
 	if (glfwGetKey(user->window->window, GLFW_KEY_2) == GLFW_PRESS) { //two "2"
-		scene->SetHeldObject(scene->GetObjectByName("arm2"));
+		
 	}
 	if (glfwGetKey(user->window->window, GLFW_KEY_3) == GLFW_PRESS) { //three "3"
 		scene->shading_mode = 1;
@@ -1079,6 +1099,9 @@ static void ProcessInput(User*& user, Scene*& scene) {
 	}
 	if (glfwGetKey(user->window->window, GLFW_KEY_6) == GLFW_PRESS) { //six "6"
 		scene->shading_mode = 4;
+	}
+	if (glfwGetKey(user->window->window, GLFW_KEY_7) == GLFW_PRESS) { //six "6"
+		scene->shading_mode = 5;
 	}
 
 	if (glfwGetMouseButton(user->window->window, GLFW_MOUSE_BUTTON_5) == GLFW_PRESS) { //mouse button 5 (far thumb button)
@@ -1202,4 +1225,29 @@ static void RenderToFramebuffer(Scene*& scene) {
 
 	// Render the full-screen quad
 	RenderFullScreenQuad(scene);
+}
+
+static void DebugPrinter(Scene*& scene) {
+
+	//std::cout << "Time: " << glfwGetTime() << std::endl;
+
+}
+
+static void PollTimers(User*& user, Scene*& scene) {
+	float current_time = glfwGetTime();
+	for (int i = 0; i < user->timers.size();) {
+		if (user->timers[i]->Evaluate(current_time)) {
+			std::cout << "Timer has gone off!" << std::endl;
+			i++;
+		} else if (user->timers[i]->ringing) {
+			std::cout << "ring" << std::endl;
+			i++;
+		} else if (user->timers[i]->active) {
+			i++;
+		} else if (user->timers[i]->one_time_use) {
+			delete user->timers[i];
+			user->timers.erase(user->timers.begin() + i);
+		}
+	}
+
 }

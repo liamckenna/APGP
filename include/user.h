@@ -2,6 +2,7 @@
 
 #include "input.h"
 #include "window.h"
+#include "timer.h"
 #include <GLFW/glfw3.h>
 struct User { //local user variables all packaged in one convenient place
 	
@@ -9,6 +10,8 @@ struct User { //local user variables all packaged in one convenient place
 
 	Window* window;
 	Input* input;
+
+	std::vector<Timer*> timers; //maybe move to program?
 	
 	GLuint matrix_id;
 	GLuint view_matrix_id;

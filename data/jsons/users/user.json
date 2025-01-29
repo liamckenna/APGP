@@ -4,9 +4,9 @@
     "width": 2560,
     "height": 1440,
     "msaa": 1,
-    "pos_x": 0,
-    "pos_y": 0,
-    "display_mode": "fullscreen"
+    "pos_x": 960,
+    "pos_y": 540,
+    "display_mode": "windowed"
   },
   "settings": {
     "gl": {
