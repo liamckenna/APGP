@@ -13,24 +13,93 @@
       <UniqueIdentifier>{A8D7C6B3-F4D8-4878-BE5D-9E2BB24F6A47}</UniqueIdentifier>
       <Extensions>vert;frag;geom;tesc;tese;comp;glsl;spv;vglsl;gglsl;fglsl</Extensions>
     </Filter>
-	  <Filter Include="Json Files">
-		  <UniqueIdentifier>{A8D7C6B3-F4D8-4878-BE5D-9E2BB24F6A48}</UniqueIdentifier>
-		  <Extensions>json</Extensions>
-	  </Filter>
-	  <Filter Include="Material Files">
-		  <UniqueIdentifier>{A8D7C6B3-F4D8-4878-BE5D-9E2BB24F6A49}</UniqueIdentifier>
-		  <Extensions>mtl</Extensions>
-	  </Filter>
-	  <Filter Include="Object Files">
-		  <UniqueIdentifier>{A8D7C6B3-F4D8-4878-BE5D-9E2BB24F6A4A}</UniqueIdentifier>
-		  <Extensions>obj</Extensions>
-	  </Filter>
-	  <Filter Include="Texture Files">
-		  <UniqueIdentifier>{A8D7C6B3-F4D8-4878-BE5D-9E2BB24F6A4B}</UniqueIdentifier>
-		  <Extensions>png;jpeg;jpg</Extensions>
-	  </Filter>
+    <Filter Include="Json Files">
+      <UniqueIdentifier>{A8D7C6B3-F4D8-4878-BE5D-9E2BB24F6A48}</UniqueIdentifier>
+      <Extensions>json</Extensions>
+    </Filter>
+    <Filter Include="Material Files">
+      <UniqueIdentifier>{A8D7C6B3-F4D8-4878-BE5D-9E2BB24F6A49}</UniqueIdentifier>
+      <Extensions>mtl</Extensions>
+    </Filter>
+    <Filter Include="Object Files">
+      <UniqueIdentifier>{A8D7C6B3-F4D8-4878-BE5D-9E2BB24F6A4A}</UniqueIdentifier>
+      <Extensions>obj</Extensions>
+    </Filter>
+    <Filter Include="Texture Files">
+      <UniqueIdentifier>{A8D7C6B3-F4D8-4878-BE5D-9E2BB24F6A4B}</UniqueIdentifier>
+      <Extensions>png;jpeg;jpg</Extensions>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="src\**\*.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -39,30 +108,328 @@
     <ClInclude Include="include\**\*.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\**\*.*">
       <Filter>Shader Files</Filter>
     </None>
+    <None Include="shaders\**\*.*">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\**\*.*">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\**\*.*">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\**\*.*">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\**\*.*">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\jsons\scenes\sample scene.json">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\jsons\scenes\p2 scene.json">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\jsons\scenes\p3 scene.json">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\jsons\scenes\scene.json">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\jsons\users\user.json">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\materials\castle.mtl">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\materials\eagle.mtl">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\materials\Face.mtl">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\materials\flowers.mtl">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\materials\grid.mtl">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\materials\ink_blot.mtl">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\materials\no hair.mtl">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\materials\pokeball.mtl">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\materials\robot_full.mtl">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\materials\Smooth Face.mtl">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\materials\transform.mtl">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\objects\castle.obj">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\objects\cow.obj">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\objects\eagle.obj">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\objects\Face.obj">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\objects\flowers.obj">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\objects\grid.obj">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\objects\pokeball.obj">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\objects\shark.obj">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\objects\transform.obj">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\textures\Base Color.png">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Object Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Object Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Object Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Object Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Object Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Object Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Object Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Object Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Object Files</Filter>
+    </None>
+    <None Include="data\**\*.*">
+      <Filter>Texture Files</Filter>
+    </None>
   </ItemGroup>
-	<ItemGroup>
-		<None Include="data\jsons\**\*.*">
-			<Filter>Json Files</Filter>
-		</None>
-	</ItemGroup>
-	<ItemGroup>
-		<None Include="data\materials\**\*.*">
-			<Filter>Material Files</Filter>
-		</None>
-	</ItemGroup>
-	<ItemGroup>
-		<None Include="data\objects\**\*.*">
-			<Filter>Object Files</Filter>
-		</None>
-	</ItemGroup>
-	<ItemGroup>
-		<None Include="data\textures\**\*.*">
-			<Filter>Texture Files</Filter>
-		</None>
-	</ItemGroup>
+  <ItemGroup>
+    <None Include="data\jsons\scenes\p2 scene.json">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\jsons\scenes\p3 scene.json">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\jsons\scenes\scene.json">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\jsons\users\user.json">
+      <Filter>Json Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\materials\eagle.mtl">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\materials\Face.mtl">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\materials\flowers.mtl">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\materials\grid.mtl">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\materials\ink_blot.mtl">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\materials\no hair.mtl">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\materials\pokeball.mtl">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\materials\robot_full.mtl">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\materials\Smooth Face.mtl">
+      <Filter>Material Files</Filter>
+    </None>
+    <None Include="data\materials\transform.mtl">
+      <Filter>Material Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\objects\cow.obj">
+      <Filter>Object Files</Filter>
+    </None>
+    <None Include="data\objects\eagle.obj">
+      <Filter>Object Files</Filter>
+    </None>
+    <None Include="data\objects\Face.obj">
+      <Filter>Object Files</Filter>
+    </None>
+    <None Include="data\objects\flowers.obj">
+      <Filter>Object Files</Filter>
+    </None>
+    <None Include="data\objects\grid.obj">
+      <Filter>Object Files</Filter>
+    </None>
+    <None Include="data\objects\pokeball.obj">
+      <Filter>Object Files</Filter>
+    </None>
+    <None Include="data\objects\shark.obj">
+      <Filter>Object Files</Filter>
+    </None>
+    <None Include="data\objects\transform.obj">
+      <Filter>Object Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>
