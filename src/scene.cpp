@@ -9,11 +9,43 @@
 #include "object.h"
 #include <iostream>
 #include <cctype>
-Scene::Scene() {
 
-};
 
-Scene::Scene(std::string file_name) {
+Scene::Scene(const std::string& filepath, Program* program) {
+
+	this->program = program;
+
+	nlohmann::json data = ReadJsonFromFile(filepath);
+
+	name = data["name"];
+
+	if (data.contains("default_draw_mode")) SetDefaultDrawMode(data["default_draw_mode"]);
+	else SetDefaultDrawMode("GL_TRIANGLES");
+	if (data.contains("shading_mode")) shading_mode = data["shading_mode"];
+	else shading_mode = 3;
+
+	default_material = new Material(data["default_material"]);
+	current_material = default_material;
+	materials.push_back(default_material);
+
+
+
+	for (int i = 0; i < data["cameras"].size(); i++) {
+		cameras.push_back(new Camera());
+	}
+	CameraGeneration(scene, data);
+
+
+	LightGeneration(scene, data);
+	MeshGeneration(scene, data);
+	ObjectGeneration(scene, data);
+	SetHeldObject(GetObjectByName("camera shell"));
+	buffers = new Buffers();
+	shaders = new Shaders();
+
+
+	std::cout << "scene generation completed" << std::endl;
+
 
 }
 

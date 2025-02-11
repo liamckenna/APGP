@@ -1,5 +1,6 @@
 #pragma once
-#include "window.h"
+
+struct Window;
 
 struct Cursor {
 	float last_x;
@@ -10,13 +11,11 @@ struct Cursor {
 
 	float sensitivity;
 
-	Window* window;
-
 	bool first;
 
+	Window* window;
 
-
-	Cursor(Window* window, float sensitivity = 3.f);
+	Cursor(Window* window);
 	
 	void Update(double xpos, double ypos);
 };

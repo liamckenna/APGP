@@ -1,4 +1,5 @@
 {
   "user": "user.json",
-  "scene": "sample scene.json"
+  "scene": "sample scene.json",
+  "graphics":  "graphics.json"
 }

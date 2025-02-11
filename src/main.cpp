@@ -30,42 +30,40 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 #undef GLM_ENABLE_EXPERIMENTAL
+#include "callbacks.h"
 
 //forward declarations of functions
-User* UserGeneration(std::string file);
-Program* ProgramGeneration(std::string program_filepath);
-std::string GetExecutableDirectory();
-std::string LoadShader(const char* filepath);
-GLuint createShader(GLenum type, const char* shaderSource);
-void ErrorCallback(int error, const char* description);
-void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void WindowFocusCallback(GLFWwindow* window, int focused);
-void MouseCallback(GLFWwindow* window, double xpos, double ypos);
-bool ShaderInitialization(Scene*& scene, nlohmann::json data);
-Scene* SceneGeneration(std::string file);
-void BufferArrayInitialization(Scene*& scene);
-void ProcessInput(User*& user, Scene*& scene);
-void RenderScene(User*& user, Scene*& scene);
-void Cleanup(User*& user, Scene*& scene);
-void CameraGeneration(Scene*& scene, nlohmann::json data);
-void LightGeneration(Scene*& scene, nlohmann::json data);
-void MeshGeneration(Scene*& scene, nlohmann::json data);
-void ObjectGeneration(Scene*& scene, nlohmann::json data);
-void UpdateCameraUniforms(Camera*& camera);
-void UpdateLightUniforms(Scene*& scene);
-void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
-void DefaultMaterialGeneration(Scene*& scene, nlohmann::json data);
-void UpdateTextureUniforms(Scene*& scene);
-void UpdateMeshBuffer(Scene*& scene, Mesh* mesh);
-void FramebufferInitialization(User*& user, Scene*& scene);
-void RenderFullScreenQuad(Scene*& scene);
-bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE, bool composite);
-void RenderDirectlyToScreen(Scene*& scene);
-void RenderToFramebuffer(Scene*& scene);
-void DebugPrinter(Scene*& scene);
-void PollTimers(User*& user, Scene*& scene);
+//User* UserGeneration(std::string file); //DEPRECIATED AND DELETED
+Program* ProgramGeneration(std::string program_filepath); //in progress
+std::string GetExecutableDirectory(); //move to helper class
+std::string LoadShader(const char* filepath); //move to shader class
+GLuint createShader(GLenum type, const char* shaderSource); //move to shader class
+bool ShaderInitialization(Scene*& scene, nlohmann::json data); //unaddressed
+Scene* SceneGeneration(std::string file); //in progress
+void BufferArrayInitialization(Scene*& scene); //unaddressed
+void ProcessInput(User*& user, Scene*& scene); //completely unused, saving code for reference and reuse
+void RenderScene(User*& user, Scene*& scene); //unaddressed
+void Cleanup(User*& user, Scene*& scene); //HUGE TODO
+void CameraGeneration(Scene*& scene, nlohmann::json data); //part of prog gen
+void LightGeneration(Scene*& scene, nlohmann::json data); //part of prog gen
+void MeshGeneration(Scene*& scene, nlohmann::json data); //part of prog gen
+void ObjectGeneration(Scene*& scene, nlohmann::json data); //part of prog gen
+void UpdateCameraUniforms(Camera*& camera); //unaddressed
+void UpdateLightUniforms(Scene*& scene); //unaddressed
+//void DefaultMaterialGeneration(Scene*& scene, nlohmann::json data); //DEPRECIATED AND DELETED
+void UpdateTextureUniforms(Scene*& scene); //unaddressed
+void UpdateMeshBuffer(Scene*& scene, Mesh* mesh); //unaddressed
+void FramebufferInitialization(User*& user, Scene*& scene); //unaddressed
+void RenderFullScreenQuad(Scene*& scene); //unaddressed
+bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE, bool composite); //unaddressed
+void RenderDirectlyToScreen(Scene*& scene); //unaddressed
+void RenderToFramebuffer(Scene*& scene); //unaddressed
+void DebugPrinter(Scene*& scene); //unaddressed
+void PollTimers(User*& user, Scene*& scene); //unaddressed
 
 int main() {
+
+	//main should create our program object, then do our program loop i think, then cleanup
 
 	Program* program = ProgramGeneration("/data/jsons/program.json");
 
@@ -150,142 +148,6 @@ void FramebufferInitialization(User*& user, Scene*& scene) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-User* UserGeneration(std::string file) {
-	
-	nlohmann::json data = ReadJsonFromFile(file);
-
-	User* user = new User();
-	
-	user->window = new Window(	data["window"].contains("width")		? int(data["window"]["width"])					: 1920,
-								data["window"].contains("height")		? int(data["window"]["height"])					: 1080,
-								data["window"].contains("msaa")			? int(data["window"]["msaa"])					: 1,
-								data["window"].contains("pos_x")		? int(data["window"]["pos_x"])					: 0,
-								data["window"].contains("pos_y")		? int(data["window"]["pos_y"])					: 0,
-								data["window"].contains("resizable")	? bool(data["window"]["resizable"])				: true,
-								data["window"].contains("decorated")	? bool(data["window"]["decorated"])				: true,
-								data["window"].contains("focused")		? bool(data["window"]["focused"])				: true,
-								data["window"].contains("visible")		? bool(data["window"]["visible"])				: true,
-								data["window"].contains("display_mode") ? std::string(data["window"]["display_mode"])	: "windowed",
-								data["window"].contains("title")		? std::string(data["window"]["title"])			: "Window Title" );
-	user->input = new Input(user->window, 
-							(data["settings"].contains("input") && data["settings"]["input"].contains("cursor") && data["settings"]["input"]["cursor"].contains("sensitivity")) 
-							? float(data["settings"]["input"]["cursor"]["sensitivity"]) : 3.f);
-
-
-
-	if (!glfwInit()) {
-		std::cout << "Failed to initialize GLFW" << std::endl;
-		exit(EXIT_FAILURE);
-	}
-
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glfwWindowHint(GLFW_SAMPLES, user->window->msaa);
-	glfwWindowHint(GLFW_RESIZABLE, user->window->resizable ? GLFW_TRUE : GLFW_FALSE);
-	glfwWindowHint(GLFW_DECORATED, user->window->decorated ? GLFW_TRUE : GLFW_FALSE);
-	glfwWindowHint(GLFW_FOCUSED, user->window->focused ? GLFW_TRUE : GLFW_FALSE);
-	glfwWindowHint(GLFW_VISIBLE, user->window->visible ? GLFW_TRUE : GLFW_FALSE);
-
-
-	if (user->window->display_mode == FULLSCREEN) {
-		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-		const GLFWvidmode* video_mode = glfwGetVideoMode(monitor);
-		user->window->window = glfwCreateWindow(user->window->width, user->window->height, user->window->title.c_str(), monitor, NULL);
-	}
-	else if (user->window->display_mode == WINDOWED_FULLSCREEN) {
-		glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-		const GLFWvidmode* video_mode = glfwGetVideoMode(monitor);
-		user->window->window = glfwCreateWindow(user->window->width, user->window->height, user->window->title.c_str(), NULL, NULL);
-		glfwSetWindowPos(user->window->window, 0, 0);
-	}
-	else {
-		user->window->window = glfwCreateWindow(user->window->width, user->window->height, user->window->title.c_str(), NULL, NULL);
-		glfwSetWindowPos(user->window->window, user->window->pos_x, user->window->pos_y);
-	}
-
-
-	if (!user->window->window) {
-		std::cout << "Failed to create GLFW window" << std::endl;
-		glfwTerminate();
-		exit(EXIT_FAILURE);
-	}
-	glfwSetWindowUserPointer(user->window->window, user);
-	glfwMakeContextCurrent(user->window->window);
-	glfwSetScrollCallback(user->window->window, ScrollCallback);
-	glfwSetErrorCallback(ErrorCallback);
-	glfwSetKeyCallback(user->window->window, KeyCallback);
-	glfwSetCursorPosCallback(user->window->window, MouseCallback);
-	glfwSetWindowFocusCallback(user->window->window, WindowFocusCallback);
-
-
-	if (data.contains("settings")) {
-		if (data["settings"].contains("gl")) {
-			if (data["settings"]["gl"].contains("profile")) {
-				if (data["settings"]["gl"]["profile"] == "any") glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
-				else if (data["settings"]["gl"]["profile"] == "core") glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-				else if (data["settings"]["gl"]["profile"] == "compat") glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
-			}
-			if (data["settings"]["gl"].contains("depth_test") && data["settings"]["gl"]["depth_test"]) glEnable(GL_DEPTH_TEST);
-			if (data["settings"]["gl"].contains("depth_function")) {
-				if (data["settings"]["gl"]["depth_function"] == "false") glDepthFunc(GL_NEVER);
-				else if (data["settings"]["gl"]["depth_function"] == "<") glDepthFunc(GL_LESS);
-				else if (data["settings"]["gl"]["depth_function"] == "==") glDepthFunc(GL_EQUAL);
-				else if (data["settings"]["gl"]["depth_function"] == "<=") glDepthFunc(GL_LEQUAL);
-				else if (data["settings"]["gl"]["depth_function"] == ">") glDepthFunc(GL_GREATER);
-				else if (data["settings"]["gl"]["depth_function"] == "!=") glDepthFunc(GL_NOTEQUAL);
-				else if (data["settings"]["gl"]["depth_function"] == ">=") glDepthFunc(GL_GEQUAL);
-				else if (data["settings"]["gl"]["depth_function"] == "true") glDepthFunc(GL_ALWAYS);
-			}
-			if (data["settings"]["gl"].contains("depth_mask")) glDepthMask(data["settings"]["gl"]["depth_mask"] ? GL_TRUE : GL_FALSE);
-			if (data["settings"]["gl"].contains("cull_face") && data["settings"]["gl"]["cull_face"]) glEnable(GL_CULL_FACE);
-			if (data["settings"]["gl"].contains("cull_side")) {
-				if (data["settings"]["gl"]["cull_side"] == "front") glCullFace(GL_FRONT);
-				else if (data["settings"]["gl"]["cull_side"] == "back") glCullFace(GL_BACK);
-				else if (data["settings"]["gl"]["cull_side"] == "front and back") glCullFace(GL_FRONT_AND_BACK);
-			}
-			if (data["settings"]["gl"].contains("front_face")) {
-				if (data["settings"]["gl"]["front_face"] == "cw") glFrontFace(GL_CW);
-				else if (data["settings"]["gl"]["front_face"] == "ccw") glFrontFace(GL_CCW);
-			}
-			if (data["settings"]["gl"].contains("line_width")) glLineWidth(data["settings"]["gl"]["line_width"]);
-			if (data["settings"]["gl"].contains("blend") && data["settings"]["gl"]["blend"]) {
-				glEnable(GL_BLEND);
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			}
-		}
-		if (data["settings"].contains("glfw")) {
-			if (data["settings"]["glfw"].contains("version_major")) glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, data["settings"]["glfw"]["version_major"]);
-			if (data["settings"]["glfw"].contains("version_minor")) glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, data["settings"]["glfw"]["version_minor"]);
-			if (data["settings"]["glfw"].contains("swap_interval")) glfwSwapInterval(data["settings"]["glfw"]["swap_interval"]);
-		}
-		if (data["settings"].contains("input")) {
-			if (data["settings"]["input"].contains("cursor")) {
-				if (data["settings"]["input"]["cursor"].contains("mode")) {
-					if (data["settings"]["input"]["cursor"]["mode"] == "normal") glfwSetInputMode(user->window->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-					else if (data["settings"]["input"]["cursor"]["mode"] == "hidden") glfwSetInputMode(user->window->window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-					else if (data["settings"]["input"]["cursor"]["mode"] == "disabled") glfwSetInputMode(user->window->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-				}
-			}
-		}
-		if (data["settings"].contains("glew")) {
-			if (data["settings"]["glew"].contains("experimental")) glewExperimental = data["settings"]["glew"]["experimental"] ? GL_TRUE : GL_FALSE;
-		}
-	}
-
-	if (glewInit() != GLEW_OK) {
-		std::cerr << "Failed to initialize GLEW" << std::endl;
-		exit(EXIT_FAILURE);
-	}
-
-	return user;
-	
-}
-
 Program* ProgramGeneration(std::string program_filepath) {
 
 	nlohmann::json program_json = ReadJsonFromFile(program_filepath);
@@ -350,52 +212,6 @@ GLuint createShader(GLenum type, const char* shaderSource) {
 		std::cout << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
 	}
 	return shader;
-}
-
-void ErrorCallback(int error, const char* description)
-{
-	fprintf(stderr, "Error: %s\n", description);
-}
-
-void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	User* user = static_cast<User*>(glfwGetWindowUserPointer(window));
-
-	if (action == GLFW_PRESS) {
-		user->input->UpdateKeyState(key, true);
-	}
-	else if (action == GLFW_RELEASE) {
-		user->input->UpdateKeyState(key, false);
-	}
-}
-
-void WindowFocusCallback(GLFWwindow* window, int focused)
-{
-	Input* input = static_cast<Input*>(static_cast<User*>(glfwGetWindowUserPointer(window))->input);
-
-	if (focused) {
-		input->UpdateAllKeyStates(window);
-	}
-}
-
-void MouseCallback(GLFWwindow* window, double xpos, double ypos)
-{
-	User* user = static_cast<User*>(glfwGetWindowUserPointer(window));
-	Program* program = user->program;
-	Clock* clock = program->clock;
-	Scene* scene = program->scene;
-
-
-
-	user->input->cursor->Update(xpos, ypos);
-	
-	user->input->cursor->offset_x *= user->input->cursor->sensitivity * clock->GetDeltaTime() / user->window->width 	* 100000.f;
-	user->input->cursor->offset_y *= user->input->cursor->sensitivity * clock->GetDeltaTime() / user->window->height	* 100000.f;
-
-	
-	scene->GetObjectByName("camera shell")->t->local.RotateYaw(user->input->cursor->offset_x);
-	scene->GetObjectByName("camera shell")->t->local.RotatePitch(user->input->cursor->offset_y);
-	scene->GetObjectByName("camera shell")->UpdateTree();
 }
 
 bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE, bool composite) {
@@ -534,23 +350,6 @@ Scene* SceneGeneration(std::string file) {
 
 	std::cout << "scene generation completed" << std::endl;
 	return scene;
-}
-
-void DefaultMaterialGeneration(Scene*& scene, nlohmann::json data) {
-	Material* mtl = new Material();
-	mtl->name = data["default_material"]["name"];
-	mtl->index = 0;
-	mtl->colors.dif = glm::vec3(data["default_material"]["dif"][0], data["default_material"]["dif"][1], data["default_material"]["dif"][2]); 
-	mtl->colors.amb = glm::vec3(data["default_material"]["amb"][0], data["default_material"]["amb"][1], data["default_material"]["amb"][2]); 
-	mtl->colors.spc = glm::vec3(data["default_material"]["spc"][0], data["default_material"]["spc"][1], data["default_material"]["spc"][2]);
-	mtl->colors.ems = glm::vec3(data["default_material"]["ems"][0], data["default_material"]["ems"][1], data["default_material"]["ems"][2]);
-	mtl->shininess 	= data["default_material"]["shininess"];
-	mtl->roughness = data["default_material"]["roughness"];
-	mtl->opacity 	= data["default_material"]["opacity"];
-	scene->default_material = mtl;
-	scene->current_material = scene->default_material;
-	scene->materials.push_back(mtl);
-	std::cout << "default material generation completed" << std::endl;
 }
 
 void MeshGeneration(Scene*& scene, nlohmann::json data) {
@@ -896,38 +695,6 @@ void Cleanup(User*& user, Scene*& scene) {
 	scene->shaders->CleanupShaders();
 	glfwDestroyWindow(user->window->window);
 	glfwTerminate();
-}
-
-void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
-
-	User* user = static_cast<User*>(glfwGetWindowUserPointer(window));
-	Program* program = user->program;
-	Clock* clock = program->clock;
-	Scene* scene = program->scene;
-	Object* camera = scene->GetObjectByName("camera");
-	
-	if (yoffset != 0 && camera->t->local.pos[2] >= 0) { //scrolling up
-		if (glfwGetKey(scene->user->window->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-			scene->GetLightByName("flashlight")->strength += (yoffset * 1000.f * clock->GetDeltaTime());
-			std::cout << "strength: " << scene->GetLightByName("flashlight")->strength << std::endl;
-		} else {
-			camera->t->local.TranslateForward(dynamic_cast<Camera*>(camera->GetChildByNameTree("camera 1"))->velocity * yoffset * 500.f, clock->GetDeltaTime());
-			camera->t->UpdateGlobal();
-		}
-		
-	}
-	if (camera->t->local.pos[2] < 0) {
-		if (glfwGetKey(scene->user->window->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-			scene->GetLightByName("flashlight")->strength -= (yoffset * 1000.f * clock->GetDeltaTime());
-			std::cout << "strength: " << scene->GetLightByName("flashlight")->strength << std::endl;
-		}
-		else {
-			camera->t->local.SetValue(camera->t->local.pos, glm::vec3(camera->t->local.pos[0], camera->t->local.pos[1], 0));
-			camera->t->UpdateGlobal();
-		}
-		
-	}
-	
 }
 
 void ProcessInput(User*& user, Scene*& scene) {

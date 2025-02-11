@@ -13,6 +13,7 @@ struct User { //local user variables all packaged in one convenient place
 
 	Window* window;
 	Input* input;
+	
 
 	std::vector<Timer*> timers;
 	
@@ -34,4 +35,6 @@ struct User { //local user variables all packaged in one convenient place
 
 	GLuint accum_color_tex_id;
 	GLuint accum_alpha_tex_id;
+
+	User(const std::string& filepath, Program* program = nullptr);
 };

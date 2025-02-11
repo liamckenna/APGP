@@ -13,9 +13,14 @@ struct Texture;
 struct Camera;
 struct Light;
 struct FlattenedLight;
+struct Program;
 struct Scene {
 
+	Program* program;
+
 	std::string name;
+
+	Camera* default_camera;
 
 	User* user;
 	
@@ -49,9 +54,7 @@ struct Scene {
 
 	int shading_mode;
 	
-	Scene();
-
-	Scene(std::string file_name);
+	Scene(const std::string& filepath, Program* program);
 
 	std::vector<FlattenedLight> flattenLights();
 

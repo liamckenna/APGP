@@ -2,6 +2,7 @@
 #include "texture.h"
 #include <glm/vec3.hpp>
 #include <string>
+#include "json.h"
 struct Material {
 
 	std::string name;
@@ -38,6 +39,7 @@ struct Material {
 		Texture* met; //metallic
 	} textures;
 
+	Material(const nlohmann::json& data);
 	Material();
 
 

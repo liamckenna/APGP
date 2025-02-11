@@ -298,7 +298,9 @@
 		"ems": [ 0.0, 0.0, 0.0 ],
 		"shininess": 32.0,
 		"roughness": 1.0,
-		"opacity": 1.0
+		"opacity": 1.0,
+		"metallic": 0.0,
+		"refractive_index":  1.45
 	},
 	"default_draw_mode": "GL_TRIANGLES"
 }

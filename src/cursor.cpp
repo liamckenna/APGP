@@ -1,11 +1,14 @@
 #include "cursor.h"
+#include "window.h"
 
-Cursor::Cursor(Window* window, float sensitivity) {
+Cursor::Cursor(Window* window) {
 	last_x = window->width / 2.0f; //center of screen
-	last_y = window->height / 2.0f; //^
+	last_y = window->height / 2.0f;
+	offset_x = 0.f;
+	offset_y = 0.f;
 	first = true;
 	this->window = window;
-	this->sensitivity = sensitivity;
+	this->sensitivity = 1.f;
 }
 
 void Cursor::Update(double xpos, double ypos) {
