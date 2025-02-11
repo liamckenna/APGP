@@ -1,7 +1,5 @@
 # All-Purpose Graphics Playground (APGP)
 
-![Alt text]([https://example.com/image.png](https://liamdouglas.com/images/works/apgp_hu0607789f2889d60015976f0026f69aa9_435615_2226x1439_resize_q75_h1_lanczos_3.webp))
-
 APGP serves as my custom environment to test and implement various aspects of real-time 3D graphics rendering. As a repository, it serves as a personal exercise in making a publicly-accessible codebase that can easily run in a system-agnostic manner, along with simply being an archive of my efforts.
 
 ## Getting Started
