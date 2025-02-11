@@ -1,5 +1,7 @@
 # All-Purpose Graphics Playground (APGP)
 
+![Screenshot](assets/screenshot.png)
+
 APGP serves as my custom environment to test and implement various aspects of real-time 3D graphics rendering. As a repository, it serves as a personal exercise in making a publicly-accessible codebase that can easily run in a system-agnostic manner, along with simply being an archive of my efforts.
 
 ## Getting Started
