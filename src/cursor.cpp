@@ -8,19 +8,17 @@ Cursor::Cursor(Window* window, float sensitivity) {
 	this->sensitivity = sensitivity;
 }
 
-void Cursor::Update() {
-
-	glfwGetCursorPos(window->window, &curr_x, &curr_y);
+void Cursor::Update(double xpos, double ypos) {
 
 	if (first) {
-		last_x = curr_x;
-		last_y = curr_y;
+		last_x = xpos;
+		last_y = ypos;
 		first = false;
 	}
 
-	offset_x = curr_x - last_x;
-	offset_y = last_y - curr_y;
+	offset_x = xpos - last_x;
+	offset_y = last_y - ypos;
 
-	last_x = curr_x;
-	last_y = curr_y;
+	last_x = xpos;
+	last_y = ypos;
 }

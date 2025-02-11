@@ -25,55 +25,45 @@
 #include "shaders.h"
 #include "json.h"
 #include "object_parser.h"
+#include "clock.h"
 #include "program.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 #undef GLM_ENABLE_EXPERIMENTAL
 
-
-//Uniform IDs
-
-float last_time = 0.f;
-float last_fps_time = 0.f;
-int frame_count = 0;
-float delta_time = 0.f;
-
 //forward declarations of functions
-static User* UserGeneration(std::string file);
-static Program* ProgramGeneration(std::string program_filepath);
+User* UserGeneration(std::string file);
+Program* ProgramGeneration(std::string program_filepath);
 std::string GetExecutableDirectory();
 std::string LoadShader(const char* filepath);
 GLuint createShader(GLenum type, const char* shaderSource);
-static void error_callback(int error, const char* description);
-static void MouseCallback(User*& user, Scene*& scene);
-static bool ShaderInitialization(Scene*& scene, nlohmann::json data);
-static Scene* SceneGeneration(std::string file);
-static void BufferArrayInitialization(Scene*& scene);
-static void ProcessInput(User*& user, Scene*& scene);
-void CalculateFrameRate();
-void CalculateDeltaTime();
-static void RenderScene(User*& user, Scene*& scene);
-static void Cleanup(User*& user, Scene*& scene);
-static void CameraGeneration(Scene*& scene, nlohmann::json data);
-static void LightGeneration(Scene*& scene, nlohmann::json data);
-static void MeshGeneration(Scene*& scene, nlohmann::json data);
-static void ObjectGeneration(Scene*& scene, nlohmann::json data);
-static void UpdateCameraUniforms(Camera*& camera);
-static void UpdateLightUniforms(Scene*& scene);
-static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-static void DefaultMaterialGeneration(Scene*& scene, nlohmann::json data);
-static void UpdateTextureUniforms(Scene*& scene);
-static void UpdateMeshBuffer(Scene*& scene, Mesh* mesh);
-static void FramebufferInitialization(User*& user, Scene*& scene);
-static void RenderFullScreenQuad(Scene*& scene);
-static bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE, bool composite);
-static void RenderDirectlyToScreen(Scene*& scene);
-static void RenderToFramebuffer(Scene*& scene);
-static void DebugPrinter(Scene*& scene);
-static void PollTimers(User*& user, Scene*& scene);
-glm::vec3 gravity;
-glm::vec3 launch_vector;
-float launch_force;
+void ErrorCallback(int error, const char* description);
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void WindowFocusCallback(GLFWwindow* window, int focused);
+void MouseCallback(GLFWwindow* window, double xpos, double ypos);
+bool ShaderInitialization(Scene*& scene, nlohmann::json data);
+Scene* SceneGeneration(std::string file);
+void BufferArrayInitialization(Scene*& scene);
+void ProcessInput(User*& user, Scene*& scene);
+void RenderScene(User*& user, Scene*& scene);
+void Cleanup(User*& user, Scene*& scene);
+void CameraGeneration(Scene*& scene, nlohmann::json data);
+void LightGeneration(Scene*& scene, nlohmann::json data);
+void MeshGeneration(Scene*& scene, nlohmann::json data);
+void ObjectGeneration(Scene*& scene, nlohmann::json data);
+void UpdateCameraUniforms(Camera*& camera);
+void UpdateLightUniforms(Scene*& scene);
+void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+void DefaultMaterialGeneration(Scene*& scene, nlohmann::json data);
+void UpdateTextureUniforms(Scene*& scene);
+void UpdateMeshBuffer(Scene*& scene, Mesh* mesh);
+void FramebufferInitialization(User*& user, Scene*& scene);
+void RenderFullScreenQuad(Scene*& scene);
+bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE, bool composite);
+void RenderDirectlyToScreen(Scene*& scene);
+void RenderToFramebuffer(Scene*& scene);
+void DebugPrinter(Scene*& scene);
+void PollTimers(User*& user, Scene*& scene);
 
 int main() {
 
@@ -81,6 +71,10 @@ int main() {
 
 	Scene* scene = program->scene;
 	User* user = program->user;
+
+	Clock* clock = new Clock();
+
+	program->clock = clock;
 
 	FramebufferInitialization(user, scene);
 
@@ -92,11 +86,6 @@ int main() {
 
 	std::cout << "initialized textures" << std::endl;
 
-	//scene->PrintObjectTrees();
-
-	//std::cout << "texture count: " << scene->textures.size() << std::endl;
-	//std::cout << "texture filepath:" << scene->textures[0]->file_path << std::endl;
-	//std::cout << "texture index:" << scene->textures[0]->index << std::endl;
 	int textureUniformLoc = glGetUniformLocation(scene->shaders->shader_program, "textures[0]");
 	if (textureUniformLoc == -1) {
 		std::cerr << "Uniform 'textures[0]' not found in the shader!" << std::endl;
@@ -118,7 +107,7 @@ int main() {
 	exit(EXIT_SUCCESS);
 }
 
-static void FramebufferInitialization(User*& user, Scene*& scene) {
+void FramebufferInitialization(User*& user, Scene*& scene) {
 	// Generate and bind framebuffer
 	glGenFramebuffers(1, &scene->buffers->framebuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, scene->buffers->framebuffer);
@@ -161,7 +150,7 @@ static void FramebufferInitialization(User*& user, Scene*& scene) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-static User* UserGeneration(std::string file) {
+User* UserGeneration(std::string file) {
 	
 	nlohmann::json data = ReadJsonFromFile(file);
 
@@ -183,7 +172,6 @@ static User* UserGeneration(std::string file) {
 							? float(data["settings"]["input"]["cursor"]["sensitivity"]) : 3.f);
 
 
-	glfwSetErrorCallback(error_callback);
 
 	if (!glfwInit()) {
 		std::cout << "Failed to initialize GLFW" << std::endl;
@@ -226,9 +214,14 @@ static User* UserGeneration(std::string file) {
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
-
+	glfwSetWindowUserPointer(user->window->window, user);
 	glfwMakeContextCurrent(user->window->window);
-	glfwSetScrollCallback(user->window->window, scroll_callback);
+	glfwSetScrollCallback(user->window->window, ScrollCallback);
+	glfwSetErrorCallback(ErrorCallback);
+	glfwSetKeyCallback(user->window->window, KeyCallback);
+	glfwSetCursorPosCallback(user->window->window, MouseCallback);
+	glfwSetWindowFocusCallback(user->window->window, WindowFocusCallback);
+
 
 	if (data.contains("settings")) {
 		if (data["settings"].contains("gl")) {
@@ -293,7 +286,7 @@ static User* UserGeneration(std::string file) {
 	
 }
 
-static Program* ProgramGeneration(std::string program_filepath) {
+Program* ProgramGeneration(std::string program_filepath) {
 
 	nlohmann::json program_json = ReadJsonFromFile(program_filepath);
 
@@ -304,6 +297,7 @@ static Program* ProgramGeneration(std::string program_filepath) {
 
 	User* user = UserGeneration(user_filepath);
 	program->user = user;
+	user->program = program;
 
 	std::cout << "initialized user" << std::endl;
 
@@ -312,8 +306,6 @@ static Program* ProgramGeneration(std::string program_filepath) {
 	scene->user = user;
 
 	std::cout << "initialized scene" << std::endl;
-
-	glfwSetWindowUserPointer(user->window->window, scene);
 
 	nlohmann::json scene_json = ReadJsonFromFile(scene_filepath);
 	if (ShaderInitialization(scene, scene_json)) {
@@ -360,17 +352,45 @@ GLuint createShader(GLenum type, const char* shaderSource) {
 	return shader;
 }
 
-static void error_callback(int error, const char* description)
+void ErrorCallback(int error, const char* description)
 {
 	fprintf(stderr, "Error: %s\n", description);
 }
 
-static void MouseCallback(User*& user, Scene*& scene)
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	user->input->cursor->Update();
+	User* user = static_cast<User*>(glfwGetWindowUserPointer(window));
+
+	if (action == GLFW_PRESS) {
+		user->input->UpdateKeyState(key, true);
+	}
+	else if (action == GLFW_RELEASE) {
+		user->input->UpdateKeyState(key, false);
+	}
+}
+
+void WindowFocusCallback(GLFWwindow* window, int focused)
+{
+	Input* input = static_cast<Input*>(static_cast<User*>(glfwGetWindowUserPointer(window))->input);
+
+	if (focused) {
+		input->UpdateAllKeyStates(window);
+	}
+}
+
+void MouseCallback(GLFWwindow* window, double xpos, double ypos)
+{
+	User* user = static_cast<User*>(glfwGetWindowUserPointer(window));
+	Program* program = user->program;
+	Clock* clock = program->clock;
+	Scene* scene = program->scene;
+
+
+
+	user->input->cursor->Update(xpos, ypos);
 	
-	user->input->cursor->offset_x *= user->input->cursor->sensitivity * delta_time / user->window->width 	* 100000.f;
-	user->input->cursor->offset_y *= user->input->cursor->sensitivity * delta_time / user->window->height	* 100000.f;
+	user->input->cursor->offset_x *= user->input->cursor->sensitivity * clock->GetDeltaTime() / user->window->width 	* 100000.f;
+	user->input->cursor->offset_y *= user->input->cursor->sensitivity * clock->GetDeltaTime() / user->window->height	* 100000.f;
 
 	
 	scene->GetObjectByName("camera shell")->t->local.RotateYaw(user->input->cursor->offset_x);
@@ -378,7 +398,7 @@ static void MouseCallback(User*& user, Scene*& scene)
 	scene->GetObjectByName("camera shell")->UpdateTree();
 }
 
-static bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE, bool composite) {
+bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE, bool composite) {
 		
 	std::string src = LoadShader(file.c_str());
 	if (src.empty()) {
@@ -412,7 +432,7 @@ static bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE, boo
 	return true;
 }
 
-static bool ShaderInitialization(Scene*& scene, nlohmann::json data) {
+bool ShaderInitialization(Scene*& scene, nlohmann::json data) {
 
 	scene->shaders->shader_program = glCreateProgram();
 	scene->shaders->composite_program = glCreateProgram();
@@ -492,7 +512,7 @@ static bool ShaderInitialization(Scene*& scene, nlohmann::json data) {
 	return true;
 }
 
-static Scene* SceneGeneration(std::string file) {
+Scene* SceneGeneration(std::string file) {
 	nlohmann::json data = ReadJsonFromFile(file);
 	
 	Scene* scene = new Scene();
@@ -501,7 +521,6 @@ static Scene* SceneGeneration(std::string file) {
 	else scene->SetDefaultDrawMode("GL_TRIANGLES");
 	if (data.contains("shading_mode")) scene->shading_mode = data["shading_mode"];
 	else scene->shading_mode = 3;
-	launch_force = data["launch_force"];
 	DefaultMaterialGeneration(scene, data);
 	
 	CameraGeneration(scene, data);
@@ -517,7 +536,7 @@ static Scene* SceneGeneration(std::string file) {
 	return scene;
 }
 
-static void DefaultMaterialGeneration(Scene*& scene, nlohmann::json data) {
+void DefaultMaterialGeneration(Scene*& scene, nlohmann::json data) {
 	Material* mtl = new Material();
 	mtl->name = data["default_material"]["name"];
 	mtl->index = 0;
@@ -534,7 +553,7 @@ static void DefaultMaterialGeneration(Scene*& scene, nlohmann::json data) {
 	std::cout << "default material generation completed" << std::endl;
 }
 
-static void MeshGeneration(Scene*& scene, nlohmann::json data) {
+void MeshGeneration(Scene*& scene, nlohmann::json data) {
 	for (int i = 0; i < data["meshes"].size(); i++) {
 		glm::vec3 pos = glm::vec3(	data["meshes"][i]["transform"]["position"][0],
 									data["meshes"][i]["transform"]["position"][1],
@@ -562,7 +581,7 @@ static void MeshGeneration(Scene*& scene, nlohmann::json data) {
 	std::cout << "mesh generation completed" << std::endl;
 }
 
-static void ObjectGeneration(Scene*& scene, nlohmann::json data) {
+void ObjectGeneration(Scene*& scene, nlohmann::json data) {
 	for (int i = 0; i < data["objects"].size(); i++) {
 		glm::vec3 pos = glm::vec3(	data["objects"][i]["transform"]["position"][0],
 									data["objects"][i]["transform"]["position"][1],
@@ -592,7 +611,7 @@ static void ObjectGeneration(Scene*& scene, nlohmann::json data) {
 	std::cout << "object generation completed" << std::endl;
 }
 
-static void CameraGeneration(Scene*& scene, nlohmann::json data) {
+void CameraGeneration(Scene*& scene, nlohmann::json data) {
 	for (int i = 0; i < data["cameras"].size(); i++) {
 		glm::vec3 pos = glm::vec3(	data["cameras"][i]["transform"]["position"][0],
 									data["cameras"][i]["transform"]["position"][1],
@@ -622,7 +641,7 @@ static void CameraGeneration(Scene*& scene, nlohmann::json data) {
 	std::cout << "camera generation completed" << std::endl;
 }
 
-static void LightGeneration(Scene*& scene, nlohmann::json data) {
+void LightGeneration(Scene*& scene, nlohmann::json data) {
 	scene->ambient_intensity = data["ambient_intensity"];
 	for (int i = 0; i < data["lights"].size(); i++) {
 		glm::vec3 pos = glm::vec3(	data["lights"][i]["transform"]["position"][0],
@@ -645,7 +664,7 @@ static void LightGeneration(Scene*& scene, nlohmann::json data) {
 	std::cout << "light generation completed" << std::endl;
 }
 
-static void BufferArrayInitialization(Scene*& scene) {
+void BufferArrayInitialization(Scene*& scene) {
 
 	glGenBuffers(1, &scene->buffers->light_uniform_buffer);
 	glBindBuffer(GL_UNIFORM_BUFFER, scene->buffers->light_uniform_buffer);
@@ -715,24 +734,6 @@ static void BufferArrayInitialization(Scene*& scene) {
 	std::cout << "buffer array generation completed" << std::endl;
 }
 
-void CalculateFrameRate() {
-	float current_time = glfwGetTime();
-	frame_count++;
-
-	if (current_time - last_fps_time >= 1.0) {
-		double fps = frame_count / (current_time - last_fps_time);
-		std::cout << "FPS: " << fps << std::endl;
-		last_fps_time = current_time;
-		frame_count = 0;
-	}
-}
-	//TODO: Merge these into one function i guess
-void CalculateDeltaTime() {
-	float current_time = glfwGetTime();
-	delta_time = current_time - last_time;
-	last_time = current_time;
-}
-
 void UpdateMeshBuffer(Scene*& scene, Mesh* mesh) {
 	glBindBuffer(GL_ARRAY_BUFFER, scene->buffers->vertex_buffers[mesh->idx]);
 	std::vector<FlattenedVertex> flattened_vert_array = scene->meshes[mesh->idx]->flattenVertices();
@@ -754,13 +755,13 @@ void UpdateMeshBuffer(Scene*& scene, Mesh* mesh) {
 	}
 }
 
-static void UpdateCameraUniforms(Camera*& camera) {
+void UpdateCameraUniforms(Camera*& camera) {
 	glUniformMatrix4fv(camera->current_scene->user->view_matrix_id, 1, GL_FALSE, &camera->view[0][0]);
 	glUniform3f(camera->current_scene->user->camera_position_id, camera->t->global.pos[0], camera->t->global.pos[1], camera->t->global.pos[2]);
 	
 }
 
-static void UpdateLightUniforms(Scene*& scene) {
+void UpdateLightUniforms(Scene*& scene) {
 	scene->UpdateLights();
 	glUniform1i(scene->user->light_count_id, scene->lights.size());
 	std::vector<FlattenedLight> flattenedLights = scene->flattenLights();
@@ -774,7 +775,7 @@ static void UpdateLightUniforms(Scene*& scene) {
 	glUniform1f(scene->user->ambient_intensity_id, scene->ambient_intensity);
 }
 
-static void UpdateTextureUniforms(Scene*& scene) {
+void UpdateTextureUniforms(Scene*& scene) {
 	glUseProgram(scene->shaders->shader_program);
 
 	GLint maxTextures;
@@ -799,7 +800,7 @@ static void UpdateTextureUniforms(Scene*& scene) {
 	}
 }
 
-static void UpdateUniforms(Scene*& scene, Camera*& camera) {
+void UpdateUniforms(Scene*& scene, Camera*& camera) {
 	
 	UpdateCameraUniforms(camera);
 	UpdateLightUniforms(scene);
@@ -855,7 +856,7 @@ void CheckOpenGLErrors(const std::string& context) {
 	}
 }
 
-static void RenderScene(User*& user, Scene*& scene) {
+void RenderScene(User*& user, Scene*& scene) {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glBindFramebuffer(GL_FRAMEBUFFER, scene->buffers->framebuffer);
 	GLenum fbStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -869,8 +870,8 @@ static void RenderScene(User*& user, Scene*& scene) {
 	std::cout << "Accum Color Texture ID: " << scene->buffers->accum_color_tex << std::endl;
 	do {
 		// Calculate frame timing
-		CalculateFrameRate();
-		CalculateDeltaTime();
+		user->program->clock->UpdateDeltaTime();
+		user->program->clock->CalculateFrameRate();
 		PollTimers(user, scene);
 
 		RenderDirectlyToScreen(scene);
@@ -878,7 +879,6 @@ static void RenderScene(User*& user, Scene*& scene) {
 		
 		// Process inputs and callbacks
 		ProcessInput(user, scene);
-		MouseCallback(user, scene);
 
 		// Swap buffers and poll events
 		glfwSwapBuffers(user->window->window);
@@ -891,31 +891,34 @@ static void RenderScene(User*& user, Scene*& scene) {
 
 }
 
-
-static void Cleanup(User*& user, Scene*& scene) {
+void Cleanup(User*& user, Scene*& scene) {
 	scene->buffers->CleanupBuffers();
 	scene->shaders->CleanupShaders();
 	glfwDestroyWindow(user->window->window);
 	glfwTerminate();
 }
 
-static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-	Scene* scene = static_cast<Scene*>(glfwGetWindowUserPointer(window));
+void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+
+	User* user = static_cast<User*>(glfwGetWindowUserPointer(window));
+	Program* program = user->program;
+	Clock* clock = program->clock;
+	Scene* scene = program->scene;
 	Object* camera = scene->GetObjectByName("camera");
 	
 	if (yoffset != 0 && camera->t->local.pos[2] >= 0) { //scrolling up
 		if (glfwGetKey(scene->user->window->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-			scene->GetLightByName("flashlight")->strength += (yoffset * 1000.f * delta_time);
+			scene->GetLightByName("flashlight")->strength += (yoffset * 1000.f * clock->GetDeltaTime());
 			std::cout << "strength: " << scene->GetLightByName("flashlight")->strength << std::endl;
 		} else {
-			camera->t->local.TranslateForward(dynamic_cast<Camera*>(camera->GetChildByNameTree("camera 1"))->velocity * yoffset * 500.f, delta_time);
+			camera->t->local.TranslateForward(dynamic_cast<Camera*>(camera->GetChildByNameTree("camera 1"))->velocity * yoffset * 500.f, clock->GetDeltaTime());
 			camera->t->UpdateGlobal();
 		}
 		
 	}
 	if (camera->t->local.pos[2] < 0) {
 		if (glfwGetKey(scene->user->window->window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-			scene->GetLightByName("flashlight")->strength -= (yoffset * 1000.f * delta_time);
+			scene->GetLightByName("flashlight")->strength -= (yoffset * 1000.f * clock->GetDeltaTime());
 			std::cout << "strength: " << scene->GetLightByName("flashlight")->strength << std::endl;
 		}
 		else {
@@ -927,7 +930,10 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) 
 	
 }
 
-static void ProcessInput(User*& user, Scene*& scene) {
+void ProcessInput(User*& user, Scene*& scene) {
+	Program* program = user->program;
+	Clock* clock = program->clock;
+	float delta_time = clock->GetDeltaTime();
 	if (scene->held_object != nullptr) {
 		if (glfwGetKey(user->window->window, GLFW_KEY_W) == GLFW_PRESS) { //w, translate forward
 			if (glfwGetKey(user->window->window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS) {
@@ -1139,14 +1145,13 @@ static void ProcessInput(User*& user, Scene*& scene) {
 
 }
 
-
-static void RenderFullScreenQuad(Scene*& scene) {
+void RenderFullScreenQuad(Scene*& scene) {
 	glBindVertexArray(scene->buffers->framebuffer_vao);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glBindVertexArray(0);
 }
 
-static void RenderDirectlyToScreen(Scene*& scene) {
+void RenderDirectlyToScreen(Scene*& scene) {
 	// Enable depth test and face culling for PBR pass
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -1171,7 +1176,7 @@ static void RenderDirectlyToScreen(Scene*& scene) {
 	scene->DrawObjectTrees();
 }
 
-static void RenderToFramebuffer(Scene*& scene) {
+void RenderToFramebuffer(Scene*& scene) {
 	// Enable depth test and face culling for PBR pass
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -1227,13 +1232,13 @@ static void RenderToFramebuffer(Scene*& scene) {
 	RenderFullScreenQuad(scene);
 }
 
-static void DebugPrinter(Scene*& scene) {
+void DebugPrinter(Scene*& scene) {
 
 	//std::cout << "Time: " << glfwGetTime() << std::endl;
 
 }
 
-static void PollTimers(User*& user, Scene*& scene) {
+void PollTimers(User*& user, Scene*& scene) {
 	float current_time = glfwGetTime();
 	for (int i = 0; i < user->timers.size();) {
 		if (user->timers[i]->Evaluate(current_time)) {

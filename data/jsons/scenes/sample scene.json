@@ -300,6 +300,5 @@
 		"roughness": 1.0,
 		"opacity": 1.0
 	},
-	"default_draw_mode": "GL_TRIANGLES",
-	"launch_force": 5.0
+	"default_draw_mode": "GL_TRIANGLES"
 }

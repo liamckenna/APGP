@@ -1,8 +1,15 @@
 #pragma once
 
+struct User;
+struct Scene;
+struct Clock;
+
 struct Program {
 	User* user;
 	Scene* scene;
 
-	//non-specific user data to persist throughout scenes goes here
+
+	//metadata ?
+	Clock* clock;
+
 };

@@ -4,14 +4,17 @@
 #include "window.h"
 #include "timer.h"
 #include <GLFW/glfw3.h>
+
+struct Program;
+
 struct User { //local user variables all packaged in one convenient place
 	
-	
+	Program* program;
 
 	Window* window;
 	Input* input;
 
-	std::vector<Timer*> timers; //maybe move to program?
+	std::vector<Timer*> timers;
 	
 	GLuint matrix_id;
 	GLuint view_matrix_id;

@@ -5,9 +5,6 @@ struct Cursor {
 	float last_x;
 	float last_y;
 
-	double curr_x;
-	double curr_y;
-
 	float offset_x;
 	float offset_y;
 
@@ -21,5 +18,5 @@ struct Cursor {
 
 	Cursor(Window* window, float sensitivity = 3.f);
 	
-	void Update();
+	void Update(double xpos, double ypos);
 };
