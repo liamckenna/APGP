@@ -22,6 +22,10 @@ struct Scene {
 
 	Camera* default_camera;
 
+	Material* default_material;
+
+	Light* default_light;
+
 	User* user;
 	
 	Buffers* buffers;
@@ -37,8 +41,6 @@ struct Scene {
 	std::vector<Texture*> textures;
 	
 	Material* current_material;
-
-	Material* default_material;
 
 	std::vector<Camera*> cameras;
 	Camera* main_camera;
@@ -56,6 +58,14 @@ struct Scene {
 	
 	Scene(const std::string& filepath, Program* program);
 
+	void InitializeDefaultComponents();
+
+	void InitializeDefaultCamera();
+
+	void InitializeDefaultLighting();
+
+	void InitializeDefaultMaterial();
+
 	std::vector<FlattenedLight> flattenLights();
 
 	std::vector<FlattenedMaterial> flattenMaterials();
@@ -67,8 +77,6 @@ struct Scene {
 	Object* GetObjectByName(std::string name);
 
 	Light* GetLightByName(std::string name);
-
-	void SetDefaultDrawMode(const std::string& mode);
 
 	void PrintObjectTrees();
 

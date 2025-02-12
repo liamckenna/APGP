@@ -2,7 +2,8 @@
 #include "cursor.h"
 #include <iostream>
 #include "callbacks.h"
-Window::Window(const nlohmann::json& settings) {
+Window::Window(const nlohmann::json& settings, uint id) {
+	this->id = id;
 	this->width = (settings.contains("width")) ? int(settings["width"]) : 1280;
 	this->height = (settings.contains("height")) ? int(settings["height"]) : 720;
 	this->msaa = (settings.contains("msaa")) ? int(settings["msaa"]) : 0;
@@ -18,6 +19,14 @@ Window::Window(const nlohmann::json& settings) {
 		else if (std::string(settings["display_mode"]) == "fullscreen") this->display_mode = FULLSCREEN;
 		else if (std::string(settings["display_mode"]) == "windowed_fullscreen") this->display_mode = WINDOWED_FULLSCREEN;
 	}
+	this->cursor_mode = NORMAL;
+	if (settings.contains("cursor_mode")) {
+		if (std::string(settings["cursor_mode"]) == "normal") this->cursor_mode = NORMAL;
+		else if (std::string(settings["cursor_mode"]) == "hidden") this->cursor_mode = HIDDEN;
+		else if (std::string(settings["cursor_mode"]) == "disabled") this->cursor_mode = DISABLED;
+	}
+
+
 	this->title = (settings.contains("title")) ? std::string(settings["title"]) : "Window Title";
 
 	this->cursor = new Cursor(this);
@@ -28,7 +37,8 @@ Window::Window(const nlohmann::json& settings) {
 	
 }
 
-Window::Window(uint width, uint height, uint msaa, int pos_x, int pos_y, bool resizable, bool decorated, bool focused, bool visible, std::string display_mode, std::string title) {
+Window::Window(uint width, uint height, uint msaa, int pos_x, int pos_y, bool resizable, bool decorated, bool focused, bool visible, DISPLAY_MODE display_mode, CURSOR_MODE cursor_mode, std::string title, uint id) {
+	this->id = id;
 	this->width = width;
 	this->height = height;
 	this->msaa = msaa;
@@ -38,9 +48,8 @@ Window::Window(uint width, uint height, uint msaa, int pos_x, int pos_y, bool re
 	this->decorated = decorated;
 	this->focused = focused;
 	this->visible = visible;
-	if (display_mode == "windowed") this->display_mode = WINDOWED;
-	else if (display_mode == "fullscreen") this->display_mode = FULLSCREEN;
-	else if (display_mode == "windowed_fullscreen") this->display_mode = WINDOWED_FULLSCREEN;
+	this->display_mode = display_mode;
+	this->cursor_mode = cursor_mode;
 	this->title = title;
 
 	this->cursor = new Cursor(this);
@@ -56,6 +65,7 @@ void Window::SetGLFWwindowHints() {
 	glfwWindowHint(GLFW_DECORATED, decorated ? GLFW_TRUE : GLFW_FALSE);
 	glfwWindowHint(GLFW_FOCUSED, focused ? GLFW_TRUE : GLFW_FALSE);
 	glfwWindowHint(GLFW_VISIBLE, visible ? GLFW_TRUE : GLFW_FALSE);
+	glfwSetInputMode(glfw_window, GLFW_CURSOR, cursor_mode);
 }
 
 void Window::BindGLFWwindow() {
@@ -79,6 +89,4 @@ void Window::BindGLFWwindow() {
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
-
-	glfwMakeContextCurrent(glfw_window);
 }

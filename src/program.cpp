@@ -6,38 +6,42 @@
 #include "glew_init.h"
 #include "callbacks.h"
 #include "scene.h"
+#include "clock.h"
+#include "windows.h"
+#include "graphics_config.h"
+
 Program::Program(const std::string& filepath) {
+
+	nlohmann::json program_json = ReadJsonFromFile(filepath);
 
 	InitializeGLFW();
 
-	nlohmann::json program_json = ReadJsonFromFile(filepath);
-	std::string user_filepath = "/data/jsons/users/" + std::string(program_json["user"]);
-	
-	user = new User(user_filepath, this);
-
-	std::cout << "initialized user" << std::endl;
+	clock = new Clock();
+	std::cout << "initialized clock" << std::endl;
 
 	std::string graphics_filepath = "/data/jsons/graphics/" + std::string(program_json["graphics"]);
+	graphics_config = new GraphicsConfig(graphics_filepath);
+	std::cout << "configured graphics" << std::endl;
 
-	ConfigureGraphicsPipeline(graphics_filepath, user->window->glfw_window);
+	std::string user_filepath = "/data/jsons/users/" + std::string(program_json["user"]);
+	user = new User(user_filepath, this);
+	std::cout << "initialized user" << std::endl;
 
-	SetCallbacks(user->window->glfw_window, user);
+	std::string windows_filepath = "/data/jsons/windows/" + std::string(program_json["windows"]);
+	windows = new Windows(windows_filepath, this);
+	std::cout << "initialized windows" << std::endl;
 
 	InitializeGLEW();
 
-	std::string scene_filepath = "/data/jsons/scenes/" + std::string(program_json["scene"]);
+	std::string shaders_filepath = "/data/jsons/shaders/" + std::string(program_json["shaders"]);
+	shaders = new Shaders(shaders_filepath, this);
+	std::cout << "initialized shaders" << std::endl;
 
-	scene = new Scene(scene_filepath, this);
-	
-	scene->user = user;
-
-	std::cout << "initialized scene" << std::endl;
-
-	nlohmann::json scene_json = ReadJsonFromFile(scene_filepath);
-	if (ShaderInitialization(scene, scene_json)) {
-		std::cout << "yeah shaders are good" << std::endl;
-	}
+	SetCallbacks(windows->program_window);
 
 	std::cout << "initialized program" << std::endl;
+}
 
+void Program::Run() {
+	//move loop here
 }

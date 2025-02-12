@@ -1,4 +1,6 @@
 #include "transform.h"
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/vector_angle.hpp>
 
 Transform::Transform(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, void* owner, Transform* parent) {
 	this->owner = owner;
@@ -135,4 +137,20 @@ void Transform::SetParent(Transform* parent) {
 void Transform::UpdateLocalPositionFromGlobal(glm::vec3 old_global) {
 	glm::vec3 local_adjustment = global.pos - old_global;
 	local.pos += local_adjustment;
+}
+
+void Transform::LookAt(glm::vec3 focus) {
+	glm::vec3 direction = glm::normalize(focus - global.pos);
+
+	if (glm::length(direction) < 0.001f) {
+		return; //avoid singularities
+	}
+
+	glm::vec3 forward = glm::vec3(0.f, 0.f, -1.f);
+	glm::quat rotation = glm::rotation(forward, direction);
+
+	local.orn = rotation;
+
+	UpdateGlobal();
+
 }

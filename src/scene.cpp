@@ -9,11 +9,12 @@
 #include "object.h"
 #include <iostream>
 #include <cctype>
-
+#include "program.h"
 
 Scene::Scene(const std::string& filepath, Program* program) {
 
 	this->program = program;
+	user = program->user;
 
 	nlohmann::json data = ReadJsonFromFile(filepath);
 
@@ -23,25 +24,22 @@ Scene::Scene(const std::string& filepath, Program* program) {
 	else SetDefaultDrawMode("GL_TRIANGLES");
 	if (data.contains("shading_mode")) shading_mode = data["shading_mode"];
 	else shading_mode = 3;
-
-	default_material = new Material(data["default_material"]);
-	current_material = default_material;
-	materials.push_back(default_material);
+	
+	InitializeDefaultComponents();
 
 
+	//for (int i = 0; i < data["cameras"].size(); i++) {
+	//	cameras.push_back(new Camera());
+	//}
+	//CameraGeneration(scene, data);
 
-	for (int i = 0; i < data["cameras"].size(); i++) {
-		cameras.push_back(new Camera());
-	}
-	CameraGeneration(scene, data);
 
+	//LightGeneration(scene, data);
+	//MeshGeneration(scene, data);
+	//ObjectGeneration(scene, data);
+	//SetHeldObject(GetObjectByName("camera shell"));
 
-	LightGeneration(scene, data);
-	MeshGeneration(scene, data);
-	ObjectGeneration(scene, data);
-	SetHeldObject(GetObjectByName("camera shell"));
 	buffers = new Buffers();
-	shaders = new Shaders();
 
 
 	std::cout << "scene generation completed" << std::endl;
@@ -125,17 +123,6 @@ Light* Scene::GetLightByName(std::string name) {
 	return nullptr;
 }
 
-void Scene::SetDefaultDrawMode(const std::string& mode) {
-	if (mode == "GL_POINTS") default_draw_mode = GL_POINTS;
-	else if (mode == "GL_LINES") default_draw_mode = GL_LINES;
-	else if (mode == "GL_LINE_STRIP") default_draw_mode = GL_LINE_STRIP;
-	else if (mode == "GL_LINE_LOOP") default_draw_mode = GL_LINE_LOOP;
-	else if (mode == "GL_TRIANGLES") default_draw_mode = GL_TRIANGLES;
-	else if (mode == "GL_TRIANGLE_STRIP") default_draw_mode = GL_TRIANGLE_STRIP;
-	else if (mode == "GL_TRIANGLE_FAN") default_draw_mode = GL_TRIANGLE_FAN;
-	else default_draw_mode = GL_TRIANGLES;
-}
-
 void Scene::UpdateLights() {
 	for (auto& light : lights) {
 		light->t->UpdateGlobal();
@@ -168,4 +155,31 @@ void Scene::SetHeldObject(Object* object) {
 
 void Scene::DropObject() {
 	held_object = nullptr;
+}
+
+void Scene::InitializeDefaultComponents() {
+
+	InitializeDefaultCamera();
+	InitializeDefaultMaterial();
+	InitializeDefaultLighting();
+}
+
+void Scene::InitializeDefaultCamera() {
+
+	default_camera = new Camera();
+	default_camera->t->global.Translate(0.f, 0.f, 2.f, 1.f);
+	default_camera->LookAt(glm::vec3(0.f, 0.f, 0.f));
+	cameras.push_back(default_camera);
+
+}
+
+void Scene::InitializeDefaultMaterial() {
+	default_material = new Material();
+	current_material = default_material;
+	materials.push_back(default_material);
+}
+
+void Scene::InitializeDefaultLighting() {
+	default_light = new Light();
+	lights.push_back(default_light);
 }

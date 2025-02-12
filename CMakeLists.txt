@@ -22,7 +22,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out)
 file(GLOB_RECURSE SOURCES "${SRC_DIR}/*.cpp")
 
 # Add the executable target
-add_executable(APGP ${SOURCES} "include/timer.h" "src/timer.cpp" "include/clock.h" "src/clock.cpp" "include/callbacks.h" "src/callbacks.cpp" "src/program.cpp" "src/user.cpp" "include/glfw_setup.h" "src/glfw_setup.cpp" "include/glew_init.h" "src/glew_init.cpp" )
+add_executable(APGP ${SOURCES} "include/timer.h" "src/timer.cpp" "include/clock.h" "src/clock.cpp" "include/callbacks.h" "src/callbacks.cpp" "src/program.cpp" "src/user.cpp" "include/glfw_setup.h" "src/glfw_setup.cpp" "include/glew_init.h" "src/glew_init.cpp"  "include/util.h" "src/util.cpp" "include/windows.h" "src/windows.cpp" "include/graphics_config.h" "src/graphics_config.cpp")
 
 # Include local libraries (e.g., json.hpp, stb_image.h)
 target_include_directories(APGP PRIVATE ${INCLUDE_DIR} ${LIBS_DIR})

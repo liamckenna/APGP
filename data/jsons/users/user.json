@@ -1,11 +1,3 @@
 {
-  "window": {
-    "title": "Window Title",
-    "width": 2560,
-    "height": 1440,
-    "msaa": 1,
-    "pos_x": 960,
-    "pos_y": 540,
-    "display_mode": "windowed"
-  }
+  "name": "Liam"
 }

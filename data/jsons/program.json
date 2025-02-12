@@ -1,5 +1,7 @@
 {
   "user": "user.json",
-  "scene": "sample scene.json",
-  "graphics":  "graphics.json"
+  "windows": "windows.json",
+  "graphics": "graphics.json",
+  "shaders": "shaders.json",
+  "scene": "sample scene.json"
 }

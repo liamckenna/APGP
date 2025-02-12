@@ -2,29 +2,64 @@
 #include <iostream>
 
 Clock::Clock() {
-    start_time = std::chrono::high_resolution_clock::now();
-    last_time = start_time;
-    last_fps_time = start_time;
+    current_time = std::chrono::steady_clock::now();
+    start_time = current_time;
+    last_time = current_time;
+    last_fps_time = current_time;
     frame_count = 0;
     delta_time = 0.f;
 }
 
-void Clock::UpdateDeltaTime() {
-    auto current_time = std::chrono::high_resolution_clock::now();
-    delta_time = std::chrono::duration<float>(current_time - last_time).count();
+void Clock::Tick() {
+    UpdateTime();
+    CalculateFrameRate();
+    PollTimers();
+}
+
+void Clock::UpdateTime() {
     last_time = current_time;
+    current_time = std::chrono::steady_clock::now();
+    delta_time = std::chrono::duration<float>(current_time - last_time).count();
 }
 
 void Clock::CalculateFrameRate() {
-    auto current_time = std::chrono::high_resolution_clock::now();
     frame_count++;
-
     float elapsed = std::chrono::duration<float>(current_time - last_fps_time).count();
     if (elapsed >= 1.0f) {
         double fps = frame_count / elapsed;
         std::cout << "FPS: " << fps << std::endl;
         last_fps_time = current_time;
         frame_count = 0;
+    }
+}
+
+void Clock::AddTimer(float length_seconds, bool auto_dispose, bool auto_dismiss) {
+    timers.push_back(new Timer(length_seconds, current_time, auto_dispose, auto_dismiss));
+}
+
+
+
+void Clock::PollTimers() {
+
+    for (auto it = timers.begin(); it != timers.end();) {
+        Timer* timer = *it;
+        TIMER_STATE state = timer->Evaluate(current_time);
+        switch (state) {
+        case RINGING:
+            std::cout << "ring!" << std::endl;
+            ++it;
+            break;
+        case SCRAP:
+            delete timer;
+            it = timers.erase(it);
+            break;
+        case TICKING:
+        case PAUSED:
+        case IDLE:
+            ++it;
+            break;
+
+        }
     }
 }
 

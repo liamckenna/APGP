@@ -43,5 +43,6 @@ struct Transform {
 	void SetParent(Transform* parent);
 	void UpdateLocalPositionFromGlobal(glm::vec3 old_global);
 	//TODO setposition and setglobalposition along with scl and rot
+	void LookAt(glm::vec3 focus);
 	
 };

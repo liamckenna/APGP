@@ -1,0 +1,32 @@
+{
+  "vertex": [
+    {
+      "file": "vs.glsl"
+    }
+  ],
+  "tess_control": [
+
+  ],
+  "tess_eval": [
+
+  ],
+  "geometry": [
+
+  ],
+  "fragment": [
+    {
+      "file": "fs.glsl"
+    }
+  ],
+  "compute": [
+
+  ],
+  "active": {
+    "vertex": 0,
+    "tess_control": -1,
+    "tess_eval": -1,
+    "geometry": -1,
+    "fragment": 0,
+    "compute": -1
+  }
+}

@@ -1,17 +1,17 @@
 #include "camera.h"
 #include <iostream>
 Camera::Camera() {
-	t = new Transform(glm::vec3(0.f, 0.f, 0.f), this);
+	t = new Transform(glm::vec3(0.f, 0.f, 5.f), this);
 	object_type = CAMERA;
 	x_range = 8.f;
 	y_range = 6.f;
 	aspect_ratio = x_range/y_range;
-	fov = 90.f;
+	fov = 60.f;
 	projection_type = PROJECTION_TYPES::PERSPECTIVE;
 	z_near = 0.1f;
 	z_far = 100.f;
 	velocity = 5.f; //5 units per second
-	sensitivity = 90.f;
+	sensitivity = 30.f;
 	UpdateMatrices();
 }
 
@@ -29,6 +29,10 @@ Camera::Camera(Transform* t, float v, byte pt, float fov, float xr, float yr, fl
 	UpdateMatrices();
 }
 
+void Camera::LookAt(glm::vec3 focus) {
+	t->LookAt(focus);
+	UpdateMatrices();
+}
 
 void Camera::UpdateProjection() {
 	if (projection_type == PROJECTION_TYPES::ORTHOGRAPHIC) {
@@ -59,3 +63,4 @@ void Camera::UpdateMatrices() {
 	UpdateProjection();
 	UpdateView();
 }
+

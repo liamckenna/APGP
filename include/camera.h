@@ -31,6 +31,8 @@ struct Camera : public Object {
 
 	Camera(Transform* t, float v, byte pt, float fov, float xr, float yr, float zn, float zf, float s);
 
+	void LookAt(glm::vec3 focus);
+
 	void UpdateProjection();
 
 	void UpdateView();

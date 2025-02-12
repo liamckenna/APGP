@@ -1,4 +1,10 @@
 #include "light.h"
+#include "color.h"
+Light::Light() {
+	t = new Transform(glm::vec3(0.f, 2.f, 0.f), this);
+	strength = 1.f;
+	c = Color(WHITE);
+}
 
 Light::Light(Transform* t, float s, Color c, bool a) : Object(t) {
 	object_type = LIGHT;

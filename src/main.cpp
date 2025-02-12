@@ -34,45 +34,42 @@
 
 //forward declarations of functions
 //User* UserGeneration(std::string file); //DEPRECIATED AND DELETED
-Program* ProgramGeneration(std::string program_filepath); //in progress
-std::string GetExecutableDirectory(); //move to helper class
-std::string LoadShader(const char* filepath); //move to shader class
-GLuint createShader(GLenum type, const char* shaderSource); //move to shader class
-bool ShaderInitialization(Scene*& scene, nlohmann::json data); //unaddressed
+//Program* ProgramGeneration(std::string program_filepath); //DEPRECIATED AND DELETED
+//bool ShaderInitialization(Scene*& scene, nlohmann::json data); //DEPRECIATED AND DELETED
+//void DefaultMaterialGeneration(Scene*& scene, nlohmann::json data); //DEPRECIATED AND DELETED
+//std::string LoadShader(const char* filepath); //DEPRECIATED AND DELETED
+//GLuint createShader(GLenum type, const char* shaderSource); //DEPRECIATED AND DELETED
+//bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE, bool composite); //DEPRECIATED AND DELETED
+//void PollTimers(User*& user, Scene*& scene); //DEPRECIATED AND DELETED
 Scene* SceneGeneration(std::string file); //in progress
 void BufferArrayInitialization(Scene*& scene); //unaddressed
 void ProcessInput(User*& user, Scene*& scene); //completely unused, saving code for reference and reuse
-void RenderScene(User*& user, Scene*& scene); //unaddressed
+void RenderScene(User*& user, Scene*& scene); //moving to Program::Run()
 void Cleanup(User*& user, Scene*& scene); //HUGE TODO
-void CameraGeneration(Scene*& scene, nlohmann::json data); //part of prog gen
-void LightGeneration(Scene*& scene, nlohmann::json data); //part of prog gen
-void MeshGeneration(Scene*& scene, nlohmann::json data); //part of prog gen
-void ObjectGeneration(Scene*& scene, nlohmann::json data); //part of prog gen
+void CameraGeneration(Scene*& scene, nlohmann::json data); //part of scene gen
+void LightGeneration(Scene*& scene, nlohmann::json data); //part of scene gen
+void MeshGeneration(Scene*& scene, nlohmann::json data); //part of scene gen
+void ObjectGeneration(Scene*& scene, nlohmann::json data); //part of scene gen
 void UpdateCameraUniforms(Camera*& camera); //unaddressed
 void UpdateLightUniforms(Scene*& scene); //unaddressed
-//void DefaultMaterialGeneration(Scene*& scene, nlohmann::json data); //DEPRECIATED AND DELETED
 void UpdateTextureUniforms(Scene*& scene); //unaddressed
 void UpdateMeshBuffer(Scene*& scene, Mesh* mesh); //unaddressed
 void FramebufferInitialization(User*& user, Scene*& scene); //unaddressed
-void RenderFullScreenQuad(Scene*& scene); //unaddressed
-bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE, bool composite); //unaddressed
-void RenderDirectlyToScreen(Scene*& scene); //unaddressed
-void RenderToFramebuffer(Scene*& scene); //unaddressed
-void DebugPrinter(Scene*& scene); //unaddressed
-void PollTimers(User*& user, Scene*& scene); //unaddressed
+void RenderFullScreenQuad(Scene*& scene); //cutting
+void RenderDirectlyToScreen(Scene*& scene); //cutting
+void RenderToFramebuffer(Scene*& scene); //cutting
+
 
 int main() {
 
 	//main should create our program object, then do our program loop i think, then cleanup
+	std::string program_filepath = "/data/jsons/program.json";
+	Program* program = new Program(program_filepath);
+	nlohmann::json program_json = ReadJsonFromFile(program_filepath);
 
-	Program* program = ProgramGeneration("/data/jsons/program.json");
-
-	Scene* scene = program->scene;
-	User* user = program->user;
-
-	Clock* clock = new Clock();
-
-	program->clock = clock;
+	std::string scene_filepath = "/data/jsons/scenes/" + std::string(program_json["scene"]);
+	program->scene = new Scene(scene_filepath, program);
+	std::cout << "initialized scene" << std::endl;
 
 	FramebufferInitialization(user, scene);
 
@@ -94,6 +91,7 @@ int main() {
 
 	//----------		RENDER CALL			----------//
 	RenderScene(user, scene);
+	program->Run(); //replacement
 
 	std::cout << "finished rendering scene" << std::endl;
 	
@@ -146,186 +144,6 @@ void FramebufferInitialization(User*& user, Scene*& scene) {
 
 	// Unbind framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-Program* ProgramGeneration(std::string program_filepath) {
-
-	nlohmann::json program_json = ReadJsonFromFile(program_filepath);
-
-	Program* program = new Program();
-
-	std::string user_filepath = "/data/jsons/users/" + std::string(program_json["user"]);
-	std::string scene_filepath = "/data/jsons/scenes/" + std::string(program_json["scene"]);
-
-	User* user = UserGeneration(user_filepath);
-	program->user = user;
-	user->program = program;
-
-	std::cout << "initialized user" << std::endl;
-
-	Scene* scene = SceneGeneration(scene_filepath);
-	program->scene = scene;
-	scene->user = user;
-
-	std::cout << "initialized scene" << std::endl;
-
-	nlohmann::json scene_json = ReadJsonFromFile(scene_filepath);
-	if (ShaderInitialization(scene, scene_json)) {
-		std::cout << "yeah shaders are good" << std::endl;
-	}
-
-	std::cout << "initialized program" << std::endl;
-
-	return program;
-}
-
-std::string GetExecutableDirectory() {
-	return std::filesystem::current_path().string();
-}
-
-std::string LoadShader(const char* filepath) {
-	std::string absolute_filepath = std::filesystem::current_path().string() + filepath;
-	std::ifstream file(absolute_filepath);
-	if (!file.is_open()) {
-		std::cerr << "Failed to open shader file: " << filepath << std::endl;
-		return "";
-	}
-
-	std::stringstream buffer;
-	buffer << file.rdbuf();
-	return buffer.str();
-}
-
-GLuint createShader(GLenum type, const char* shaderSource) {
-	GLuint shader = glCreateShader(type);
-	GLenum error = glGetError();
-	if (error != GL_NO_ERROR) {
-		std::cerr << "OpenGL error occurred: " << error << std::endl;
-	}
-	glShaderSource(shader, 1, &shaderSource, NULL);
-	glCompileShader(shader);
-	int success;
-	char infoLog[512];
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-	if (!success) {
-		glGetShaderInfoLog(shader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-	return shader;
-}
-
-bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE, bool composite) {
-		
-	std::string src = LoadShader(file.c_str());
-	if (src.empty()) {
-		std::cerr << "Shader source loading failed." << std::endl;
-		return false;
-	}
-	GLuint ss;
-	if (TYPE == VERTEX) {
-		ss = createShader(GL_VERTEX_SHADER, src.c_str());
-		Shader s = Shader(src, ss, VERTEX);
-		scene->shaders->vertex_shaders.push_back(s);
-	} else if (TYPE == GEOMETRY) {
-		ss = createShader(GL_GEOMETRY_SHADER, src.c_str());
-		Shader s = Shader(src, ss, GEOMETRY);
-		scene->shaders->geometry_shaders.push_back(s);
-	} else if (TYPE == FRAGMENT) {
-		ss = createShader(GL_FRAGMENT_SHADER, src.c_str());
-		Shader s = Shader(src, ss, FRAGMENT);
-		scene->shaders->fragment_shaders.push_back(s);
-	}
-
-	if (composite) {
-		//attach composite shader to dedicated program
-		glAttachShader(scene->shaders->composite_program, ss);
-		glDeleteShader(ss);
-	} else {
-		glAttachShader(scene->shaders->shader_program, ss);
-		glDeleteShader(ss);
-	}
-	
-	return true;
-}
-
-bool ShaderInitialization(Scene*& scene, nlohmann::json data) {
-
-	scene->shaders->shader_program = glCreateProgram();
-	scene->shaders->composite_program = glCreateProgram();
-	for (int i = 0; i < data["shaders"]["vertex_shaders"].size(); i++) {
-		std::string fn = "/shaders/" + std::string(data["shaders"]["vertex_shaders"][i]["file"]);
-		
-		if (!ProcessShader(scene, fn, VERTEX, false)) return false;
-	}
-	for (int i = 0; i < data["shaders"]["geometry_shaders"].size(); i++) {
-		std::cout << "trying to call geom shaders" << std::endl;
-		std::string fn = "/shaders/" + std::string(data["shaders"]["geometry_shaders"][i]["file"]);
-		if (!ProcessShader(scene, fn, GEOMETRY, false)) return false;
-	}
-	for (int i = 0; i < data["shaders"]["fragment_shaders"].size(); i++) {
-		std::string fn = "/shaders/" + std::string(data["shaders"]["fragment_shaders"][i]["file"]);
-		if (!ProcessShader(scene, fn, FRAGMENT, false)) return false;
-	}
-	
-	
-	glLinkProgram(scene->shaders->shader_program);
-	int success;
-	char infoLog[512];
-	glGetProgramiv(scene->shaders->shader_program, GL_LINK_STATUS, &success);
-
-	if (!success) {
-		glGetProgramInfoLog(scene->shaders->shader_program, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-		return false;
-	}
-
-	scene->user->matrix_id = glGetUniformLocation(scene->shaders->shader_program, "MVP");
-	scene->user->view_matrix_id = glGetUniformLocation(scene->shaders->shader_program, "V");
-	scene->user->model_matrix_id = glGetUniformLocation(scene->shaders->shader_program, "M");
-	scene->user->triangle_color_id = glGetUniformLocation(scene->shaders->shader_program, "triangle_colors");
-	scene->user->triangle_normal_id = glGetUniformLocation(scene->shaders->shader_program, "triangle_normals");
-	scene->user->camera_position_id = glGetUniformLocation(scene->shaders->shader_program, "camera_position");
-	scene->user->shading_mode_id = glGetUniformLocation(scene->shaders->shader_program, "shading_mode");
-	scene->user->phong_exponent_id = glGetUniformLocation(scene->shaders->shader_program, "phong_exponent");
-	scene->user->light_count_id = glGetUniformLocation(scene->shaders->shader_program, "light_count");
-	scene->user->light_position_id = glGetUniformLocation(scene->shaders->shader_program, "lights[0].position");
-	scene->user->light_strength_id = glGetUniformLocation(scene->shaders->shader_program, "lights[0].strength");
-	scene->user->light_color_id = glGetUniformLocation(scene->shaders->shader_program, "lights[0].color");
-	scene->user->light_active_id = glGetUniformLocation(scene->shaders->shader_program, "lights[0].active");
-	scene->user->ambient_intensity_id = glGetUniformLocation(scene->shaders->shader_program, "ambient_intensity");
-	scene->user->textures_id = glGetUniformLocation(scene->shaders->shader_program, "textures");
-
-	bool contains_composite_shaders = false;
-
-	for (int i = 0; i < data["shaders"]["composite_vertex_shaders"].size(); i++) {
-		contains_composite_shaders = true;
-		std::string fn = "/shaders/" + std::string(data["shaders"]["composite_vertex_shaders"][i]["file"]);
-		if (!ProcessShader(scene, fn, VERTEX, true)) return false;
-	}
-	for (int i = 0; i < data["shaders"]["composite_fragment_shaders"].size(); i++) {
-		contains_composite_shaders = true;
-		std::string fn = "/shaders/" + std::string(data["shaders"]["composite_fragment_shaders"][i]["file"]);
-		if (!ProcessShader(scene, fn, FRAGMENT, true)) return false;
-	}
-	if (contains_composite_shaders) {
-		glLinkProgram(scene->shaders->composite_program);
-		int composite_success;
-		char composite_infoLog[512];
-		glGetProgramiv(scene->shaders->composite_program, GL_LINK_STATUS, &composite_success);
-
-		if (!composite_success) {
-			glGetProgramInfoLog(scene->shaders->composite_program, 512, NULL, composite_infoLog);
-			std::cout << "ERROR::SHADER::COMPOSITE::LINKING_FAILED\n" << composite_infoLog << std::endl;
-			return false;
-		}
-
-		scene->user->accum_color_tex_id = glGetUniformLocation(scene->shaders->composite_program, "accum_color_tex");
-		scene->user->accum_alpha_tex_id = glGetUniformLocation(scene->shaders->composite_program, "accum_alpha_tex");
-	}
-	
-
-	std::cout << "initialized shaders" << std::endl;
-	return true;
 }
 
 Scene* SceneGeneration(std::string file) {
@@ -606,55 +424,6 @@ void UpdateUniforms(Scene*& scene, Camera*& camera) {
 	UpdateTextureUniforms(scene);
 }
 
-void CheckAttachedShaders(GLuint program) {
-	GLint numShaders = 0;
-	glGetProgramiv(program, GL_ATTACHED_SHADERS, &numShaders);
-
-	if (numShaders == 0) {
-		std::cout << "No shaders are attached to the program." << std::endl;
-		return;
-	}
-
-	GLuint* shaders = new GLuint[numShaders];
-	glGetAttachedShaders(program, numShaders, NULL, shaders);
-
-	std::cout << "Shaders attached to program " << program << ":" << std::endl;
-	for (GLint i = 0; i < numShaders; i++) {
-		GLint shaderType;
-		glGetShaderiv(shaders[i], GL_SHADER_TYPE, &shaderType);
-
-		std::string typeStr;
-		if (shaderType == GL_VERTEX_SHADER) typeStr = "Vertex Shader";
-		else if (shaderType == GL_FRAGMENT_SHADER) typeStr = "Fragment Shader";
-		else if (shaderType == GL_GEOMETRY_SHADER) typeStr = "Geometry Shader";
-		else typeStr = "Unknown Shader Type";
-
-		std::cout << "  Shader ID: " << shaders[i] << " (" << typeStr << ")" << std::endl;
-	}
-
-	delete[] shaders;
-}
-
-void CheckShaderCompilation(GLuint shaderID) {
-	GLint success;
-	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
-	if (!success) {
-		char infoLog[512];
-		glGetShaderInfoLog(shaderID, 512, NULL, infoLog);
-		std::cerr << "Shader Compilation Error (ID " << shaderID << "):\n" << infoLog << std::endl;
-	}
-	else {
-		std::cout << "Shader (ID " << shaderID << ") compiled successfully." << std::endl;
-	}
-}
-
-void CheckOpenGLErrors(const std::string& context) {
-	GLenum err;
-	while ((err = glGetError()) != GL_NO_ERROR) {
-		std::cerr << "OpenGL Error in " << context << ": " << err << std::endl;
-	}
-}
-
 void RenderScene(User*& user, Scene*& scene) {
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glBindFramebuffer(GL_FRAMEBUFFER, scene->buffers->framebuffer);
@@ -669,9 +438,7 @@ void RenderScene(User*& user, Scene*& scene) {
 	std::cout << "Accum Color Texture ID: " << scene->buffers->accum_color_tex << std::endl;
 	do {
 		// Calculate frame timing
-		user->program->clock->UpdateDeltaTime();
-		user->program->clock->CalculateFrameRate();
-		PollTimers(user, scene);
+		program->clock->Tick();
 
 		RenderDirectlyToScreen(scene);
 		//RenderToFramebuffer(scene);
@@ -997,29 +764,4 @@ void RenderToFramebuffer(Scene*& scene) {
 
 	// Render the full-screen quad
 	RenderFullScreenQuad(scene);
-}
-
-void DebugPrinter(Scene*& scene) {
-
-	//std::cout << "Time: " << glfwGetTime() << std::endl;
-
-}
-
-void PollTimers(User*& user, Scene*& scene) {
-	float current_time = glfwGetTime();
-	for (int i = 0; i < user->timers.size();) {
-		if (user->timers[i]->Evaluate(current_time)) {
-			std::cout << "Timer has gone off!" << std::endl;
-			i++;
-		} else if (user->timers[i]->ringing) {
-			std::cout << "ring" << std::endl;
-			i++;
-		} else if (user->timers[i]->active) {
-			i++;
-		} else if (user->timers[i]->one_time_use) {
-			delete user->timers[i];
-			user->timers.erase(user->timers.begin() + i);
-		}
-	}
-
 }

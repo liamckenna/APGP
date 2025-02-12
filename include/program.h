@@ -1,14 +1,23 @@
 #pragma once
 #include <iostream>
 struct User;
+struct Windows;
 struct Scene;
+struct Shaders;
 struct Clock;
+struct GraphicsConfig;
 
 struct Program {
 	User* user;
+	Windows* windows;
 	Scene* scene;
-	//metadata ?
+	Shaders* shaders;
+	GraphicsConfig* graphics_config;
+	
 	Clock* clock;
+	
 
 	Program(const std::string& filepath);
+
+	void Run();
 };

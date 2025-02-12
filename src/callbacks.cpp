@@ -2,6 +2,7 @@
 #include "user.h"
 #include "program.h"
 #include "clock.h"
+#include "windows.h"
 #include <iostream>
 
 void ErrorCallback(int error, const char* description) {
@@ -23,15 +24,17 @@ void MouseCallback(GLFWwindow* window, double xpos, double ypos) {
 	User* user = static_cast<User*>(glfwGetWindowUserPointer(window));
 	Program* program = user->program;
 	Clock* clock = program->clock;
-	Scene* scene = program->scene;
+	Window* main_window = program->windows->main_window;
+	Cursor* cursor = main_window->cursor;
+
 
 	//todo: replace with a program or scene function that handles camera movement i think
 	//in the meantime, we just use the hardcoded method
 
-	user->input->cursor->Update(xpos, ypos);
+	cursor->Update(xpos, ypos);
 
-	user->input->cursor->offset_x *= user->input->cursor->sensitivity * clock->GetDeltaTime() / user->window->width * 100000.f;
-	user->input->cursor->offset_y *= user->input->cursor->sensitivity * clock->GetDeltaTime() / user->window->height * 100000.f;
+	cursor->offset_x *= cursor->sensitivity * clock->GetDeltaTime() / main_window->width * 100000.f;
+	cursor->offset_y *= cursor->sensitivity * clock->GetDeltaTime() / main_window->height * 100000.f;
 
 
 	//scene->GetObjectByName("camera shell")->t->local.RotateYaw(user->input->cursor->offset_x);
@@ -84,11 +87,11 @@ void WindowFocusCallback(GLFWwindow* window, int focused)
 	}
 }
 
-void SetCallbacks(GLFWwindow* window, void* user) {
-	glfwSetWindowUserPointer(window, user);
-	glfwSetScrollCallback(window, ScrollCallback);
+void SetCallbacks(Window* window) {
+	glfwSetWindowUserPointer(window->glfw_window, window);
+	glfwSetScrollCallback(window->glfw_window, ScrollCallback);
 	glfwSetErrorCallback(ErrorCallback);
-	glfwSetKeyCallback(window, KeyCallback);
-	glfwSetCursorPosCallback(window, MouseCallback);
-	glfwSetWindowFocusCallback(window, WindowFocusCallback);
+	glfwSetKeyCallback(window->glfw_window, KeyCallback);
+	glfwSetCursorPosCallback(window->glfw_window, MouseCallback);
+	glfwSetWindowFocusCallback(window->glfw_window, WindowFocusCallback);
 }

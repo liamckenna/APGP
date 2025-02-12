@@ -7,7 +7,7 @@ User::User(const std::string& filepath, Program* program) {
 
 	nlohmann::json data = ReadJsonFromFile(filepath);
 
-	window = new Window(data["window"]);
+	name = data["name"];
 
 	input = new Input();
 

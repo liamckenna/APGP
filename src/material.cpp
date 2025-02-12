@@ -26,8 +26,6 @@ Material::Material(const nlohmann::json& data) {
 	textures.ems = nullptr;
 	textures.hgt = nullptr;
 	textures.met = nullptr;
-	std::cout << "default material generation completed" << std::endl;
-
 }
 
 Material::Material() {
@@ -41,7 +39,7 @@ Material::Material() {
 	metallic	= 0.f;
 	tris 		= 0;
 	edges		= 0;
-	refractive_index = 1.45f;
+	refractive_index = 1.f;
 	textures.dif = nullptr;
 	textures.nrm = nullptr;
 	textures.bmp = nullptr;

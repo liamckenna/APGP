@@ -7,4 +7,4 @@ void MouseCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 void WindowFocusCallback(GLFWwindow* window, int focused);
 
-void SetCallbacks(GLFWwindow* window, void* user);
+void SetCallbacks(Window* window);
