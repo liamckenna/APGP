@@ -7,6 +7,11 @@ struct Shaders;
 struct Clock;
 struct GraphicsConfig;
 
+enum PROGRAM_MODE
+{
+
+};
+
 struct Program {
 	User* user;
 	Windows* windows;
