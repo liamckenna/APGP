@@ -4,6 +4,19 @@
 #include <algorithm>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <typeindex>
+#include <glm/glm.hpp>
+
+
+enum PROJECTION_TYPES {
+    ORTHOGRAPHIC = 0xFF,
+    PERSPECTIVE = 0X00,
+};
+
+#define LIGHT_BINDING_POINT     0
+#define MATERIAL_BINDING_POINT  1
+#define TEXTURE_BINDING_POINT   2
+
 
 inline void ToLowerCase(std::string& str) {
     std::transform(str.begin(), str.end(), str.begin(), ::tolower);
@@ -15,6 +28,22 @@ inline std::string ToLowerCaseCopy(const std::string& str) {
     return lowerStr;
 }
 
+const static std::unordered_map<std::type_index, GLenum> GL_TYPES = {
+    { typeid(int), GL_INT},
+    { typeid(unsigned int), GL_UNSIGNED_INT},
+    { typeid(float),     GL_FLOAT },
+    { typeid(glm::vec2), GL_FLOAT_VEC2 },
+    { typeid(glm::vec3), GL_FLOAT_VEC3 },
+    { typeid(glm::vec4), GL_FLOAT_VEC4 },
+    { typeid(glm::mat2), GL_FLOAT_MAT2 },
+    { typeid(glm::mat3), GL_FLOAT_MAT3 },
+    { typeid(glm::mat4), GL_FLOAT_MAT4 }
+};
+
+inline GLenum FetchGLTypeEnum(std::type_index key) {
+    auto it = GL_TYPES.find(key);
+    return (it != GL_TYPES.end()) ? it->second : GL_INVALID_ENUM;
+}
 
 const static std::unordered_map<std::string, GLenum> GL_ENUMS = {
     //default
@@ -46,7 +75,11 @@ const static std::unordered_map<std::string, GLenum> GL_ENUMS = {
 
     //front face
     {"cw", GL_CW},
-    {"ccw", GL_CCW}
+    {"ccw", GL_CCW},
+
+    //projection types
+    {"perspective", PROJECTION_TYPES::PERSPECTIVE},
+    {"orthographic", PROJECTION_TYPES::ORTHOGRAPHIC}
 
 };
 

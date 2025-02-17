@@ -4,7 +4,7 @@
 
 Windows::Windows(const std::string& filepath, Program* program) {
     this->program = program;
-    next_id = 0;
+    it = 0;
     nlohmann::json data = ReadJsonFromFile(filepath);
     Initialize(data);
 }
@@ -22,21 +22,32 @@ bool Windows::Initialize(const nlohmann::json& settings) {
         return false;
     }
 
-    for (const auto& windowConfig : settings["windows"]) {
-        Window* newWindow = CreateWindow(windowConfig);
-        if (!newWindow) return false;
+    std::cout << "NOW NOWN OWO" << std::endl;
+
+    for (int i = 0; i < settings["windows"].size(); i++) {
+        Window* newWindow = CreateWindow(settings["windows"][i]);
+        if (!newWindow) {
+            std::cout << "NO WINDOWWWW" << std::endl;
+            return false;
+        }
+        else {
+            std::cout << "WINDOWWWW" << std::endl;
+
+        }
     }
 
     SetProgramWindow(settings["program_window"]);
     SetActiveWindow(settings["active_window"]);
 
+    program_window->SetSwapInterval();
+
     return true;
 }
 
 Window* Windows::CreateWindow(const nlohmann::json& settings) {
-    Window* newWindow = new Window(settings, program->user, next_id);
-    windows[next_id] = newWindow;
-    next_id++;
+    Window* newWindow = new Window(settings, program);
+    windows[it] = newWindow;
+    it++;
     return newWindow;
 }
 
@@ -46,7 +57,7 @@ void Windows::RemoveWindow(uint window_id) {
         return;
     }
 
-    if (window_id == program_window->id) {
+    if (window_id == program_window->idx) {
         std::cerr << "Program window removed. Terminating application..." << std::endl;
         delete windows[window_id];
         windows.erase(window_id);
@@ -57,8 +68,8 @@ void Windows::RemoveWindow(uint window_id) {
     delete windows[window_id];
     windows.erase(window_id);
 
-    if (window_id == active_window->id) {
-        SetActiveWindow(program_window->id);
+    if (window_id == active_window->idx) {
+        SetActiveWindow(program_window->idx);
     }
 
 }

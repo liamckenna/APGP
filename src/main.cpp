@@ -41,29 +41,29 @@
 //GLuint createShader(GLenum type, const char* shaderSource); //DEPRECIATED AND DELETED
 //bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE, bool composite); //DEPRECIATED AND DELETED
 //void PollTimers(User*& user, Scene*& scene); //DEPRECIATED AND DELETED
-Scene* SceneGeneration(std::string file); //in progress
-void BufferArrayInitialization(Scene*& scene); //unaddressed
-void ProcessInput(User*& user, Scene*& scene); //completely unused, saving code for reference and reuse
-void RenderScene(User*& user, Scene*& scene); //moving to Program::Run()
-void Cleanup(User*& user, Scene*& scene); //HUGE TODO
-void CameraGeneration(Scene*& scene, nlohmann::json data); //part of scene gen
-void LightGeneration(Scene*& scene, nlohmann::json data); //part of scene gen
-void MeshGeneration(Scene*& scene, nlohmann::json data); //part of scene gen
-void ObjectGeneration(Scene*& scene, nlohmann::json data); //part of scene gen
-void UpdateCameraUniforms(Camera*& camera); //unaddressed
-void UpdateLightUniforms(Scene*& scene); //unaddressed
-void UpdateTextureUniforms(Scene*& scene); //unaddressed
-void UpdateMeshBuffer(Scene*& scene, Mesh* mesh); //unaddressed
-void FramebufferInitialization(User*& user, Scene*& scene); //unaddressed
-void RenderFullScreenQuad(Scene*& scene); //cutting
-void RenderDirectlyToScreen(Scene*& scene); //cutting
-void RenderToFramebuffer(Scene*& scene); //cutting
+//Scene* SceneGeneration(std::string file); //DEPRECIATED AND DELETED
+//void RenderScene(User*& user, Scene*& scene); //DEPRECIATED AND DELETED
+//void CameraGeneration(Scene*& scene, nlohmann::json data); //DEPRECIATED AND DELETED
+//void ObjectGeneration(Scene*& scene, nlohmann::json data); //DEPRECIATED AND DELETED
+//void RenderFullScreenQuad(Scene*& scene); //DEPRECIATED AND DELETED
+//void RenderDirectlyToScreen(Scene*& scene); //DEPRECIATED AND DELETED
+//void FramebufferInitialization(User*& user, Scene*& scene); //DEPRECIATED AND DELETED
+//void BufferArrayInitialization(Scene*& scene); //DEPRECIATED AND DELETED
+//void UpdateTextureUniforms(Scene*& scene); //DEPRECIATED AND DELETED
+//void Cleanup(User*& user, Scene*& scene); //DEPRECIATED AND DELETED
+//void ProcessInput(User*& user, Scene*& scene); //COMMENTED OUT
+
+
+
 
 
 int main() {
 
 	//main should create our program object, then do our program loop i think, then cleanup
 	std::string program_filepath = "/data/jsons/program.json";
+
+	
+
 	Program* program = new Program(program_filepath);
 	nlohmann::json program_json = ReadJsonFromFile(program_filepath);
 
@@ -71,399 +71,21 @@ int main() {
 	program->scene = new Scene(scene_filepath, program);
 	std::cout << "initialized scene" << std::endl;
 
-	FramebufferInitialization(user, scene);
-
-	BufferArrayInitialization(scene);
-
-	std::cout << "initialized buffers and arrays" << std::endl;
-
-	UpdateTextureUniforms(scene);
-
-	std::cout << "initialized textures" << std::endl;
-
-	int textureUniformLoc = glGetUniformLocation(scene->shaders->shader_program, "textures[0]");
-	if (textureUniformLoc == -1) {
-		std::cerr << "Uniform 'textures[0]' not found in the shader!" << std::endl;
-	}
-	else {
-		//std::cerr << "Uniform 'textures[0]' WAS FOUND in the shader!" << std::endl;
-	}
-
 	//----------		RENDER CALL			----------//
-	RenderScene(user, scene);
-	program->Run(); //replacement
+
+	program->Run();
 
 	std::cout << "finished rendering scene" << std::endl;
 	
 	//----------		CLEANUP CALL		----------//
-	Cleanup(user, scene);
+	
+	program->Cleanup();
 
 	std::cout << "finished cleanup" << std::endl;
 
 	exit(EXIT_SUCCESS);
 }
-
-void FramebufferInitialization(User*& user, Scene*& scene) {
-	// Generate and bind framebuffer
-	glGenFramebuffers(1, &scene->buffers->framebuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, scene->buffers->framebuffer);
-
-	// Create and attach AccumColor texture
-	glGenTextures(1, &scene->buffers->accum_color_tex);
-	glBindTexture(GL_TEXTURE_2D, scene->buffers->accum_color_tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, user->window->width, user->window->height, 0, GL_RGBA, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, scene->buffers->accum_color_tex, 0);
-
-	// Create and attach AccumAlpha texture
-	glGenTextures(1, &scene->buffers->accum_alpha_tex);
-	glBindTexture(GL_TEXTURE_2D, scene->buffers->accum_alpha_tex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, user->window->width, user->window->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, scene->buffers->accum_alpha_tex, 0);
-
-	// Create and attach depth renderbuffer
-	glGenRenderbuffers(1, &scene->buffers->depth_attachment);
-	glBindRenderbuffer(GL_RENDERBUFFER, scene->buffers->depth_attachment);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, user->window->width, user->window->height);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, scene->buffers->depth_attachment);
-
-	// Specify draw buffers
-	GLenum drawBuffers[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-	glDrawBuffers(2, drawBuffers);
-
-	// Check framebuffer completeness
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		std::cerr << "Framebuffer is not complete!" << std::endl;
-	}
-	else {
-		std::cout << "Framebuffer successfully created!" << std::endl;
-	}
-
-	// Unbind framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-Scene* SceneGeneration(std::string file) {
-	nlohmann::json data = ReadJsonFromFile(file);
-	
-	Scene* scene = new Scene();
-	scene->name = data["name"];
-	if (data.contains("default_draw_mode")) scene->SetDefaultDrawMode(data["default_draw_mode"]);
-	else scene->SetDefaultDrawMode("GL_TRIANGLES");
-	if (data.contains("shading_mode")) scene->shading_mode = data["shading_mode"];
-	else scene->shading_mode = 3;
-	DefaultMaterialGeneration(scene, data);
-	
-	CameraGeneration(scene, data);
-	LightGeneration(scene, data);
-	MeshGeneration(scene, data);
-	ObjectGeneration(scene, data);
-	scene->SetHeldObject(scene->GetObjectByName("camera shell"));
-	scene->buffers = new Buffers();
-	scene->shaders = new Shaders();
-
-
-	std::cout << "scene generation completed" << std::endl;
-	return scene;
-}
-
-void MeshGeneration(Scene*& scene, nlohmann::json data) {
-	for (int i = 0; i < data["meshes"].size(); i++) {
-		glm::vec3 pos = glm::vec3(	data["meshes"][i]["transform"]["position"][0],
-									data["meshes"][i]["transform"]["position"][1],
-									data["meshes"][i]["transform"]["position"][2]);
-		glm::vec3 rot = glm::vec3(	data["meshes"][i]["transform"]["rotation"][0],
-									data["meshes"][i]["transform"]["rotation"][1],
-									data["meshes"][i]["transform"]["rotation"][2]);
-		glm::vec3 scl = glm::vec3(	data["meshes"][i]["transform"]["scale"][0],
-									data["meshes"][i]["transform"]["scale"][1],
-									data["meshes"][i]["transform"]["scale"][2]);
-		std::string fn = "/data/objects/" + std::string(data["meshes"][i]["file"]);
-		Mesh* m = new Mesh();
-		m->visible = data["meshes"][i]["visible"];
-		m->current_scene = scene;
-		m->t = new Transform(pos, rot, scl);
-		m->name = data["meshes"][i]["name"];
-		m->verbose = data["meshes"][i]["verbose"];
-		m->idx = i;
-		if (data["meshes"][i].contains("draw_mode")) m->SetDrawMode(data["meshes"][i]["draw_mode"]);
-		else m->SetDefaultDrawMode();
-		ObjectParser::ParseObjFile(fn, m);
-		scene->meshes.push_back(m);
-		//std::cout << m->name << " mesh completed" << std::endl;
-	}
-	std::cout << "mesh generation completed" << std::endl;
-}
-
-void ObjectGeneration(Scene*& scene, nlohmann::json data) {
-	for (int i = 0; i < data["objects"].size(); i++) {
-		glm::vec3 pos = glm::vec3(	data["objects"][i]["transform"]["position"][0],
-									data["objects"][i]["transform"]["position"][1],
-									data["objects"][i]["transform"]["position"][2]);
-		glm::vec3 rot = glm::vec3(	data["objects"][i]["transform"]["rotation"][0],
-									data["objects"][i]["transform"]["rotation"][1],
-									data["objects"][i]["transform"]["rotation"][2]);
-		glm::vec3 scl = glm::vec3(	data["objects"][i]["transform"]["scale"][0],
-									data["objects"][i]["transform"]["scale"][1],
-									data["objects"][i]["transform"]["scale"][2]);
-		
-		Object* o = new Object();
-		o->current_scene = scene;
-		o->t = new Transform(pos, rot, scl);
-		o->name = data["objects"][i]["name"];
-		if (data["objects"][i].contains("children")) {
-			for (int j = 0; j < data["objects"][i]["children"].size(); j++) {
-				if (data["objects"][i]["children"][j]["type"] == "object") 		o->AttachChild(dynamic_cast<Object*>(scene->GetObjectByName(data["objects"][i]["children"][j]["name"])));
-				else if (data["objects"][i]["children"][j]["type"] == "mesh") 	o->AttachChild(dynamic_cast<Object*>(scene->GetMeshByName(	data["objects"][i]["children"][j]["name"])));
-				else if (data["objects"][i]["children"][j]["type"] == "camera") o->AttachChild(dynamic_cast<Object*>(scene->GetCameraByName(data["objects"][i]["children"][j]["name"])));
-				else if (data["objects"][i]["children"][j]["type"] == "light") 	o->AttachChild(dynamic_cast<Object*>(scene->GetLightByName(	data["objects"][i]["children"][j]["name"])));
-			}
-		}
-		scene->objects.push_back(o);
-		//std::cout << o->name << " object completed" << std::endl;
-	}
-	std::cout << "object generation completed" << std::endl;
-}
-
-void CameraGeneration(Scene*& scene, nlohmann::json data) {
-	for (int i = 0; i < data["cameras"].size(); i++) {
-		glm::vec3 pos = glm::vec3(	data["cameras"][i]["transform"]["position"][0],
-									data["cameras"][i]["transform"]["position"][1],
-									data["cameras"][i]["transform"]["position"][2]);
-		glm::vec3 rot = glm::vec3(	data["cameras"][i]["transform"]["rotation"][0],
-									data["cameras"][i]["transform"]["rotation"][1],
-									data["cameras"][i]["transform"]["rotation"][2]);
-		glm::vec3 scl = glm::vec3(	data["cameras"][i]["transform"]["scale"][0],
-									data["cameras"][i]["transform"]["scale"][1],
-									data["cameras"][i]["transform"]["scale"][2]);
-		Transform* t = new Transform(pos, rot, scl);
-		byte projection_type;
-		if (data["cameras"][i]["projection_type"] == "PERSPECTIVE") projection_type = PERSPECTIVE;
-		else if (data["cameras"][i]["projection_type"] == "ORTHOGRAPHIC") projection_type = ORTHOGRAPHIC;
-		Camera* c = new Camera(t,	data["cameras"][i]["velocity"], projection_type, data["cameras"][i]["fov"],
-									data["cameras"][i]["x_range"], data["cameras"][i]["y_range"], data["cameras"][i]["z_near"],
-									data["cameras"][i]["z_far"], data["cameras"][i]["sensitivity"]);
-		c->name = data["cameras"][i]["name"]; //TODO: need unique camera values, not just by name
-		c->active = data["cameras"][i]["active"]; 
-		c->current_scene = scene;
-		scene->cameras.push_back(c);
-		//std::cout << c->name << " camera completed" << std::endl;
-
-	}
-	int active_camera = data["active_camera"];
-	scene->main_camera = scene->cameras[active_camera];
-	std::cout << "camera generation completed" << std::endl;
-}
-
-void LightGeneration(Scene*& scene, nlohmann::json data) {
-	scene->ambient_intensity = data["ambient_intensity"];
-	for (int i = 0; i < data["lights"].size(); i++) {
-		glm::vec3 pos = glm::vec3(	data["lights"][i]["transform"]["position"][0],
-									data["lights"][i]["transform"]["position"][1],
-									data["lights"][i]["transform"]["position"][2]);
-		glm::vec3 rot = glm::vec3(	data["lights"][i]["transform"]["rotation"][0],
-									data["lights"][i]["transform"]["rotation"][1],
-									data["lights"][i]["transform"]["rotation"][2]);
-		glm::vec3 scl = glm::vec3(	data["lights"][i]["transform"]["scale"][0],
-									data["lights"][i]["transform"]["scale"][1],
-									data["lights"][i]["transform"]["scale"][2]);
-		Transform* t = new Transform(pos, rot, scl);
-		Color c = Color(data["lights"][i]["color"][0], data["lights"][i]["color"][1],
-						data["lights"][i]["color"][2], 255);
-		Light* l = new Light(t, data["lights"][i]["strength"], c, data["lights"][i]["active"]);
-		l->name = data["lights"][i]["name"];
-		scene->lights.push_back(l);
-		//std::cout << l->name << " light completed" << std::endl;
-	}
-	std::cout << "light generation completed" << std::endl;
-}
-
-void BufferArrayInitialization(Scene*& scene) {
-
-	glGenBuffers(1, &scene->buffers->light_uniform_buffer);
-	glBindBuffer(GL_UNIFORM_BUFFER, scene->buffers->light_uniform_buffer);
-	std::vector<FlattenedLight> flattenedLights = scene->flattenLights();
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(FlattenedLight) * scene->lights.size(), flattenedLights.data(), GL_DYNAMIC_DRAW);
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-	glBindBufferBase(GL_UNIFORM_BUFFER, scene->buffers->light_binding_point, scene->buffers->light_uniform_buffer);
-
-	glGenBuffers(1, &scene->buffers->shader_uniform_buffer);
-	glBindBuffer(GL_UNIFORM_BUFFER, scene->buffers->shader_uniform_buffer);
-	std::vector<FlattenedMaterial> flattened_materials = scene->flattenMaterials();
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(FlattenedMaterial) * flattened_materials.size(), flattened_materials.data(), GL_DYNAMIC_DRAW);
-
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
-	glBindBufferBase(GL_UNIFORM_BUFFER, 1, scene->buffers->shader_uniform_buffer);
-
-	for (int i = 0; i < scene->meshes.size(); i++) {
-		scene->buffers->GenerateBuffers();
-		std::vector<FlattenedVertex> flattened_vert_array = scene->meshes[i]->flattenVertices();
-		glGenVertexArrays(1, &scene->buffers->vertex_arrays[i]);
-		glBindVertexArray(scene->buffers->vertex_arrays[i]);
-
-		glGenBuffers(1, &scene->buffers->vertex_buffers[i]);
-		glBindBuffer(GL_ARRAY_BUFFER, scene->buffers->vertex_buffers[i]);
-		glBufferData(GL_ARRAY_BUFFER, flattened_vert_array.size() * sizeof(FlattenedVertex), flattened_vert_array.data(), GL_DYNAMIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, position));
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, normal));
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(2, 4, GL_FLOAT, GL_TRUE, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, color));
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, tex_coord));
-		glEnableVertexAttribArray(3);
-		glVertexAttribIPointer(4, 1, GL_INT, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, material_index));
-		glEnableVertexAttribArray(4);
-		glVertexAttribIPointer(5, 1, GL_INT, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, draw_mode));
-		glEnableVertexAttribArray(5);
-		
-	}
-
-	float quadVertices[] = {
-		// Positions   // TexCoords
-		-1.0f, -1.0f,  0.0f, 0.0f,
-		 1.0f, -1.0f,  1.0f, 0.0f,
-		-1.0f,  1.0f,  0.0f, 1.0f,
-		 1.0f,  1.0f,  1.0f, 1.0f,
-	};
-
-	glGenVertexArrays(1, &scene->buffers->framebuffer_vao);
-	glBindVertexArray(scene->buffers->framebuffer_vao);
-
-	glGenBuffers(1, &scene->buffers->framebuffer_vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, scene->buffers->framebuffer_vbo);
-
-	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	std::cout << "buffer array generation completed" << std::endl;
-}
-
-void UpdateMeshBuffer(Scene*& scene, Mesh* mesh) {
-	glBindBuffer(GL_ARRAY_BUFFER, scene->buffers->vertex_buffers[mesh->idx]);
-	std::vector<FlattenedVertex> flattened_vert_array = scene->meshes[mesh->idx]->flattenVertices();
-
-	GLint buffer_size = 0;
-	glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &buffer_size);
-
-	size_t new_size = flattened_vert_array.size() * sizeof(FlattenedVertex);
-
-	if (new_size > buffer_size) {
-		size_t allocated_size = std::max(new_size, static_cast<size_t>(buffer_size) * 2);
-		std::cout << "Resizing buffer: old size = " << buffer_size << ", new size = " << allocated_size << std::endl;
-
-		glBufferData(GL_ARRAY_BUFFER, allocated_size, nullptr, GL_DYNAMIC_DRAW);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, new_size, flattened_vert_array.data());
-	}
-	else {
-		glBufferSubData(GL_ARRAY_BUFFER, 0, new_size, flattened_vert_array.data());
-	}
-}
-
-void UpdateCameraUniforms(Camera*& camera) {
-	glUniformMatrix4fv(camera->current_scene->user->view_matrix_id, 1, GL_FALSE, &camera->view[0][0]);
-	glUniform3f(camera->current_scene->user->camera_position_id, camera->t->global.pos[0], camera->t->global.pos[1], camera->t->global.pos[2]);
-	
-}
-
-void UpdateLightUniforms(Scene*& scene) {
-	scene->UpdateLights();
-	glUniform1i(scene->user->light_count_id, scene->lights.size());
-	std::vector<FlattenedLight> flattenedLights = scene->flattenLights();
-	
-	glBindBuffer(GL_UNIFORM_BUFFER, scene->buffers->light_uniform_buffer);
-	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(FlattenedLight) * flattenedLights.size(), flattenedLights.data());
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-	glUniform1i(scene->user->shading_mode_id, scene->shading_mode);
-	glUniform1i(scene->user->phong_exponent_id, 20);
-	glUniform1f(scene->user->ambient_intensity_id, scene->ambient_intensity);
-}
-
-void UpdateTextureUniforms(Scene*& scene) {
-	glUseProgram(scene->shaders->shader_program);
-
-	GLint maxTextures;
-	glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTextures);
-
-	for (size_t i = 0; i < scene->textures.size(); ++i) {
-		if (i >= maxTextures) {
-			std::cerr << "Warning: Texture count exceeds maximum supported units (" << maxTextures << ")" << std::endl;
-			break;
-		}
-
-		GLenum texture_unit = GL_TEXTURE0 + i;
-		scene->textures[i]->Bind(texture_unit);
-
-		GLint location = glGetUniformLocation(scene->shaders->shader_program, ("textures[" + std::to_string(i) + "]").c_str());
-		if (location == -1) {
-			std::cerr << "Warning: Uniform 'textures[" << i << "]' not found in shader!" << std::endl;
-			continue;
-		}
-
-		glUniform1i(location, i);
-	}
-}
-
-void UpdateUniforms(Scene*& scene, Camera*& camera) {
-	
-	UpdateCameraUniforms(camera);
-	UpdateLightUniforms(scene);
-	UpdateTextureUniforms(scene);
-}
-
-void RenderScene(User*& user, Scene*& scene) {
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glBindFramebuffer(GL_FRAMEBUFFER, scene->buffers->framebuffer);
-	GLenum fbStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (fbStatus != GL_FRAMEBUFFER_COMPLETE) {
-		std::cerr << "Framebuffer incomplete: " << fbStatus << std::endl;
-	}
-	else {
-		std::cout << "Framebuffer complete!" << std::endl;
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	std::cout << "Accum Color Texture ID: " << scene->buffers->accum_color_tex << std::endl;
-	do {
-		// Calculate frame timing
-		program->clock->Tick();
-
-		RenderDirectlyToScreen(scene);
-		//RenderToFramebuffer(scene);
-		
-		// Process inputs and callbacks
-		ProcessInput(user, scene);
-
-		// Swap buffers and poll events
-		glfwSwapBuffers(user->window->window);
-		glfwPollEvents();
-
-		// Print all debugs
-		DebugPrinter(scene);
-
-	} while (!glfwWindowShouldClose(user->window->window));
-
-}
-
-void Cleanup(User*& user, Scene*& scene) {
-	scene->buffers->CleanupBuffers();
-	scene->shaders->CleanupShaders();
-	glfwDestroyWindow(user->window->window);
-	glfwTerminate();
-}
-
+/*
 void ProcessInput(User*& user, Scene*& scene) {
 	Program* program = user->program;
 	Clock* clock = program->clock;
@@ -678,90 +300,4 @@ void ProcessInput(User*& user, Scene*& scene) {
 	}
 
 }
-
-void RenderFullScreenQuad(Scene*& scene) {
-	glBindVertexArray(scene->buffers->framebuffer_vao);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-	glBindVertexArray(0);
-}
-
-void RenderDirectlyToScreen(Scene*& scene) {
-	// Enable depth test and face culling for PBR pass
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-
-	// === First Pass: Render Scene to Framebuffer ===
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// Check framebuffer completeness
-	GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (framebufferStatus != GL_FRAMEBUFFER_COMPLETE) {
-		std::cerr << "Framebuffer incomplete: " << framebufferStatus << std::endl;
-		return; // Exit the loop if the framebuffer is not valid
-	}
-
-	// Use the PBR shader program
-	glUseProgram(scene->shaders->shader_program);
-
-	// Update scene data and draw objects
-	scene->UpdateObjectTrees(true);
-	UpdateLightUniforms(scene);
-	scene->DrawObjectTrees();
-}
-
-void RenderToFramebuffer(Scene*& scene) {
-	// Enable depth test and face culling for PBR pass
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-
-	// === First Pass: Render Scene to Framebuffer ===
-	glBindFramebuffer(GL_FRAMEBUFFER, scene->buffers->framebuffer);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// Check framebuffer completeness
-	GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (framebufferStatus != GL_FRAMEBUFFER_COMPLETE) {
-		std::cerr << "Framebuffer incomplete: " << framebufferStatus << std::endl;
-		return; // Exit the loop if the framebuffer is not valid
-	}
-
-	// Use the PBR shader program
-	glUseProgram(scene->shaders->shader_program);
-
-	// Update scene data and draw objects
-	scene->UpdateObjectTrees(true);
-	UpdateLightUniforms(scene);
-	scene->DrawObjectTrees();
-
-	// Unbind framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	// === Second Pass: Composite Pass ===
-
-	glDisable(GL_DEPTH_TEST); // Disable depth test for full-screen quad
-	glDisable(GL_CULL_FACE); // Disable face culling for the quad
-
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	// Check if the composite program is valid
-	if (!glIsProgram(scene->shaders->composite_program)) {
-		std::cerr << "Composite shader program is not valid!" << std::endl;
-		return; // Exit the loop if the program is invalid
-	}
-
-	// Use the composite shader program
-	glUseProgram(scene->shaders->composite_program);
-
-	// Bind accumulated textures
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, scene->buffers->accum_color_tex);
-	glUniform1i(glGetUniformLocation(scene->shaders->composite_program, "accum_color_tex"), 0);
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, scene->buffers->accum_alpha_tex);
-	glUniform1i(glGetUniformLocation(scene->shaders->composite_program, "accum_alpha_tex"), 1);
-
-	// Render the full-screen quad
-	RenderFullScreenQuad(scene);
-}
+*/

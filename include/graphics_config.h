@@ -1,6 +1,5 @@
 #pragma once
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include "json.h"
 
 struct GraphicsConfig {
@@ -15,6 +14,7 @@ struct GraphicsConfig {
     GLenum front_face;
     float line_width;
     bool blend;
+    float default_ambient_intensity;
     
     //glfw
     int profile;

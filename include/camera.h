@@ -5,11 +5,7 @@
 #include <iostream>
 #include <GL/glew.h>
 #include "scene.h"
-enum PROJECTION_TYPES {
-	ORTHOGRAPHIC = 0xFF,
-	PERSPECTIVE = 0X00,
-};
-
+#include "program.h"
 
 struct Camera : public Object {
 	
@@ -29,6 +25,8 @@ struct Camera : public Object {
 
 	Camera();
 
+	Camera(const nlohmann::json& data, Scene* scene);
+
 	Camera(Transform* t, float v, byte pt, float fov, float xr, float yr, float zn, float zf, float s);
 
 	void LookAt(glm::vec3 focus);
@@ -43,8 +41,8 @@ struct Camera : public Object {
 		//std::cout << "UPDATING SELF!" << std::endl;
 		UpdateView();
 		if (rendering && (active_local && active_global)) {
-			glUniformMatrix4fv(current_scene->user->view_matrix_id, 1, GL_FALSE, &view[0][0]);
-			glUniform3f(current_scene->user->camera_position_id, t->global.pos[0], t->global.pos[1], t->global.pos[2]);
+			scene->program->shaders->uniforms.FindAndUpdate("V", view);
+			scene->program->shaders->uniforms.FindAndUpdate("camera_position", t->global.pos);
 		}
 		
 	}

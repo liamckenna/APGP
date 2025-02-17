@@ -1,6 +1,8 @@
 #include "transform.h"
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/vector_angle.hpp>
+#undef GLM_ENABLE_EXPERIMENTAL
 
 Transform::Transform(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, void* owner, Transform* parent) {
 	this->owner = owner;
@@ -34,6 +36,30 @@ Transform::Transform(void* owner, Transform* parent) {
 	local.pos = glm::vec3(0.f);
 	local.scl = glm::vec3(1.f);
 	UpdateGlobal();
+}
+
+Transform::Transform(const nlohmann::json& data, void* owner, Transform* parent) {
+	
+
+	glm::vec3 position = glm::vec3(data["position"][0],
+		data["position"][1],
+		data["position"][2]);
+	glm::vec3 rotation = glm::vec3(data["rotation"][0],
+		data["rotation"][1],
+		data["rotation"][2]);
+	glm::vec3 scale = glm::vec3(data["scale"][0],
+		data["scale"][1],
+		data["scale"][2]);
+
+	this->owner = owner;
+	this->parent = parent;
+	local.InitializeOrientation();
+	local.pos = position;
+	local.scl = scale;
+	local.Rotate(rotation[0], rotation[1], rotation[2]);
+
+	UpdateGlobal();
+
 }
 
 void Transform::Values::InitializeOrientation() {

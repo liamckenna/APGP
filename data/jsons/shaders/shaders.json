@@ -21,6 +21,11 @@
   "compute": [
 
   ],
+  "uniforms": {
+    "ambient_intensity": 0.2,
+    "shading_mode": 3,
+    "phong_exponent": 32
+  },
   "active": {
     "vertex": 0,
     "tess_control": -1,

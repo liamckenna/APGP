@@ -1,18 +1,38 @@
 #include "camera.h"
+#include "cameras.h"
+#include "scene.h"
 #include <iostream>
 Camera::Camera() {
-	t = new Transform(glm::vec3(0.f, 0.f, 5.f), this);
+	t = new Transform(glm::vec3(0.f, 0.f, 2.f), this);
 	object_type = CAMERA;
 	x_range = 8.f;
 	y_range = 6.f;
 	aspect_ratio = x_range/y_range;
 	fov = 60.f;
-	projection_type = PROJECTION_TYPES::PERSPECTIVE;
+	projection_type = PERSPECTIVE;
 	z_near = 0.1f;
 	z_far = 100.f;
 	velocity = 5.f; //5 units per second
 	sensitivity = 30.f;
 	UpdateMatrices();
+	LookAt(glm::vec3(0.f, 0.f, 0.f));
+}
+
+Camera::Camera(const nlohmann::json& data, Scene* scene) {
+	this->scene = scene;
+	object_type = CAMERA;
+	if (data.contains("transform")) t = new Transform(data["transform"], this);
+	else t = new Transform(glm::vec3(0.f, 0.f, 2.f), this);
+	projection_type = FetchGLenum(Fetch(data, "projection_type", "perspective"));
+
+	velocity = Fetch(data, "velocity", 5.f);
+	fov = Fetch(data, "fov", 60.f);
+	x_range = Fetch(data, "x_range", 8.f);
+	y_range = Fetch(data, "y_range", 6.f);
+	z_near = Fetch(data, "z_near", 0.1f);
+	z_far = Fetch(data, "z_far", 100.f);
+	sensitivity = Fetch(data, "sensitivity", 30.f);
+	active = Fetch(data, "active", true);
 }
 
 Camera::Camera(Transform* t, float v, byte pt, float fov, float xr, float yr, float zn, float zf, float s)  : Object(t) {

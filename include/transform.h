@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/vec3.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include "json.h"
 
 struct Transform {
 	struct Values {
@@ -39,6 +40,7 @@ struct Transform {
 	Transform(glm::vec3 position, glm::vec3 rotation, glm::vec3 scale = glm::vec3(1.f), void* owner = nullptr, Transform* parent = nullptr);
 	Transform(glm::vec3 position, void* owner, Transform* parent = nullptr, glm::vec3 rotation = glm::vec3(0.f), glm::vec3 scale = glm::vec3(1.f));
 	Transform(void* owner, Transform* parent = nullptr);
+	Transform(const nlohmann::json& data, void* owner = nullptr, Transform* parent = nullptr);
 	void UpdateGlobal();
 	void SetParent(Transform* parent);
 	void UpdateLocalPositionFromGlobal(glm::vec3 old_global);

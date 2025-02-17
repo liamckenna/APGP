@@ -3,15 +3,18 @@
 #include <string>
 #include "json.h"
 #include "GL/glew.h"
+#include "uniforms.h"
+
+struct Program;
 
 struct Shaders{
 	
-	GLuint main_program;
+	GLuint gl_program;
 
 	std::unordered_map<std::string, std::vector<GLuint>> compiledShaders;
 	std::unordered_map<std::string, int> activeShaders;
 
-	std::unordered_map<std::string, GLint> uniform_locations;
+	Uniforms uniforms;
 
 	Program* program;
 
@@ -23,7 +26,6 @@ struct Shaders{
 	std::string LoadShader(const std::string& filepath);
 	void SetActiveShader(const std::string& shaderType, int newIndex);
 
-	void CacheUniformLocations(); // New function to dynamically detect uniforms
-	GLint GetUniformLocation(const std::string& name); // Lookup function
+	void SetUniformValues(const nlohmann::json& data);
 	
 };

@@ -9,9 +9,10 @@
 #include "object_parser.h"
 #include "material.h"
 #include "scene.h"
+#include "materials.h"
+#include "textures.h"
 
-
-void ObjectParser::ParseObjFile(const std::string& filepath, Mesh*& mesh) {
+void ParseObjFile(const std::string& filepath, Mesh* mesh) {
 	std::string absolute_filepath = std::filesystem::current_path().string() + filepath;
 	std::ifstream file(absolute_filepath);
 
@@ -32,8 +33,8 @@ void ObjectParser::ParseObjFile(const std::string& filepath, Mesh*& mesh) {
 			ParseMtlFile(material_library, mesh);
 		} else if (line.substr(0, 7) == "usemtl ") { //extract material name to apply to subsequent faces
 			current_material = line.substr(7);
-			mesh->SetCurrentMaterial(current_material);
-			//if (mesh->name == "grid") std::cout << "Current material: " << mesh->current_scene->current_material->name << std::endl;
+			mesh->scene->materials->current = mesh->scene->materials->GetByName(current_material);
+			//if (mesh->name == "grid") std::cout << "Current material: " << mesh->scene->current_material->name << std::endl;
 		} else if (line.substr(0, 2) == "v ") {
 			ParseVertex(line, mesh);
 		} else if (line.substr(0, 3) == "vn ") {
@@ -48,12 +49,12 @@ void ObjectParser::ParseObjFile(const std::string& filepath, Mesh*& mesh) {
 	}
 
 	mesh->NormalizeVertexNormals();
-	mesh->SetCurrentMaterial(mesh->current_scene->default_material->name);
+	mesh->scene->materials->current = mesh->scene->materials->dval;
 	file.close();
 }
 
 
-void ObjectParser::ParseVertex(const std::string& line, Mesh*& mesh) {
+void ParseVertex(const std::string& line, Mesh*& mesh) {
 	std::istringstream s(line.substr(2));
 	float x, y, z;
 	s >> x >> y >> z;
@@ -64,7 +65,7 @@ void ObjectParser::ParseVertex(const std::string& line, Mesh*& mesh) {
 	mesh->vertices.push_back(vertex);
 }
 
-void ObjectParser::ParseNormal(const std::string& line, Mesh*& mesh, int idx) {
+void ParseNormal(const std::string& line, Mesh*& mesh, int idx) {
 	std::istringstream s(line.substr(3));
 	float nx, ny, nz;
 	s >> nx >> ny >> nz;
@@ -72,7 +73,7 @@ void ObjectParser::ParseNormal(const std::string& line, Mesh*& mesh, int idx) {
 	mesh->vertex_normals.push_back(vn);
 }
 
-void ObjectParser::ParseTextureCoord(const std::string& line, Mesh*& mesh, int idx) {
+void ParseTextureCoord(const std::string& line, Mesh*& mesh, int idx) {
 	std::istringstream s(line.substr(3));
 	float u, v;
 	s >> u >> v;
@@ -81,7 +82,7 @@ void ObjectParser::ParseTextureCoord(const std::string& line, Mesh*& mesh, int i
 	mesh->texture_coords.push_back(vt);
 }
 
-void ObjectParser::ParseFace(const std::string& line, Mesh*& mesh) {
+void ParseFace(const std::string& line, Mesh*& mesh) {
 	std::istringstream s(line.substr(2));
 	std::string token;
 	std::vector<int> vertex_indices;
@@ -140,7 +141,7 @@ void ObjectParser::ParseFace(const std::string& line, Mesh*& mesh) {
 	}
 }
 
-void ObjectParser::ParseEdge(const std::string& line, Mesh*& mesh) {
+void ParseEdge(const std::string& line, Mesh*& mesh) {
 	std::istringstream s(line.substr(2));
 	std::string token;
 	std::vector<int> vertex_indices;
@@ -161,7 +162,7 @@ void ObjectParser::ParseEdge(const std::string& line, Mesh*& mesh) {
 
 
 
-std::vector<std::string> ObjectParser::Split(const std::string& str, char delimiter) {
+std::vector<std::string> Split(const std::string& str, char delimiter) {
 	std::vector<std::string> tokens;
 	std::string token;
 	std::istringstream tokenStream(str);
@@ -171,7 +172,7 @@ std::vector<std::string> ObjectParser::Split(const std::string& str, char delimi
 	return tokens;
 }
 
-void ObjectParser::ParseMtlFile(const std::string& filepath, Mesh*& mesh) {
+void ParseMtlFile(const std::string& filepath, Mesh*& mesh) {
 	std::string absolute_filepath = std::filesystem::current_path().string() + filepath;
 	std::ifstream file(absolute_filepath);
 	if (!file.is_open()) {
@@ -185,10 +186,10 @@ void ObjectParser::ParseMtlFile(const std::string& filepath, Mesh*& mesh) {
 	while (std::getline(file, line)) {
 		
 		if (line.substr(0, 7) == "newmtl ") {
-			if (material != nullptr) mesh->current_scene->materials.push_back(material);
+			if (material != nullptr) mesh->scene->materials->Insert(material);
 			material = new Material();  //start a new material
 			material->name = line.substr(7);
-			material->index = mesh->current_scene->materials.size();
+			
 		} else if (line.substr(0, 3) == "Kd ") { //diffuse color
 			std::istringstream s(line.substr(3));
 			s >> material->colors.dif.x >> material->colors.dif.y >> material->colors.dif.z;
@@ -237,25 +238,18 @@ void ObjectParser::ParseMtlFile(const std::string& filepath, Mesh*& mesh) {
 			s >> material->opacity;
 		}
 	}
-
-	
 	if (material != nullptr) { //add the last material if it exists
-		mesh->current_scene->materials.push_back(material);
-		if (material->name == "bone") {
-			
-		}
+		mesh->scene->materials->Insert(material);
 	}
 
 	file.close();
 }
 
 
-Texture* ObjectParser::ParseTxtFile(const std::string& filepath, Mesh*& mesh, Material*& material, TEXTURE_TYPES type) {
+Texture* ParseTxtFile(const std::string& filepath, Mesh*& mesh, Material*& material, TEXTURE_TYPES type) {
 	std::string fp = "/data/textures/" + filepath;
 	std::string absolute_filepath = std::filesystem::current_path().string() + fp;
 	Texture* txt = new Texture(absolute_filepath, type);
-	txt->index = mesh->current_scene->textures.size();
-	mesh->current_scene->textures.push_back(txt);
-	txt->LoadTexture();
+	mesh->scene->textures->InsertAndLoad(txt);
 	return txt;
 }

@@ -109,17 +109,6 @@
 			"file": "pokeball.obj",
 			"verbose": false,
 			"visible": true
-		},
-		{
-			"transform": {
-				"position": [ 0.0, 0.0, 0.0 ],
-				"rotation": [ 0.0, 0.0, 0.0 ],
-				"scale": [ 1.0, 1.0, 1.0 ]
-			},
-			"name": "robot_full",
-			"file": "robot_full.obj",
-			"verbose": false,
-			"visible": true
 		}
 	],
 	"cameras": [

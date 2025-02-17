@@ -1,9 +1,8 @@
 #include "program.h"
 #include "json.h"
 #include <iostream>
+#include <GL/glew.h>
 #include "user.h"
-#include "glfw_setup.h"
-#include "glew_init.h"
 #include "callbacks.h"
 #include "scene.h"
 #include "clock.h"
@@ -14,7 +13,7 @@ Program::Program(const std::string& filepath) {
 
 	nlohmann::json program_json = ReadJsonFromFile(filepath);
 
-	InitializeGLFW();
+	glfwInit();
 
 	clock = new Clock();
 	std::cout << "initialized clock" << std::endl;
@@ -31,11 +30,11 @@ Program::Program(const std::string& filepath) {
 	windows = new Windows(windows_filepath, this);
 	std::cout << "initialized windows" << std::endl;
 
-	InitializeGLEW();
+	glewInit();
 
 	std::string shaders_filepath = "/data/jsons/shaders/" + std::string(program_json["shaders"]);
 	shaders = new Shaders(shaders_filepath, this);
-	std::cout << "initialized shaders" << std::endl;
+	std::cout << "initialized shaders and their uniforms" << std::endl;
 
 	SetCallbacks(windows->program_window);
 
@@ -43,5 +42,23 @@ Program::Program(const std::string& filepath) {
 }
 
 void Program::Run() {
-	//move loop here
+	
+	do {
+		// Calculate frame timing
+		clock->Tick();
+
+		//scene->Render();
+
+		// Swap buffers and poll events
+		glfwSwapBuffers(windows->program_window->glfw_window);
+		//glfwPollEvents();
+
+	} while (!glfwWindowShouldClose(windows->program_window->glfw_window));
+
+}
+
+void Program::Cleanup() {
+	//cleanup buffers and shaders
+	glfwDestroyWindow(windows->program_window->glfw_window);
+	glfwTerminate();
 }

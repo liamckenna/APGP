@@ -1,4 +1,5 @@
 #include "user.h"
+#include "program.h"
 #include "json.h"
 #include <iostream>
 User::User(const std::string& filepath, Program* program) {

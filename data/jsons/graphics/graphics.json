@@ -8,7 +8,8 @@
     "front_face": "cw",
     "line_width": 2.0,
     "blend": true,
-    "default_draw_mode": "GL_TRIANGLES"
+    "default_draw_mode": "GL_TRIANGLES",
+    "ambient_intensity": 0.2
   },
   "glfw": {
     "profile": "core",

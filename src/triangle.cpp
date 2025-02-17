@@ -3,9 +3,10 @@
 #include <string>
 #include "mesh.h"
 #include "scene.h"
+#include "materials.h"
 
 Triangle::Triangle(Vertex* v0, Vertex* v1, Vertex* v2, bool precalculated_normals, Mesh* m) {
-	AssignMaterial(m->current_scene->current_material);
+	AssignMaterial(m->scene->materials->current);
 	this->m = m;
 	this->v[0] = v0;
 	this->v[1] = v1;
@@ -78,7 +79,7 @@ void Triangle::UpdateVertexNormals() {
 
 void Triangle::AssignMaterial(Material* material) {
 	if (material == nullptr) {
-		mtl = m->current_scene->default_material;
+		mtl = m->scene->materials->dval;
 	} else {
 		mtl = material;
 	}

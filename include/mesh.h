@@ -8,11 +8,16 @@
 #include "edge.h"
 #include "object.h"
 #include "scene.h"
-#include "buffers.h"
 #include "camera.h"
+#include "uniforms.h"
+#include "program.h"
 struct Edge;
 struct Triangle;
 struct Mesh : public Object {
+
+	GLuint vao;
+	GLuint vbo;
+
 	std::vector<Vertex*> vertices;
 	std::vector<glm::vec3> vertex_positions;
 	std::vector<glm::vec3> vertex_normals;
@@ -29,15 +34,21 @@ struct Mesh : public Object {
 	
 	GLuint draw_mode;
 
-	int idx;
+	std::string file;
 
 	bool verbose;
 	bool visible;
 
 	Mesh();
+	Mesh(const nlohmann::json& data, Scene* scene);
 	Mesh(Color color);
 	Mesh(COLORS color_name);
 
+	void SetupBuffers();
+	void GenerateBuffers();
+	void PopulateBuffers(std::vector<FlattenedVertex> flattened_vertices);
+
+	void ParseFile();
 	std::vector<FlattenedVertex> flattenVertices();
 	std::vector<Vertex> GetVertexArray();
 	void InsertVertex(const glm::vec3& position, const glm::vec3& normal, const glm::vec2& tex_coord);
@@ -69,9 +80,9 @@ struct Mesh : public Object {
 		
 		if (!visible || !(active_local && active_global)) return;
 		UpdateModelMatrix();
-		glUniformMatrix4fv(current_scene->user->matrix_id, 1, GL_FALSE, &(camera->projection * camera->view * model)[0][0]);
-		glUniformMatrix4fv(current_scene->user->model_matrix_id, 1, GL_FALSE, &model[0][0]);
-		glBindVertexArray(current_scene->buffers->vertex_arrays[idx]);
+		scene->program->shaders->uniforms.FindAndUpdate("MVP", (camera->projection * camera->view * model));
+		scene->program->shaders->uniforms.FindAndUpdate("M", model);
+		glBindVertexArray(vao);
 		if (draw_mode == GL_TRIANGLES) glDrawArrays(GL_TRIANGLES, 0, GLsizei(triangles.size() * 3));
 		else if (draw_mode == GL_LINES) glDrawArrays(GL_LINES, 0, edges.size() * 2);
 

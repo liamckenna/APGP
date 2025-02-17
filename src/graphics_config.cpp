@@ -38,6 +38,7 @@ void GraphicsConfig::OpenGLConfig(const nlohmann::json& settings) {
 
     line_width = Fetch(settings, "line_width", 1.f);
     blend = Fetch(settings, "blend", true);
+    default_ambient_intensity = Fetch(settings, "ambient_intensity", 0.2f);
 
 }
 
@@ -58,6 +59,7 @@ void GraphicsConfig::DefaultOpenGLConfig() {
     front_face = GL_CW;
     line_width = 1.f;
     blend = true;
+    default_ambient_intensity = 0.2f;
 }
 
 void GraphicsConfig::DefaultGLFWConfig() {
@@ -93,6 +95,5 @@ void GraphicsConfig::ApplyGLFWSettings() const {
     glfwWindowHint(GLFW_OPENGL_PROFILE, profile);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, gl_version_major);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, gl_version_minor);
-    glfwSwapInterval(swap_interval);
 }
 

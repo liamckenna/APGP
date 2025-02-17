@@ -3,10 +3,15 @@
 #include <glm/vec3.hpp>
 #include <string>
 #include "json.h"
+
+struct Scene;
+
 struct Material {
 
 	std::string name;
-	int index;
+	int idx;
+
+	Scene* scene;
 
 	struct Colors {
 		glm::vec3 dif;
@@ -25,7 +30,7 @@ struct Material {
 	int edges;
 
 
-	struct Textures {
+	struct TextureSlots {
 		Texture* dif; //diffuse (albedo)
 		Texture* nrm; //normal
 		Texture* bmp; //bump
@@ -39,7 +44,7 @@ struct Material {
 		Texture* met; //metallic
 	} textures;
 
-	Material(const nlohmann::json& data);
+	Material(const nlohmann::json& data, Scene* scene);
 	Material();
 
 

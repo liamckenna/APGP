@@ -21,11 +21,11 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 }
 
 void MouseCallback(GLFWwindow* window, double xpos, double ypos) {
-	User* user = static_cast<User*>(glfwGetWindowUserPointer(window));
-	Program* program = user->program;
+	Window* user_window = static_cast<Window*>(glfwGetWindowUserPointer(window));
+	Program* program = user_window->program;
 	Clock* clock = program->clock;
-	Window* main_window = program->windows->main_window;
-	Cursor* cursor = main_window->cursor;
+	Window* program_window = program->windows->program_window;
+	Cursor* cursor = program_window->cursor;
 
 
 	//todo: replace with a program or scene function that handles camera movement i think
@@ -33,8 +33,8 @@ void MouseCallback(GLFWwindow* window, double xpos, double ypos) {
 
 	cursor->Update(xpos, ypos);
 
-	cursor->offset_x *= cursor->sensitivity * clock->GetDeltaTime() / main_window->width * 100000.f;
-	cursor->offset_y *= cursor->sensitivity * clock->GetDeltaTime() / main_window->height * 100000.f;
+	cursor->offset_x *= cursor->sensitivity * clock->GetDeltaTime() / program_window->width * 100000.f;
+	cursor->offset_y *= cursor->sensitivity * clock->GetDeltaTime() / program_window->height * 100000.f;
 
 
 	//scene->GetObjectByName("camera shell")->t->local.RotateYaw(user->input->cursor->offset_x);

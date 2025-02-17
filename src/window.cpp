@@ -2,8 +2,10 @@
 #include "cursor.h"
 #include <iostream>
 #include "callbacks.h"
-Window::Window(const nlohmann::json& settings, uint id) {
-	this->id = id;
+#include "program.h"
+#include "graphics_config.h"
+Window::Window(const nlohmann::json& settings, Program* program) {
+	this->program = program;
 	this->width = (settings.contains("width")) ? int(settings["width"]) : 1280;
 	this->height = (settings.contains("height")) ? int(settings["height"]) : 720;
 	this->msaa = (settings.contains("msaa")) ? int(settings["msaa"]) : 0;
@@ -19,26 +21,30 @@ Window::Window(const nlohmann::json& settings, uint id) {
 		else if (std::string(settings["display_mode"]) == "fullscreen") this->display_mode = FULLSCREEN;
 		else if (std::string(settings["display_mode"]) == "windowed_fullscreen") this->display_mode = WINDOWED_FULLSCREEN;
 	}
-	this->cursor_mode = NORMAL;
+	this->cursor_mode = GLFW_CURSOR_NORMAL;
 	if (settings.contains("cursor_mode")) {
-		if (std::string(settings["cursor_mode"]) == "normal") this->cursor_mode = NORMAL;
-		else if (std::string(settings["cursor_mode"]) == "hidden") this->cursor_mode = HIDDEN;
-		else if (std::string(settings["cursor_mode"]) == "disabled") this->cursor_mode = DISABLED;
+		if (std::string(settings["cursor_mode"]) == "normal") this->cursor_mode = GLFW_CURSOR_NORMAL;
+		else if (std::string(settings["cursor_mode"]) == "hidden") this->cursor_mode = GLFW_CURSOR_HIDDEN;
+		else if (std::string(settings["cursor_mode"]) == "disabled") this->cursor_mode = GLFW_CURSOR_DISABLED;
 	}
-
+	this->swap_interval = program->graphics_config->swap_interval;
 
 	this->title = (settings.contains("title")) ? std::string(settings["title"]) : "Window Title";
 
 	this->cursor = new Cursor(this);
 
+	std::cout << "after cursor" << std::endl;
+
 	SetGLFWwindowHints();
 
 	BindGLFWwindow();
 	
+	SetInputMode();
+	SetSwapInterval();
 }
 
-Window::Window(uint width, uint height, uint msaa, int pos_x, int pos_y, bool resizable, bool decorated, bool focused, bool visible, DISPLAY_MODE display_mode, CURSOR_MODE cursor_mode, std::string title, uint id) {
-	this->id = id;
+Window::Window(uint width, uint height, uint msaa, int pos_x, int pos_y, bool resizable, bool decorated, bool focused, bool visible, DISPLAY_MODE display_mode, GLenum cursor_mode, std::string title, uint id) {
+	this->idx = id;
 	this->width = width;
 	this->height = height;
 	this->msaa = msaa;
@@ -57,6 +63,9 @@ Window::Window(uint width, uint height, uint msaa, int pos_x, int pos_y, bool re
 	SetGLFWwindowHints();
 
 	BindGLFWwindow();
+
+	SetInputMode();
+	SetSwapInterval();
 }
 
 void Window::SetGLFWwindowHints() {
@@ -65,7 +74,16 @@ void Window::SetGLFWwindowHints() {
 	glfwWindowHint(GLFW_DECORATED, decorated ? GLFW_TRUE : GLFW_FALSE);
 	glfwWindowHint(GLFW_FOCUSED, focused ? GLFW_TRUE : GLFW_FALSE);
 	glfwWindowHint(GLFW_VISIBLE, visible ? GLFW_TRUE : GLFW_FALSE);
+	
+}
+
+void Window::SetInputMode() {
 	glfwSetInputMode(glfw_window, GLFW_CURSOR, cursor_mode);
+}
+
+void Window::SetSwapInterval() {
+	glfwSwapInterval(swap_interval);
+	std::cout << "swap interval set to " << swap_interval << std::endl;
 }
 
 void Window::BindGLFWwindow() {

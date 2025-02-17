@@ -1,9 +1,8 @@
 #include "material.h"
 #include <iostream>
-Material::Material(const nlohmann::json& data) {
-	
+Material::Material(const nlohmann::json& data, Scene* scene) {
+	this->scene = scene;
 	name = data["name"];
-	index = 0;
 	colors.dif = glm::vec3(data["dif"][0], data["dif"][1], data["dif"][2]);
 	colors.amb = glm::vec3(data["amb"][0], data["amb"][1], data["amb"][2]);
 	colors.spc = glm::vec3(data["spc"][0], data["spc"][1], data["spc"][2]);
@@ -29,6 +28,7 @@ Material::Material(const nlohmann::json& data) {
 }
 
 Material::Material() {
+	name = "default";
 	colors.dif 	= glm::vec3(1.f, 1.f, 1.f);
 	colors.amb 	= glm::vec3(0.2f, 0.2f, 0.2f);
 	colors.spc 	= glm::vec3(1.f, 1.f, 1.f);

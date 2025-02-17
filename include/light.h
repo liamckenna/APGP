@@ -8,6 +8,7 @@ struct Light : public Object {
 	Color c;
 
 	Light();
+	Light(const nlohmann::json& data, Scene* scene);
 	Light(Transform* t, float s = 100.f, Color c = Color(), bool a = true);
 	Light(float p0, float p1, float p2, float s = 100.f, Color c = Color(), bool a = true);
 

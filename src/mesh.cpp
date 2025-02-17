@@ -1,11 +1,68 @@
 #include "mesh.h"
 #include <iostream>
 #include "scene.h"
+#include "materials.h"
+#include "object_parser.h"
 Mesh::Mesh() {
 	default_color = Color(COLORS::DEFAULT);
 	tri_color = default_color;
 	model = glm::mat4(1.f);
 	object_type = MESH;
+}
+
+Mesh::Mesh(const nlohmann::json& data, Scene* scene) {
+	this->scene = scene;
+	object_type = MESH;
+	if (data.contains("transform")) t = new Transform(data["transform"], this);
+	else t = new Transform(glm::vec3(0.f, 0.f, 0.f), this);
+	file = std::string(data["file"]);
+	
+	visible = Fetch(data, "visible", true);
+	verbose = Fetch(data, "verbose", false);
+	draw_mode = FetchGLenum(Fetch(data, "draw_mode", "gl_triangles"));
+	ParseFile();
+	SetupBuffers();
+}
+
+void Mesh::ParseFile() {
+	std::string filename = "/data/objects/" + file;
+	ParseObjFile(filename, this);
+}
+
+void Mesh::SetupBuffers() {
+	
+	GenerateBuffers();
+	PopulateBuffers(flattenVertices());
+
+}
+
+void Mesh::GenerateBuffers() {
+	glGenVertexArrays(1, &vao);
+	glGenBuffers(1, &vbo);
+}
+
+void Mesh::PopulateBuffers(std::vector<FlattenedVertex> flattened_vertices) {
+
+	glBindVertexArray(vao);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, flattened_vertices.size() * sizeof(FlattenedVertex), flattened_vertices.data(), GL_DYNAMIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, position));
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, normal));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 4, GL_FLOAT, GL_TRUE, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, color));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, tex_coord));
+	glEnableVertexAttribArray(3);
+	glVertexAttribIPointer(4, 1, GL_INT, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, material_index));
+	glEnableVertexAttribArray(4);
+	glVertexAttribIPointer(5, 1, GL_INT, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, draw_mode));
+	glEnableVertexAttribArray(5);
+
+	glBindVertexArray(0);
+
 }
 
 Mesh::Mesh(Color color) {
@@ -33,7 +90,7 @@ std::vector<FlattenedVertex> Mesh::flattenVertices() {
 				flatVertex.normal = vertex->n.n;
 				flatVertex.color = triangle->c.ToVec4();
 				flatVertex.tex_coord = vertex->tex_coord;
-				flatVertex.material_index = triangle->mtl->index;
+				flatVertex.material_index = triangle->mtl->idx;
 				flatVertex.draw_mode = GetDrawModeIdx();
 				flatVertices.push_back(flatVertex);
 			}
@@ -46,7 +103,7 @@ std::vector<FlattenedVertex> Mesh::flattenVertices() {
 				flatVertex.normal = vertex->n.n;
 				flatVertex.color = edge->c.ToVec4();
 				flatVertex.tex_coord = vertex->tex_coord;
-				flatVertex.material_index = edge->mtl->index;
+				flatVertex.material_index = edge->mtl->idx;
 				flatVertex.draw_mode = GetDrawModeIdx();
 				flatVertices.push_back(flatVertex);
 			}
@@ -170,26 +227,6 @@ void Mesh::UpdateModelMatrix() {
 	model = glm::scale(model, this->t->global.scl);
 }
 
-void Mesh::SetCurrentMaterial(const std::string& material_name) {
-	for (Material* material : current_scene->materials) {
-		if (material->name == material_name) {
-			current_scene->current_material = material;
-			break;
-		}
-	}
-}
-
-
-void Mesh::SetDrawMode(const std::string& mode) { //draw mode indices
-	if (mode == "GL_POINTS") draw_mode = GL_POINTS; //0
-	else if (mode == "GL_LINES") draw_mode = GL_LINES; //1
-	else if (mode == "GL_LINE_STRIP") draw_mode = GL_LINE_STRIP; //2
-	else if (mode == "GL_LINE_LOOP") draw_mode = GL_LINE_LOOP; //3
-	else if (mode == "GL_TRIANGLES") draw_mode = GL_TRIANGLES; //4
-	else if (mode == "GL_TRIANGLE_STRIP") draw_mode = GL_TRIANGLE_STRIP; //5
-	else if (mode == "GL_TRIANGLE_FAN") draw_mode = GL_TRIANGLE_FAN; //6
-}
-
 int Mesh::GetDrawModeIdx() {
 	if (draw_mode == GL_POINTS) return 0;
 	else if (draw_mode == GL_LINES) return 1;
@@ -198,8 +235,5 @@ int Mesh::GetDrawModeIdx() {
 	else if (draw_mode == GL_TRIANGLES) return 4;
 	else if (draw_mode == GL_TRIANGLE_STRIP) return 5;
 	else if (draw_mode == GL_TRIANGLE_FAN) return 6;
-}
-
-void Mesh::SetDefaultDrawMode() {
-	draw_mode = current_scene->default_draw_mode;
+	else return 4;
 }

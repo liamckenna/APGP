@@ -9,13 +9,20 @@
 
 Shaders::Shaders(const std::string& filepath, Program* program) {
     this->program = program;
-    main_program = glCreateProgram();
+    gl_program = glCreateProgram();
     nlohmann::json data = ReadJsonFromFile(filepath);
     Initialize(data);
+
+    uniforms = Uniforms(this);
+    uniforms.CacheUniforms();
+
+    if (data.contains("uniforms")) {
+        SetUniformValues(data["uniforms"]);
+    }
 }
 
 Shaders::~Shaders() {
-    glDeleteProgram(main_program);
+    glDeleteProgram(gl_program);
 }
 
 bool Shaders::Initialize(const nlohmann::json& data) {
@@ -43,7 +50,7 @@ bool Shaders::Initialize(const nlohmann::json& data) {
             if (!shaderData.contains("file")) continue;
 
             std::string filePath = "/shaders/" + std::string(shaderData["file"]);
-            GLuint shaderID = CompileAndAttachShader(filePath, shaderType, main_program);
+            GLuint shaderID = CompileAndAttachShader(filePath, shaderType, gl_program);
 
             if (shaderID == 0) return false; // Shader compilation failed
 
@@ -51,24 +58,23 @@ bool Shaders::Initialize(const nlohmann::json& data) {
 
             // Attach only if it's the active shader for this type
             if (shaderIndex == activeShaders[key]) {
-                glAttachShader(main_program, shaderID);
+                glAttachShader(gl_program, shaderID);
             }
 
             shaderIndex++;
         }
     }
 
-    glLinkProgram(main_program);
+    glLinkProgram(gl_program);
     GLint success;
     char infoLog[512];
-    glGetProgramiv(main_program, GL_LINK_STATUS, &success);
+    glGetProgramiv(gl_program, GL_LINK_STATUS, &success);
     if (!success) {
-        glGetProgramInfoLog(main_program, 512, NULL, infoLog);
+        glGetProgramInfoLog(gl_program, 512, NULL, infoLog);
         std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
         return false;
     }
 
-    CacheUniformLocations();
     std::cout << "Shaders initialized successfully!" << std::endl;
     return true;
 }
@@ -128,50 +134,35 @@ void Shaders::SetActiveShader(const std::string& shaderType, int newIndex) {
 
     // Detach the current active shader if one exists
     if (activeShaders[shaderType] != -1) {
-        glDetachShader(main_program, compiledShaders[shaderType][activeShaders[shaderType]]);
+        glDetachShader(gl_program, compiledShaders[shaderType][activeShaders[shaderType]]);
     }
 
     // Attach the new active shader
-    glAttachShader(main_program, compiledShaders[shaderType][newIndex]);
+    glAttachShader(gl_program, compiledShaders[shaderType][newIndex]);
     activeShaders[shaderType] = newIndex;
 
     // Relink the shader program
-    glLinkProgram(main_program);
+    glLinkProgram(gl_program);
 }
 
-GLint Shaders::GetUniformLocation(const std::string& name) {
-    if (uniform_locations.find(name) != uniform_locations.end()) {
-        return uniform_locations[name];
-    }
-
-    // If the uniform is not cached, try retrieving it dynamically
-    GLint location = glGetUniformLocation(main_program, name.c_str());
-
-    if (location == -1) {
-        std::cerr << "Warning: Uniform '" << name << "' not found in shader program!" << std::endl;
-    }
-    else {
-        uniform_locations[name] = location; // Cache it for future use
-    }
-
-    return location;
-}
-
-
-void Shaders::CacheUniformLocations() {
-    GLint uniformCount;
-    glGetProgramiv(main_program, GL_ACTIVE_UNIFORMS, &uniformCount);
-
-    for (GLint i = 0; i < uniformCount; i++) {
-        char name[256];
-        GLsizei length;
-        GLint size;
-        GLenum type;
-        glGetActiveUniform(main_program, i, sizeof(name), &length, &size, &type, name);
-
-        GLint location = glGetUniformLocation(main_program, name);
-        uniform_locations[name] = location;
-
-        std::cout << "Cached uniform: " << name << " at location " << location << std::endl;
+void Shaders::SetUniformValues(const nlohmann::json& data) {
+    for (auto& [name, value] : data.items()) {
+        try {
+            if (value.is_number_integer()) {
+                uniforms.FindAndUpdate(name, static_cast<int>(value));
+            }
+            else if (value.is_number_unsigned()) {
+                uniforms.FindAndUpdate(name, static_cast<unsigned int>(value));
+            }
+            else if (value.is_number_float()) {
+                uniforms.FindAndUpdate(name, static_cast<float>(value));
+            }
+            else {
+                std::cerr << "Warning: Unsupported uniform type for " << name << std::endl;
+            }
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Error processing uniform " << name << ": " << e.what() << std::endl;
+        }
     }
 }

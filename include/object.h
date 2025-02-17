@@ -1,9 +1,10 @@
 #pragma once
 #include "transform.h"
+#include "scene.h"
 #include <vector>
-#include <string>
+#include <iostream>
 #include "byte.h"
-struct Scene;
+
 struct Camera;
 enum OBJECT_TYPE {
 	OBJECT	= 0x00,
@@ -16,8 +17,8 @@ struct Object {
 	Transform* t;
 	
 	std::string name;
-	
 	byte object_type;
+	int idx;
 
 	Object* parent;
 	std::vector<Object*> children;
@@ -25,7 +26,7 @@ struct Object {
 	bool active_global;
 	bool active_local;
 
-	Scene* current_scene;
+	Scene* scene;
 
 	void UpdateTree(bool rendering = false);
 
@@ -33,8 +34,10 @@ struct Object {
 
 	void DetatchChild(Object* child);
 
-	Object(Transform* t);
+	
 	Object();
+	Object(const nlohmann::json& data, Scene* scene);
+	Object(Transform* t);
 
 	void PrintTree(int lvl);
 

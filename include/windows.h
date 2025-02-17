@@ -11,7 +11,7 @@ struct Windows {
     Window* active_window;
 
     Program* program;
-    uint next_id;
+    int it;
 
     Windows(const std::string& filepath, Program* program);
     ~Windows();

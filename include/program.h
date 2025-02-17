@@ -25,4 +25,5 @@ struct Program {
 	Program(const std::string& filepath);
 
 	void Run();
+	void Cleanup();
 };

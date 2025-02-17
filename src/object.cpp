@@ -1,7 +1,12 @@
 #include "object.h"
+#include "objects.h"
+#include "meshes.h"
+#include "cameras.h"
+#include "lights.h"
 #include <iostream>
 #include "mesh.h"
 #include "camera.h"
+#include "json.h"
 #include <algorithm>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
@@ -10,6 +15,27 @@ Object::Object() {
 	object_type = OBJECT;
 	active_global = true;
 	active_local = true;
+	name = "default object";
+}
+
+Object::Object(const nlohmann::json& data, Scene* scene) {
+	this->scene = scene;
+	object_type = OBJECT;
+	active_global = true;
+	active_local = true;
+
+	if (data.contains("transform")) t = new Transform(data["transform"], this);
+	else t = new Transform(glm::vec3(0.f, 0.f, 0.f), this);
+
+	name = Fetch(data, "name", "UNSET OBJECT NAME");
+
+	//for (int j = 0; j < data["children"].size(); j++) {
+	//	//if (data["children"][j]["type"] == "object") 		continue;
+	//	if (data["children"][j]["type"] == "object") 		AttachChild(scene->objects->GetByName(data["children"][j]["name"]));
+	//	else if (data["children"][j]["type"] == "mesh") 	AttachChild(dynamic_cast<Object*>(scene->meshes->GetByName(data["children"][j]["name"])));
+	//	else if (data["children"][j]["type"] == "camera")	AttachChild(dynamic_cast<Object*>(scene->cameras->GetByName(data["children"][j]["name"])));
+	//	else if (data["children"][j]["type"] == "light") 	AttachChild(dynamic_cast<Object*>(scene->lights->GetByName(data["children"][j]["name"])));
+	//}
 }
 
 Object::Object(Transform* t) {
