@@ -15,8 +15,9 @@
 #include <iostream>
 #include <cctype>
 #include "program.h"
+#include "ecs_manager.h"
 
-Scene::Scene(const std::string& filepath, Program* program) {
+Scene::Scene(const std::string& filepath, Program* program) : scene_ecs(), resource_manager() {
 
 	this->program = program;
 	user = program->user;
@@ -25,39 +26,60 @@ Scene::Scene(const std::string& filepath, Program* program) {
 
 	name = Fetch(data, "name", "My Scene");
 
-	std::cout << "working on lights" << std::endl;
-	
-	lights = new Lights(data["lights"], this);
-	
-	std::cout << "setup lights" << std::endl;
+	if (!program->hardcoded) {
+		//existing code
+		std::cout << "working on lights" << std::endl;
 
-	cameras = new Cameras(data["cameras"], this);
-	
-	std::cout << "setup cameras" << std::endl;
+		lights = new Lights(data["lights"], this);
 
-	materials = new Materials(this);
-	
-	std::cout << "setup materials" << std::endl;
+		std::cout << "setup lights" << std::endl;
 
-	textures = new Textures(this);
+		cameras = new Cameras(data["cameras"], this);
 
-	std::cout << "setup textures" << std::endl;
-	
-	meshes = new Meshes(data["meshes"], this);
+		std::cout << "setup cameras" << std::endl;
 
-	std::cout << "setup meshes" << std::endl;
-	
-	objects = new Objects(data["objects"], this);
+		materials = new Materials(this);
 
-	std::cout << "setup objects" << std::endl;
-	
-	materials->SetupBuffer();
+		std::cout << "setup materials" << std::endl;
 
-	std::cout << "setup mat buffer" << std::endl;
+		textures = new Textures(this);
 
-	textures->SetupBuffer();
+		std::cout << "setup textures" << std::endl;
 
-	std::cout << "setup text buffer" << std::endl;
+		meshes = new Meshes(data["meshes"], this);
+
+		std::cout << "setup meshes" << std::endl;
+
+		objects = new Objects(data["objects"], this);
+
+		std::cout << "setup objects" << std::endl;
+
+		materials->SetupBuffer();
+
+		std::cout << "setup material buffer" << std::endl;
+
+		textures->SetupBuffer();
+
+		std::cout << "setup texture buffer" << std::endl;
+	}
+	else {
+		
+		
+		Entity camera_entity = scene_ecs.CreateEntity();
+		scene_ecs.AddComponent(camera_entity, TransformComponent{ .position = glm::vec3(3.f, 3.f, 3.f) });
+		scene_ecs.AddComponent(camera_entity, CameraComponent{});
+		scene_ecs.AddComponent(camera_entity, PrimaryCameraComponent{});
+
+		Entity light_entity = scene_ecs.CreateEntity();
+		scene_ecs.AddComponent(light_entity, TransformComponent{ .position = glm::vec3(0.f, 5.f, 0.f) });
+		scene_ecs.AddComponent(camera_entity, LightComponent{});
+
+		Entity cube_entity = scene_ecs.CreateEntity();
+		scene_ecs.AddComponent(cube_entity, TransformComponent{});
+		scene_ecs.AddComponent(cube_entity, MeshComponent{.mesh_filepath = "default.obj"});
+		scene_ecs.AddComponent(cube_entity, MaterialComponent{});
+
+	}
 	
 	std::cout << "scene generation completed" << std::endl;
 

@@ -7,47 +7,40 @@
 struct Scene;
 
 struct Material {
+    std::string name;
+    int index = -1;  // Matches the `MaterialQuery()` lookup index
 
-	std::string name;
-	int idx;
+    Scene* scene = nullptr;
 
-	Scene* scene;
+    struct Colors {
+        glm::vec3 diffuse = glm::vec3(1.0f);
+        glm::vec3 ambient = glm::vec3(0.2f);
+        glm::vec3 specular = glm::vec3(1.0f);
+        glm::vec3 emissive = glm::vec3(0.0f);
+    } colors;
 
-	struct Colors {
-		glm::vec3 dif;
-		glm::vec3 amb;
-		glm::vec3 spc;
-		glm::vec3 ems;
+    float shininess = 32.0f; // Phong exponent
+    float roughness = 0.5f;
+    float opacity = 1.0f;
+    float metallic = 0.0f;
+    float refractive_index = 1.0f;
 
-	} colors;
+    struct TextureSlots {
+        int diffuse = -1; // Diffuse (albedo)
+        int normal = -1;  // Normal
+        int bump = -1;    // Bump
+        int specular = -1;// Specular
+        int roughness = -1;// Roughness (glossiness inverse)
+        int displacement = -1;
+        int ambient_occlusion = -1;
+        int opacity = -1; // Opacity (transparency inverse, alpha)
+        int emissive = -1;
+        int height = -1;
+        int metallic = -1;
+    } textures;
 
-	float shininess; //phong exp
-	float roughness;
-	float opacity;
-	float metallic;
-	float refractive_index;
-	int tris;
-	int edges;
-
-
-	struct TextureSlots {
-		Texture* dif; //diffuse (albedo)
-		Texture* nrm; //normal
-		Texture* bmp; //bump
-		Texture* spc; //specular
-		Texture* rgh; //roughness (glossiness inverse)
-		Texture* dsp; //displacement
-		Texture* aoc; //ambient occlusion
-		Texture* opc; //opacity (transparency inverse, alpha)
-		Texture* ems; //emissive
-		Texture* hgt; //height
-		Texture* met; //metallic
-	} textures;
-
-	Material(const nlohmann::json& data, Scene* scene);
-	Material();
-
-
+    Material() = default;
+    Material(const nlohmann::json& data, Scene* scene);
 };
 #pragma pack(push, 1)
 struct FlattenedMaterial {

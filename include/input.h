@@ -2,6 +2,7 @@
 #include "cursor.h"
 #include "byte.h"
 #include <unordered_set>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 enum KEY_STATE {

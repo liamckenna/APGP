@@ -2,15 +2,14 @@
 #include "program.h"
 #include "json.h"
 #include <iostream>
-User::User(const std::string& filepath, Program* program) {
 
-	this->program = program;
+User::User(const std::string& filepath, Program* program) : program(program), input() {
 
 	nlohmann::json data = ReadJsonFromFile(filepath);
-
 	name = data["name"];
-
-	input = new Input();
 
 }
 
+Input& User::GetInput() {
+	return input;
+}

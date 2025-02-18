@@ -1,9 +1,11 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <optional>
 #include "shaders.h"
 #include "user.h"
-
+#include "ecs_manager.h"
+#include "resource_manager.h"
 struct Mesh;
 struct Meshes;
 struct Object;
@@ -25,7 +27,7 @@ struct Scene {
 
 	std::string name;
 
-	User* user;
+	std::optional<User> user;
 
 	Cameras* cameras;
 
@@ -38,6 +40,10 @@ struct Scene {
 	Materials* materials;
 
 	Textures* textures;
+
+	ECSManager scene_ecs;
+
+	ResourceManager resource_manager;
 	
 	Scene(const std::string& filepath, Program* program);
 

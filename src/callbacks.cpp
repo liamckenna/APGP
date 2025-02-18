@@ -3,6 +3,7 @@
 #include "program.h"
 #include "clock.h"
 #include "windows.h"
+#include "input.h"
 #include <iostream>
 
 void ErrorCallback(int error, const char* description) {
@@ -10,20 +11,20 @@ void ErrorCallback(int error, const char* description) {
 }
 
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-	User* user = static_cast<User*>(glfwGetWindowUserPointer(window));
+	Window* user_window = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
 	if (action == GLFW_PRESS) {
-		user->input->UpdateKeyState(key, true);
+		user_window->program->user.value().input.UpdateKeyState(key, true);
 	}
 	else if (action == GLFW_RELEASE) {
-		user->input->UpdateKeyState(key, false);
+		user_window->program->user.value().input.UpdateKeyState(key, false);
 	}
 }
 
 void MouseCallback(GLFWwindow* window, double xpos, double ypos) {
 	Window* user_window = static_cast<Window*>(glfwGetWindowUserPointer(window));
 	Program* program = user_window->program;
-	Clock* clock = program->clock;
+	Clock& clock = program->clock;
 	Window* program_window = program->windows->program_window;
 	Cursor* cursor = program_window->cursor;
 
@@ -33,8 +34,8 @@ void MouseCallback(GLFWwindow* window, double xpos, double ypos) {
 
 	cursor->Update(xpos, ypos);
 
-	cursor->offset_x *= cursor->sensitivity * clock->GetDeltaTime() / program_window->width * 100000.f;
-	cursor->offset_y *= cursor->sensitivity * clock->GetDeltaTime() / program_window->height * 100000.f;
+	cursor->offset_x *= cursor->sensitivity * clock.GetDeltaTime() / program_window->width * 100000.f;
+	cursor->offset_y *= cursor->sensitivity * clock.GetDeltaTime() / program_window->height * 100000.f;
 
 
 	//scene->GetObjectByName("camera shell")->t->local.RotateYaw(user->input->cursor->offset_x);
@@ -46,7 +47,7 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
 
 	User* user = static_cast<User*>(glfwGetWindowUserPointer(window));
 	Program* program = user->program;
-	Clock* clock = program->clock;
+	Clock& clock = program->clock;
 	Scene* scene = program->scene;
 	
 	//todo: need to standardize this and allow for custom code injection
@@ -80,10 +81,11 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
 
 void WindowFocusCallback(GLFWwindow* window, int focused)
 {
-	Input* input = static_cast<Input*>(static_cast<User*>(glfwGetWindowUserPointer(window))->input);
+	Window* user_window = static_cast<Window*>(glfwGetWindowUserPointer(window));
+	Input& input = user_window->program->user.value().GetInput();
 
 	if (focused) {
-		input->UpdateAllKeyStates(window);
+		input.UpdateAllKeyStates(window);
 	}
 }
 

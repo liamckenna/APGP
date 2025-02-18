@@ -44,7 +44,6 @@ struct Camera : public Object {
 			scene->program->shaders->uniforms.FindAndUpdate("V", view);
 			scene->program->shaders->uniforms.FindAndUpdate("camera_position", t->global.pos);
 		}
-		
 	}
 };
 

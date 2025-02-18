@@ -3,5 +3,6 @@
   "windows": "windows.json",
   "graphics": "graphics.json",
   "shaders": "shaders.json",
-  "scene": "sample scene.json"
+  "scene": "sample scene.json",
+  "hardcoded":  true
 }

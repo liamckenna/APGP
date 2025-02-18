@@ -58,7 +58,7 @@
 
 
 int main() {
-
+	std::cout << __cplusplus << std::endl;
 	//main should create our program object, then do our program loop i think, then cleanup
 	std::string program_filepath = "/data/jsons/program.json";
 

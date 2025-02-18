@@ -3,12 +3,7 @@
 #include "scene.h"
 #include "materials.h"
 #include "object_parser.h"
-Mesh::Mesh() {
-	default_color = Color(COLORS::DEFAULT);
-	tri_color = default_color;
-	model = glm::mat4(1.f);
-	object_type = MESH;
-}
+
 
 Mesh::Mesh(const nlohmann::json& data, Scene* scene) {
 	this->scene = scene;
@@ -32,7 +27,7 @@ void Mesh::ParseFile() {
 void Mesh::SetupBuffers() {
 	
 	GenerateBuffers();
-	PopulateBuffers(flattenVertices());
+	PopulateBuffers(Flatten());
 
 }
 
@@ -62,7 +57,6 @@ void Mesh::PopulateBuffers(std::vector<FlattenedVertex> flattened_vertices) {
 	glEnableVertexAttribArray(5);
 
 	glBindVertexArray(0);
-
 }
 
 Mesh::Mesh(Color color) {
@@ -79,7 +73,7 @@ Mesh::Mesh(COLORS color_name) {
 	object_type = MESH;
 }
 
-std::vector<FlattenedVertex> Mesh::flattenVertices() {
+std::vector<FlattenedVertex> Mesh::Flatten() {
 	std::vector<FlattenedVertex> flatVertices;
 
 	if (draw_mode == GL_TRIANGLES) {

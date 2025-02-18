@@ -34,7 +34,7 @@ void Clock::CalculateFrameRate() {
 }
 
 void Clock::AddTimer(float length_seconds, bool auto_dispose, bool auto_dismiss) {
-    timers.push_back(new Timer(length_seconds, current_time, auto_dispose, auto_dismiss));
+    timers.emplace_back(length_seconds, current_time, auto_dispose, auto_dismiss);
 }
 
 
@@ -42,15 +42,13 @@ void Clock::AddTimer(float length_seconds, bool auto_dispose, bool auto_dismiss)
 void Clock::PollTimers() {
 
     for (auto it = timers.begin(); it != timers.end();) {
-        Timer* timer = *it;
-        TIMER_STATE state = timer->Evaluate(current_time);
+        TIMER_STATE state = it->Evaluate(current_time);
         switch (state) {
         case RINGING:
             std::cout << "ring!" << std::endl;
             ++it;
             break;
         case SCRAP:
-            delete timer;
             it = timers.erase(it);
             break;
         case TICKING:
