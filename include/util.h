@@ -7,6 +7,7 @@
 #include <typeindex>
 #include <glm/glm.hpp>
 
+typedef unsigned int uint;
 
 enum PROJECTION_TYPES {
     ORTHOGRAPHIC = 0xFF,

@@ -19,7 +19,6 @@ struct Mesh {
 	std::string name;
 
 	Mesh() = default;
-	Mesh();
 
 	void SetupBuffers();
 	void GenerateBuffers();

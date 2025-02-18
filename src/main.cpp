@@ -24,7 +24,6 @@
 #include "user.h"
 #include "shaders.h"
 #include "json.h"
-#include "object_parser.h"
 #include "clock.h"
 #include "program.h"
 #define GLM_ENABLE_EXPERIMENTAL
