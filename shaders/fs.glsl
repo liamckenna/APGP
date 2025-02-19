@@ -65,7 +65,6 @@ layout(std140, binding = 1) uniform MaterialBuffer {
 layout(binding = 2) uniform sampler2D textures[MAX_TEXTURES];
 
 
-
 in vec3 frag_position;
 in vec3 frag_normal;
 in vec4 frag_color;

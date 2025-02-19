@@ -1,81 +1,57 @@
 #pragma once
 #include <vector>
 #include <string>
-#include "shaders.h"
-#include "buffers.h"
+#include <optional>
 #include "user.h"
-
+#include "ecs_manager.h"
+#include "resource_manager.h"
 struct Mesh;
+struct Meshes;
 struct Object;
+struct Objects;
 struct Material;
+struct Materials;
 struct FlattenedMaterial;
 struct Texture;
+struct Textures;
 struct Camera;
+struct Cameras;
 struct Light;
+struct Lights;
 struct FlattenedLight;
+struct Program;
 struct Scene {
+
+	Program* program;
 
 	std::string name;
 
-	User* user;
+	std::optional<User> user;
+
+	Cameras* cameras;
+
+	Lights* lights;
 	
-	Buffers* buffers;
+	Meshes* meshes;
 
-	Shaders* shaders;
+	Objects* objects;
 
-	std::vector<Mesh*> meshes;
+	Materials* materials;
 
-	std::vector<Object*> objects;
+	Textures* textures;
 
-	std::vector<Material*> materials;
+	ECSManager scene_ecs;
 
-	std::vector<Texture*> textures;
+	ResourceManager resource_manager;
 	
-	Material* current_material;
-
-	Material* default_material;
-
-	std::vector<Camera*> cameras;
-	Camera* main_camera;
-
-	std::vector<Light*> lights;
-	Light* main_light;
-
-	float ambient_intensity;
-	
-	GLuint default_draw_mode;
-
-	Object* held_object;
-
-	int shading_mode;
-	
-	Scene();
-
-	Scene(std::string file_name);
-
-	std::vector<FlattenedLight> flattenLights();
-
-	std::vector<FlattenedMaterial> flattenMaterials();
-
-	Mesh* GetMeshByName(std::string name);
-
-	Camera* GetCameraByName(std::string name);
-
-	Object* GetObjectByName(std::string name);
-
-	Light* GetLightByName(std::string name);
-
-	void SetDefaultDrawMode(const std::string& mode);
+	Scene(const std::string& filepath, Program* program);
 
 	void PrintObjectTrees();
 
 	void UpdateObjectTrees(bool rendering = false);
 
-	void UpdateLights();
-
 	void DrawObjectTrees();
 
-	void SetHeldObject(Object* object);
+	void Render();
 
-	void DropObject();
 };

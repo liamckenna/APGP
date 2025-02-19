@@ -1,0 +1,13 @@
+{
+  "active_shader":  "default",
+  "shader_programs": {
+    "default": {
+      "vertex": "default_vs.glsl",
+      "fragment": "default_fs.glsl"
+    }
+  },
+  "uniforms": {
+    "ambient_intensity": 0.2,
+    "phong_exponent": 32
+  }
+}

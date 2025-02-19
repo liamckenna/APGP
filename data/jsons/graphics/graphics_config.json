@@ -1,0 +1,20 @@
+{
+  "gl": {
+    "depth_test": true,
+    "depth_function": "<",
+    "depth_mask": true,
+    "cull_face": true,
+    "cull_side": "back",
+    "front_face": "cw",
+    "line_width": 2.0,
+    "blend": true,
+    "default_draw_mode": "GL_TRIANGLES",
+    "ambient_intensity": 0.2
+  },
+  "glfw": {
+    "profile": "core",
+    "version_major": 3,
+    "version_minor": 3,
+    "swap_interval": 0
+  }
+}

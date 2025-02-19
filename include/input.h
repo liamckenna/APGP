@@ -2,6 +2,8 @@
 #include "cursor.h"
 #include "byte.h"
 #include <unordered_set>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 enum KEY_STATE {
 	UP			= 0b00, //inactive now, unchanged
@@ -12,13 +14,11 @@ enum KEY_STATE {
 
 struct Input {
 
-	Cursor* cursor;
-
 	byte key_states[GLFW_KEY_LAST / 4];
 
 	std::unordered_set<int> active_key_stack; //keys with recent activity that need to transition states
 
-	Input(Window* window, float mouse_sensitivity);
+	Input();
 
 	void UpdateKeyStack();
 

@@ -1,0 +1,16 @@
+{
+  "windows": [
+    {
+      "title": "Window Title",
+      "width": 1280,
+      "height": 960,
+      "msaa": 1,
+      "pos_x": 960,
+      "pos_y": 540,
+      "display_mode": "windowed",
+      "cursor_mode": "normal"
+    }
+  ],
+  "program_window": 0,
+  "active_window": 0
+}

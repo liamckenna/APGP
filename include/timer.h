@@ -1,28 +1,48 @@
 #pragma once
-#include <GLFW/glfw3.h>
+#include <chrono>
 
+enum TIMER_STATE { // 0xABC, A = active, B = paused, C = ringing
+	TICKING = 0b100,
+	PAUSED	= 0b110,
+	RINGING = 0b001,
+	IDLE	= 0b010,
+	SCRAP	= 0b000
+};
 
 struct Timer {
-	float start;
-	float length;
-	float initial_length;
-	float initial_start;
-	bool one_time_use;
-	bool paused;
-	bool active; //here, active means potentially running, paused or not
-	bool ringing;
-	Timer();
-	Timer(float length, float start = glfwGetTime(), bool one_time_use = true);
-	bool Pause(float current = glfwGetTime()); //bool -> successfully paused? if not consider deletion
-	bool Resume(float current = glfwGetTime());
-	bool Evaluate(float current = glfwGetTime()); //bool refers to whether or not the timer is finished
-	//we want minimize the number of gettime calls by sharing a current time between timers, ie passing in a preretrieved time
+	using Chrono = std::chrono::steady_clock;
+	using Timestamp = std::chrono::time_point<Chrono>;
+	using Duration = std::chrono::duration<float>;
 
-	float Expiration();
-	float Remaining(float current = glfwGetTime(), bool despite_pause = false);
-	float Elapsed(float current = glfwGetTime());
-	//dynamically calculate these when requested rather than storing and constantly updating them
+	Timestamp start_time;
+	Timestamp end_time;
+	Duration length;
+	Duration initial_length;
+	Timestamp initial_start;
 
-	bool Reset(float current = glfwGetTime());
-	bool Silence();
+	bool auto_dispose;
+	bool auto_dismiss;
+
+	TIMER_STATE state;
+
+	Timer(float length_seconds, Timestamp current_time, bool auto_dispose, bool auto_dismiss);
+
+	TIMER_STATE Pause(Timestamp current_time); //bool -> successfully paused? if not consider deletion
+	TIMER_STATE Resume(Timestamp current_time);
+	TIMER_STATE Evaluate(Timestamp current_time); //true if timer has expired
+
+	Timestamp Expiration();
+	Duration Remaining(Timestamp current_time);
+	Duration Elapsed(Timestamp current_time);
+
+	TIMER_STATE Reset(Timestamp current_time); //maintains pause state
+	TIMER_STATE Restart(Timestamp current_time); //resets and starts
+
+	TIMER_STATE Dismiss();
+	TIMER_STATE Dispose();
+
+	void EnableAutoDisposal();
+	void DisableAutoDisposal();
+	void EnableAutoDismissal();
+	void DisableAutoDismissal();
 };

@@ -2,8 +2,7 @@
 #include "cursor.h"
 #include <algorithm>
 #include <iostream>
-Input::Input(Window* window, float mouse_sensitivity) {
-	this->cursor = new Cursor(window, mouse_sensitivity);
+Input::Input() {
 	std::memset(key_states, 0, sizeof(key_states));
 	std::cout << "this: " << this << std::endl;
 }
