@@ -16,20 +16,22 @@ void LightSystem::Init() {
 void LightSystem::Update(EntityManager& entity_manager, ComponentManager& component_manager, float delta_time) {
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
 
-    auto view = component_manager.GetEntitiesWithComponents<LightComponent, TransformComponent>();
+    auto lights = component_manager.GetEntitiesWithComponents<LightComponent, TransformComponent>();
     int index = 0;
 
-    for (auto entity : view) {
+    for (auto entity : lights) {
         auto& light = component_manager.GetComponent<LightComponent>(entity);
         auto& transform = component_manager.GetComponent<TransformComponent>(entity);
 
         if (!light.stale) continue;
 
         FlatLight fl;
-        fl.position = transform.position;
+        //fl.enabled = light.enabled ? 1 : 0;
+        fl.enabled = 1;
+        fl.index = index;
         fl.intensity = light.intensity;
+        fl.position = transform.position;
         fl.color = light.color;
-        fl.enabled = light.active ? 1 : 0;  // **Mark inactive instead of deleting**
 
         std::size_t offset = index * sizeof(FlatLight);
 

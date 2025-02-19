@@ -13,6 +13,7 @@
 
 class ResourceManager {
 public:
+
     std::unordered_map<std::string, Mesh> meshes;
 
     std::vector<Material> materials;
@@ -68,26 +69,23 @@ public:
             FlatMaterial flat_material{};
 
             flat_material.index = material.index;
-
-
-            flat_material.ambient = material.colors.ambient;
-            flat_material.diffuse = material.colors.diffuse;
-            flat_material.specular = material.colors.specular;
-
             flat_material.shininess = material.shininess;
             flat_material.alpha = material.alpha;
+
+            flat_material.ambient = material.colors.ambient;
+
+            flat_material.diffuse = material.colors.diffuse;
+            
+            flat_material.specular = material.colors.specular;
 
             flat_material.ambient_tex = material.textures.ambient;
             flat_material.diffuse_tex = material.textures.diffuse;
             flat_material.specular_tex = material.textures.specular;
             flat_material.emissive_tex = material.textures.emissive;
-            flat_material.alpha_tex = material.textures.alpha;
-            flat_material.decal_tex = material.textures.decal;
             flat_material.shininess_tex = material.textures.shininess;
             flat_material.bump_tex = material.textures.bump;
             flat_material.displacement_tex = material.textures.displacement;
             flat_material.reflection_tex = material.textures.reflection;
-
             flat_materials.push_back(flat_material);
         }
 

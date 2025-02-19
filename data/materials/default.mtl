@@ -1,59 +1,17 @@
 
-
 newmtl default
 
 Ka 0.2 0.2 0.2
-Kd 0.0 1.0 0.0
+Kd 0.8 0.8 0.8
 Ks 1.0 1.0 1.0
 Ns 32.0
 d 1.0
-# map_Kd default.png
+map_Kd default.png
 
-
-newmtl posx
-
-Ka 0.2 0.2 0.2
-Kd 0.5 1.0 0.0
-Ks 1.0 1.0 1.0
-Ns 32.0
-d 1.0
-
-newmtl negx
+newmtl black
 
 Ka 0.2 0.2 0.2
-Kd 0.5 0.0 1.0
-Ks 1.0 1.0 1.0
-Ns 32.0
-d 1.0
-
-newmtl posy
-
-Ka 0.2 0.2 0.2
-Kd 1.0 0.5 0.0
-Ks 1.0 1.0 1.0
-Ns 32.0
-d 1.0
-
-newmtl negy
-
-Ka 0.2 0.2 0.2
-Kd 0.0 0.5 1.0
-Ks 1.0 1.0 1.0
-Ns 32.0
-d 1.0
-
-newmtl posz
-
-Ka 0.2 0.2 0.2
-Kd 1.0 0.0 0.5
-Ks 1.0 1.0 1.0
-Ns 32.0
-d 1.0
-
-newmtl negz
-
-Ka 0.2 0.2 0.2
-Kd 0.0 1.0 0.5
+Kd 0.0 0.0 0.0
 Ks 1.0 1.0 1.0
 Ns 32.0
 d 1.0
@@ -66,11 +24,26 @@ Ks 1.0 1.0 1.0
 Ns 32.0
 d 1.0
 
-newmtl black
+newmtl red
 
 Ka 0.2 0.2 0.2
-Kd 0.0 0.0 0.0
+Kd 1.0 0.0 0.0
 Ks 1.0 1.0 1.0
 Ns 32.0
 d 1.0
 
+newmtl green
+
+Ka 0.2 0.2 0.2
+Kd 0.0 1.0 0.0
+Ks 1.0 1.0 1.0
+Ns 32.0
+d 1.0
+
+newmtl blue
+
+Ka 0.2 0.2 0.2
+Kd 0.0 0.0 1.0
+Ks 1.0 1.0 1.0
+Ns 32.0
+d 1.0

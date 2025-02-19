@@ -95,5 +95,6 @@ void GraphicsConfig::ApplyGLFWSettings() const {
     glfwWindowHint(GLFW_OPENGL_PROFILE, profile);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, gl_version_major);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, gl_version_minor);
+    if (depth_test) glfwWindowHint(GLFW_DEPTH_BITS, 24);
 }
 

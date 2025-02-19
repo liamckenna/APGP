@@ -24,7 +24,7 @@ Scene::Scene(const std::string& filepath, Program* program) : scene_ecs(), resou
 	else {
 
 		Entity camera_entity = scene_ecs.CreateEntity();
-		scene_ecs.AddComponent(camera_entity, TransformComponent{ .position = glm::vec3(3.f, 3.f, 3.f) });
+		scene_ecs.AddComponent(camera_entity, TransformComponent{ .position = glm::vec3(5.f, 3.f, 3.f) });
 		scene_ecs.AddComponent(camera_entity, CameraComponent{});
 		scene_ecs.AddComponent(camera_entity, PrimaryCameraComponent{});
 

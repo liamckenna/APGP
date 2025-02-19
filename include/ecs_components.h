@@ -12,7 +12,7 @@ struct TransformComponent {
 };
 
 struct CameraComponent {
-    bool active = true;
+    bool enabled = true;
     float fov = 60.f;
     float aspect_ratio = 8.f / 6.f;
     float near = 0.1f;
@@ -24,18 +24,19 @@ struct CameraComponent {
 };
 
 struct PrimaryCameraComponent {
-    bool active = true;
+    bool enabled = true;
 };
 
 struct LightComponent {
-    bool active = true;
-    glm::vec3 color = glm::vec3(1.f);
+    bool enabled = true;
+    int index = -1;
     float intensity = 1.f;
+    glm::vec3 color = glm::vec3(1.f);
     bool stale = true;
 };
 
 struct MeshComponent {
-    bool active = true;
+    bool enabled = true;
     std::string mesh_name = "";
     GLuint vao = 0;
     GLuint vbo = 0;

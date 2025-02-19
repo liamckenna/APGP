@@ -26,7 +26,6 @@ void ResourceManager::LoadObjectFile(const std::string& filename) {
     std::string line;
     std::string material_file;
     int material_index = 0;
-    mesh.material_index.push_back(material_index);
     std::vector<glm::vec3> positions;
     std::vector<glm::vec3> normals;
     std::vector<glm::vec2> texcoords;
@@ -229,11 +228,6 @@ void ResourceManager::LoadMaterialFile(const std::string& filename) {
             iss >> texture_name;
             current_material.textures.specular = TextureQuery(texture_name);
         }
-        else if (keyword == "map_d") { // Alpha texture
-            std::string texture_name;
-            iss >> texture_name;
-            current_material.textures.alpha = TextureQuery(texture_name);
-        }
         else if (keyword == "map_Ns") { // Shininess texture
             std::string texture_name;
             iss >> texture_name;
@@ -289,7 +283,7 @@ void ResourceManager::LoadTextureFile(const std::string& filename) {
 
     // Generate and bind an OpenGL texture
     glGenTextures(1, &texture.id);
-    glActiveTexture(GL_TEXTURE0 + texture.index);
+    glActiveTexture(GL_TEXTURE2 + texture.index);
     glBindTexture(GL_TEXTURE_2D, texture.id);
 
     // Determine pixel format

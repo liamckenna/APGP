@@ -45,7 +45,7 @@ void RenderSystem::Update(EntityManager& entity_manager, ComponentManager& compo
 
             Mesh& mesh = resource_manager.GetMesh(meshComp.mesh_name);
 
-            if (!meshComp.active) continue; // Skip inactive meshes
+            //if (!meshComp.enabled) continue; // Skip inactive meshes
 
             if (transform.stale) {
                 meshComp.model = glm::translate(glm::mat4(1.0f), glm::vec3(0.f));

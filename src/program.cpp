@@ -17,7 +17,7 @@ Program::Program(const std::string& filepath) : clock() {
 
 	glfwInit();
 
-	std::string graphics_filepath = "/data/jsons/graphics/" + std::string(data["graphics"]);
+	std::string graphics_filepath = "/data/jsons/graphics/" + std::string(data["graphics_config"]);
 	graphics_config.emplace(graphics_filepath);
 	std::cout << "configured graphics" << std::endl;
 
@@ -43,14 +43,22 @@ Program::Program(const std::string& filepath) : clock() {
 void Program::Run() {
 	
 	do {
-		
 		clock.Tick();
 
+		glfwPollEvents();
+
+		//will move to input manager
+		if (user.value().input.GetKeyState(GLFW_KEY_SPACE) == PRESSED) {
+			
+		} else if (user.value().input.GetKeyState(GLFW_KEY_SPACE) == RELEASED) {
+			//std::cout << "Space bar is RELEASED!" << std::endl;
+		}
+		
 		scene->scene_ecs.Update(clock.GetDeltaTime());
 		
-		glfwSwapBuffers(windows->program_window->glfw_window);
+		user.value().input.UpdateKeyStack();
 
-		//glfwPollEvents();
+		glfwSwapBuffers(windows->program_window->glfw_window);
 
 	} while (!glfwWindowShouldClose(windows->program_window->glfw_window));
 

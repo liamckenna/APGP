@@ -91,7 +91,8 @@ const static std::unordered_map<std::string, GLenum> GL_ENUMS = {
 inline GLenum FetchGLenum(std::string key) {
     ToLowerCase(key);
     auto it = GL_ENUMS.find(key);
-    return (it != GL_ENUMS.end()) ? it->second : GL_INVALID_ENUM;
+    GLenum result = (it != GL_ENUMS.end()) ? it->second : GL_INVALID_ENUM;
+    return result;
 }
 
 const static std::unordered_map<std::string, int> GLFW_ENUMS = {
