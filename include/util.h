@@ -17,7 +17,11 @@ enum PROJECTION_TYPES {
 #define LIGHT_BINDING_POINT     0
 #define MATERIAL_BINDING_POINT  1
 #define TEXTURE_BINDING_POINT   2
+#define SSBO_BINDING_POINT      3
 
+#define MAX_LIGHTS  10
+#define MAX_MATERIALS 20
+#define MAX_TEXTURES 10
 
 inline void ToLowerCase(std::string& str) {
     std::transform(str.begin(), str.end(), str.begin(), ::tolower);

@@ -12,17 +12,13 @@
 #include <filesystem>
 #include <vector>
 #include <algorithm>
-#include "transform.h"
 #include "vertex.h"
 #include "mesh.h"
 #include "window.h"
-#include "camera.h"
 #include "scene.h"
 #include "cursor.h"
-#include "light.h"
 #include "input.h"
 #include "user.h"
-#include "shaders.h"
 #include "json.h"
 #include "clock.h"
 #include "program.h"
@@ -30,30 +26,6 @@
 #include <glm/gtx/string_cast.hpp>
 #undef GLM_ENABLE_EXPERIMENTAL
 #include "callbacks.h"
-
-//forward declarations of functions
-//User* UserGeneration(std::string file); //DEPRECIATED AND DELETED
-//Program* ProgramGeneration(std::string program_filepath); //DEPRECIATED AND DELETED
-//bool ShaderInitialization(Scene*& scene, nlohmann::json data); //DEPRECIATED AND DELETED
-//void DefaultMaterialGeneration(Scene*& scene, nlohmann::json data); //DEPRECIATED AND DELETED
-//std::string LoadShader(const char* filepath); //DEPRECIATED AND DELETED
-//GLuint createShader(GLenum type, const char* shaderSource); //DEPRECIATED AND DELETED
-//bool ProcessShader(Scene*& scene, std::string file, SHADER_TYPE TYPE, bool composite); //DEPRECIATED AND DELETED
-//void PollTimers(User*& user, Scene*& scene); //DEPRECIATED AND DELETED
-//Scene* SceneGeneration(std::string file); //DEPRECIATED AND DELETED
-//void RenderScene(User*& user, Scene*& scene); //DEPRECIATED AND DELETED
-//void CameraGeneration(Scene*& scene, nlohmann::json data); //DEPRECIATED AND DELETED
-//void ObjectGeneration(Scene*& scene, nlohmann::json data); //DEPRECIATED AND DELETED
-//void RenderFullScreenQuad(Scene*& scene); //DEPRECIATED AND DELETED
-//void RenderDirectlyToScreen(Scene*& scene); //DEPRECIATED AND DELETED
-//void FramebufferInitialization(User*& user, Scene*& scene); //DEPRECIATED AND DELETED
-//void BufferArrayInitialization(Scene*& scene); //DEPRECIATED AND DELETED
-//void UpdateTextureUniforms(Scene*& scene); //DEPRECIATED AND DELETED
-//void Cleanup(User*& user, Scene*& scene); //DEPRECIATED AND DELETED
-//void ProcessInput(User*& user, Scene*& scene); //COMMENTED OUT
-
-
-
 
 
 int main() {

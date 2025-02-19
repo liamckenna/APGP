@@ -18,10 +18,7 @@ struct Uniform {
 	GLenum type;
 	DataType value;
 
-	Uniform() {
-		//hi
-
-	}
+	Uniform() = default;
 
 	Uniform(std::string name, GLint location, GLenum type, DataType value) {
 		this->name = name;
@@ -33,7 +30,7 @@ struct Uniform {
 		this->name = name;
 		this->location = location;
 		this->type = type;
-		SetDefaultValue(type);
+		//SetDefaultValue(type);
 	};
 
 	void Update(DataType new_value) {
@@ -67,6 +64,7 @@ struct Uniform {
 			break;
 		case GL_FLOAT_MAT4:
 			glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(std::get<glm::mat4>(value)));
+			std::cout << "updated mat 4 named " << name << std::endl;
 			break;
 		default:
 			std::cerr << "Error: Unsupported uniform data type." << std::endl;
@@ -95,6 +93,7 @@ struct Uniform {
 			case GL_FLOAT_MAT4:    value = glm::mat4(1.0f);  // Identity matrix
 				break;
 			default:
+				std::cerr << "UNIFORM NAME: " << name << std::endl;
 				std::cerr << "Error: Unsupported uniform type for default value." << std::endl;
 				value = 0;
 				break;

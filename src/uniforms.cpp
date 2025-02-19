@@ -1,17 +1,68 @@
 #include "uniforms.h"
-#include "shaders.h"
+#include <iostream>
 #include <stdexcept>
 using DataType = std::variant<int, unsigned int, float, glm::vec2, glm::vec3, glm::vec4, glm::mat2, glm::mat3, glm::mat4>;
 
-Uniforms::Uniforms() {
-    shaders = nullptr;
+
+Uniforms::Uniforms(GLuint program) {
+    this->program = program;
+
+    // --- Regular Uniforms ---
+    GLint uniformCount;
+    glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &uniformCount);
+
+    std::cout << "Caching uniforms for program " << program << ", found " << uniformCount << " uniforms." << std::endl;
+
+    for (GLint i = 0; i < uniformCount; i++) {
+        char name[256];
+        GLsizei length;
+        GLint size;
+        GLenum type;
+        glGetActiveUniform(program, i, sizeof(name), &length, &size, &type, name);
+
+        std::string nameStr = name;
+        GLint location = glGetUniformLocation(program, name);
+        if (name == "model") std::cout << "HIIHHIFHIOAWEFAIFA" << std::endl;
+        // **Handle UBO-stored uniforms** (they have location = -1)
+        if (location == -1) {
+            continue;  // Skip for now, but we may handle them differently later
+        }
+
+        // **Fix array uniforms (e.g., "lights[0]" -> "lights")**
+        size_t bracket_pos = nameStr.find("[0]");
+        if (bracket_pos != std::string::npos) {
+            nameStr = nameStr.substr(0, bracket_pos);
+        }
+
+        uniforms[nameStr] = Uniform(nameStr, location, type);
+        std::cout << "Cached uniform: " << nameStr << " at location " << location << std::endl;
+    }
+
+    // --- Uniform Buffer Objects (UBOs) ---
+    GLint blockCount;
+    glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCKS, &blockCount);
+
+    std::cout << "Total active UBOs: " << blockCount << std::endl;
+
+    for (GLint i = 0; i < blockCount; i++) {
+        char blockName[256];
+        GLsizei length;
+        glGetActiveUniformBlockName(program, i, sizeof(blockName), &length, blockName);
+
+        GLuint blockIndex = glGetUniformBlockIndex(program, blockName);
+        if (blockIndex == GL_INVALID_INDEX) {
+            std::cerr << "Failed to get UBO index for " << blockName << std::endl;
+            continue;
+        }
+
+        glUniformBlockBinding(program, blockIndex, i);
+        std::cout << "Cached UBO: " << blockName << " at block index " << blockIndex << std::endl;
+    }
 }
 
-Uniforms::Uniforms(Shaders* shaders) {
-	this->shaders = shaders;
-}
 
-Uniform& Uniforms::GetByName(std::string name) {
+
+Uniform& Uniforms::GetByName(const std::string& name) {
 	auto it = uniforms.find(name);
 	if (it == uniforms.end()) {
 		throw std::runtime_error("Uniform not found: " + name);
@@ -19,67 +70,14 @@ Uniform& Uniforms::GetByName(std::string name) {
 	return it->second;
 }
 
-void Uniforms::FindAndUpdate(std::string name, DataType value) {
-	try {
-		Uniform& uniform = GetByName(name);
-		uniform.Update(value);
-	}
-	catch (const std::runtime_error& e) {
-		std::cerr << e.what() << std::endl;
-	}
-
-}
-void Uniforms::CacheUniforms() {
-    GLint uniformCount;
-    glGetProgramiv(shaders->gl_program, GL_ACTIVE_UNIFORMS, &uniformCount);
-
-    std::cout << "Total active uniforms: " << uniformCount << std::endl;
-
-    // **Cache Regular Uniforms (NOT UBOs)**
-    for (GLint i = 0; i < uniformCount; i++) {
-        char name[256];
-        GLsizei length;
-        GLint size;
-        GLenum type;
-        glGetActiveUniform(shaders->gl_program, i, sizeof(name), &length, &size, &type, name);
-
-        std::string name_str = name;
-
-        GLint location = glGetUniformLocation(shaders->gl_program, name);
-        if (location == -1) {
-            // Skip uniforms inside UBOs
-            continue;
+void Uniforms::FindAndUpdate(const std::string& name, DataType value) {
+    if (uniforms.find(name) == uniforms.end()) {
+        std::cerr << "Uniform not found: " << name << std::endl;
+        //std::cerr << "Printing out list of all uniforms" << std::endl;
+        for (auto& uniform : uniforms) {
+            //std::cout << uniform.second.name << std::endl;
         }
-
-        size_t bracket_pos = name_str.find("[0]");
-        if (bracket_pos != std::string::npos) {
-            name_str = name_str.substr(0, bracket_pos);
-        }
-
-        uniforms[name_str] = Uniform(name_str, location, type);
-        std::cout << "Cached uniform: " << name_str << " at location " << location << std::endl;
+        return;
     }
-
-    // **Cache Uniform Buffer Objects (UBOs)**
-    GLint blockCount;
-    glGetProgramiv(shaders->gl_program, GL_ACTIVE_UNIFORM_BLOCKS, &blockCount);
-
-    std::cout << "Total active UBOs: " << blockCount << std::endl;
-
-    for (GLint i = 0; i < blockCount; i++) {
-        char blockName[256];
-        GLsizei length;
-        glGetActiveUniformBlockName(shaders->gl_program, i, sizeof(blockName), &length, blockName);
-
-        GLuint blockIndex = glGetUniformBlockIndex(shaders->gl_program, blockName);
-        if (blockIndex == GL_INVALID_INDEX) {
-            std::cerr << "Failed to get UBO index for " << blockName << std::endl;
-            continue;
-        }
-
-        // Bind UBO to binding slot i
-        glUniformBlockBinding(shaders->gl_program, blockIndex, i);
-        std::cout << "Cached UBO: " << blockName << " at block index " << blockIndex << std::endl;
-    }
+    uniforms[name].Update(value);
 }
-

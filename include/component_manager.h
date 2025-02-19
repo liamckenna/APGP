@@ -51,4 +51,30 @@ public:
     std::vector<Entity>& GetEntitiesWithComponent() {
         return std::any_cast<ComponentPool<T>&>(component_pools[typeid(T)]).GetAllEntities();
     }
+
+    // Gets all entities that have *all* components of types T...
+    template<typename... T>
+    std::vector<Entity> GetEntitiesWithComponents() {
+        std::vector<Entity> result;
+        if constexpr (sizeof...(T) == 0) return result; // Return empty if no types provided
+
+        // Get the first component's entity list as a base
+        auto& firstPool = std::any_cast<ComponentPool<std::tuple_element_t<0, std::tuple<T...>>>&>(
+            component_pools[typeid(std::tuple_element_t<0, std::tuple<T...>>)]
+        );
+        result = firstPool.GetAllEntities();
+
+        // Filter entities to only those that have *all* components
+        for (Entity entity : result) {
+            bool hasAll = ((component_pools.find(typeid(T)) != component_pools.end() &&
+                std::any_cast<ComponentPool<T>&>(component_pools[typeid(T)]).Has(entity)) && ...);
+
+            if (!hasAll) {
+                result.erase(std::remove(result.begin(), result.end(), entity), result.end());
+            }
+        }
+
+        return result;
+    }
+
 };

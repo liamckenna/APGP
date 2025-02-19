@@ -22,7 +22,7 @@ struct Timer {
 
 	bool auto_dispose;
 	bool auto_dismiss;
-	
+
 	TIMER_STATE state;
 
 	Timer(float length_seconds, Timestamp current_time, bool auto_dispose, bool auto_dismiss);

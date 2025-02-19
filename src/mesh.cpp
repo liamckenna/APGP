@@ -1,78 +1,67 @@
 #include "mesh.h"
 #include <iostream>
 #include "scene.h"
-#include "materials.h"
-
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/string_cast.hpp"
+#undef GLM_ENABLE_EXPERIMENTAL
 
 void Mesh::SetupBuffers() {
-	
 	GenerateBuffers();
 	PopulateBuffers(Flatten());
-
 }
 
 void Mesh::GenerateBuffers() {
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
+	glGenBuffers(1, &ebo);
+	glGenBuffers(1, &ssbo);
 }
 
-void Mesh::PopulateBuffers(std::vector<FlattenedVertex> flattened_vertices) {
+void Mesh::PopulateBuffers(std::vector<FlatVertex> flat_vertices) {
 
 	glBindVertexArray(vao);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, flattened_vertices.size() * sizeof(FlattenedVertex), flattened_vertices.data(), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, flat_vertices.size() * sizeof(FlatVertex), flat_vertices.data(), GL_DYNAMIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, position));
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(int), indices.data(), GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(FlatVertex), (void*)offsetof(FlatVertex, position));
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, normal));
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(FlatVertex), (void*)offsetof(FlatVertex, texcoord));
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 4, GL_FLOAT, GL_TRUE, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, color));
+
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(FlatVertex), (void*)offsetof(FlatVertex, normal));
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, tex_coord));
-	glEnableVertexAttribArray(3);
-	glVertexAttribIPointer(4, 1, GL_INT, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, material_index));
-	glEnableVertexAttribArray(4);
-	glVertexAttribIPointer(5, 1, GL_INT, sizeof(FlattenedVertex), (void*)offsetof(FlattenedVertex, draw_mode));
-	glEnableVertexAttribArray(5);
+
+	std::cout << "printing mat indices, size: " << material_index.size() << std::endl;
+	for (auto& index : material_index) {
+		std::cout << index << std::endl;
+	}
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, material_index.size() * sizeof(int), material_index.data(), GL_STATIC_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_BINDING_POINT, ssbo); // Bind to binding point 0
+	glVertexAttribIPointer(3, 1, GL_INT, sizeof(int), (void*)0);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 	glBindVertexArray(0);
 }
 
+std::vector<FlatVertex> Mesh::Flatten() {
+	std::vector<FlatVertex> flat_vertices;
+	flat_vertices.reserve(vertices.size());
 
-std::vector<FlattenedVertex> Mesh::Flatten() {
-	std::vector<FlattenedVertex> flatVertices;
-
-	if (draw_mode == GL_TRIANGLES) {
-		for (const auto& triangle : this->triangles) {
-			for (const auto& vertex: triangle->v) {
-				FlattenedVertex flatVertex;
-				flatVertex.position = vertex->t->global.pos;
-				flatVertex.normal = vertex->n.n;
-				flatVertex.color = triangle->c.ToVec4();
-				flatVertex.tex_coord = vertex->tex_coord;
-				flatVertex.material_index = triangle->mtl->idx;
-				flatVertex.draw_mode = GetDrawModeIdx();
-				flatVertices.push_back(flatVertex);
-			}
-		}
-	} else if (draw_mode == GL_LINES) {
-		for (const auto& edge : this->edges) {
-			for (const auto& vertex: edge->v) {
-				FlattenedVertex flatVertex;
-				flatVertex.position = vertex->t->global.pos;
-				flatVertex.normal = vertex->n.n;
-				flatVertex.color = edge->c.ToVec4();
-				flatVertex.tex_coord = vertex->tex_coord;
-				flatVertex.material_index = edge->mtl->idx;
-				flatVertex.draw_mode = GetDrawModeIdx();
-				flatVertices.push_back(flatVertex);
-			}
-		}
-		//std::cout << "finished flattening edges" << std::endl;
-		//std::cout << flatVertices.size() << std::endl;
+	for (const Vertex& v : vertices) {
+		FlatVertex fv;
+		fv.position = v.position;
+		fv.texcoord = v.texcoord;
+		fv.normal =	v.normal;
+		std::cout << "flat vertex " << flat_vertices.size() << ":\t\tPosition: " << glm::to_string(fv.position) << "\t\tTexcoord: " << glm::to_string(fv.texcoord) << "\t\tNormal: " << glm::to_string(fv.normal) << std::endl;
+		flat_vertices.push_back(fv);
 	}
 
-	
-	return flatVertices;
+	return flat_vertices;
 }

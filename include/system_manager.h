@@ -6,6 +6,7 @@
 //system manager handles all systems and calls their update function
 
 class SystemManager {
+
 	std::vector<std::unique_ptr<System>> systems;
 
 public:

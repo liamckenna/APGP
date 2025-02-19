@@ -2,17 +2,18 @@
 #include "entity_manager.h"
 #include "component_manager.h"
 #include "system_manager.h"
-
+#include "resource_manager.h"
 
 //the entity component system (ecs) manager provides a simple API that abstracts manager functions
 
 class ECSManager {
+
     EntityManager entity_manager;
     ComponentManager component_manager;
     SystemManager system_manager;
 
 public:
-    
+
     //creates a new entity instance
     Entity CreateEntity() {
         return entity_manager.CreateEntity();
@@ -26,6 +27,12 @@ public:
     //adds a component to an entity
     template<typename T>
     void AddComponent(Entity entity, const T& component) {
+        component_manager.AddComponent(entity, component);
+    }
+
+    // Overload specifically for MeshComponent
+    void AddComponent(Entity entity, const MeshComponent& component, ResourceManager& resource_manager) {
+        resource_manager.GetMesh(component.mesh_name);
         component_manager.AddComponent(entity, component);
     }
 

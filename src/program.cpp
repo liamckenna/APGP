@@ -32,7 +32,7 @@ Program::Program(const std::string& filepath) : clock() {
 	glewInit();
 
 	std::string shaders_filepath = "/data/jsons/shaders/" + std::string(data["shaders"]);
-	shaders = new Shaders(shaders_filepath, this);
+	shader_manager.LoadFromJSON(shaders_filepath);
 	std::cout << "initialized shaders and their uniforms" << std::endl;
 
 	SetCallbacks(windows->program_window);
@@ -46,11 +46,11 @@ void Program::Run() {
 		
 		clock.Tick();
 
-		//here we need to do the rendering for our scene entities with meshes
-
+		scene->scene_ecs.Update(clock.GetDeltaTime());
 		
 		glfwSwapBuffers(windows->program_window->glfw_window);
-		glfwPollEvents();
+
+		//glfwPollEvents();
 
 	} while (!glfwWindowShouldClose(windows->program_window->glfw_window));
 

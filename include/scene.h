@@ -2,7 +2,6 @@
 #include <vector>
 #include <string>
 #include <optional>
-#include "shaders.h"
 #include "user.h"
 #include "ecs_manager.h"
 #include "resource_manager.h"
