@@ -13,6 +13,8 @@ struct Clock {
     Timestamp last_fps_time;
     int frame_count;
     float delta_time;
+    long long frames;
+    long long seconds;
     std::vector<Timer> timers;
 
     Clock();
@@ -25,4 +27,5 @@ struct Clock {
     
     float GetElapsedTime() const;
     float GetDeltaTime() const;
+    float GetFinalFPS() const;
 };

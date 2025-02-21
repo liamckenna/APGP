@@ -14,7 +14,8 @@ struct GraphicsConfig {
     GLenum front_face;
     float line_width;
     bool blend;
-    float default_ambient_intensity;
+    GLenum polygon_mode;
+    GLenum polygon_mode_side;
     
     //glfw
     int profile;

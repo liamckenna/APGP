@@ -40,6 +40,8 @@ void ShaderManager::LoadFromJSON(const std::string& filepath) {
     }
     std::string default_shader = Fetch(data, "active_shader", "");
     UseShader(default_shader);
+    
+    SetUniform("ambient_intensity", static_cast<float>(Fetch(data["uniforms"], "ambient_intensity", 0.2f)));
 
 }
 

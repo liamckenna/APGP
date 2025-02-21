@@ -2,14 +2,13 @@
 #include "json.h"
 #include <iostream>
 #include <GL/glew.h>
-#include "user.h"
 #include "callbacks.h"
 #include "scene.h"
 #include "clock.h"
 #include "windows.h"
 #include "graphics_config.h"
 
-Program::Program(const std::string& filepath) : clock() {
+Program::Program(const std::string& filepath) : clock(), input_manager(*this) {
 
 	nlohmann::json data = ReadJsonFromFile(filepath);
 
@@ -20,13 +19,10 @@ Program::Program(const std::string& filepath) : clock() {
 	std::string graphics_filepath = "/data/jsons/graphics/" + std::string(data["graphics_config"]);
 	graphics_config.emplace(graphics_filepath);
 	std::cout << "configured graphics" << std::endl;
-
-	std::string user_filepath = "/data/jsons/users/" + std::string(data["user"]);
-	user.emplace(user_filepath, this);
-	std::cout << "initialized user" << std::endl;
-
+	
 	std::string windows_filepath = "/data/jsons/windows/" + std::string(data["windows"]);
-	windows = new Windows(windows_filepath, this);
+	windows = new Windows(windows_filepath, *this);
+	graphics_config.value().ApplyOpenGLSettings(); //needs to happen after the window is made
 	std::cout << "initialized windows" << std::endl;
 
 	glewInit();
@@ -37,6 +33,8 @@ Program::Program(const std::string& filepath) : clock() {
 
 	SetCallbacks(windows->program_window);
 
+	scene = nullptr;
+	
 	std::cout << "initialized program" << std::endl;
 }
 
@@ -44,20 +42,11 @@ void Program::Run() {
 	
 	do {
 		clock.Tick();
-
+		
 		glfwPollEvents();
-
-		//will move to input manager
-		if (user.value().input.GetKeyState(GLFW_KEY_SPACE) == PRESSED) {
-			
-		} else if (user.value().input.GetKeyState(GLFW_KEY_SPACE) == RELEASED) {
-			//std::cout << "Space bar is RELEASED!" << std::endl;
-		}
 		
 		scene->scene_ecs.Update(clock.GetDeltaTime());
-		
-		user.value().input.UpdateKeyStack();
-
+				
 		glfwSwapBuffers(windows->program_window->glfw_window);
 
 	} while (!glfwWindowShouldClose(windows->program_window->glfw_window));
@@ -66,6 +55,8 @@ void Program::Run() {
 
 void Program::Cleanup() {
 	//cleanup buffers and shaders
+	std::cout << "Program Average FPS: " << clock.GetFinalFPS() << std::endl;
 	glfwDestroyWindow(windows->program_window->glfw_window);
 	glfwTerminate();
+
 }

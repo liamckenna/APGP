@@ -1,5 +1,4 @@
 {
-  "user": "user.json",
   "windows": "windows.json",
   "graphics_config": "graphics_config.json",
   "shaders": "shaders.json",

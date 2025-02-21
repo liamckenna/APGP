@@ -2,8 +2,7 @@
 #include <iostream>
 #include "json.h"
 
-Windows::Windows(const std::string& filepath, Program* program) {
-    this->program = program;
+Windows::Windows(const std::string& filepath, Program& program) : program(program) {
     it = 0;
     nlohmann::json data = ReadJsonFromFile(filepath);
     Initialize(data);
@@ -22,17 +21,11 @@ bool Windows::Initialize(const nlohmann::json& settings) {
         return false;
     }
 
-    std::cout << "NOW NOWN OWO" << std::endl;
 
     for (int i = 0; i < settings["windows"].size(); i++) {
         Window* newWindow = CreateWindow(settings["windows"][i]);
         if (!newWindow) {
-            std::cout << "NO WINDOWWWW" << std::endl;
             return false;
-        }
-        else {
-            std::cout << "WINDOWWWW" << std::endl;
-
         }
     }
 
@@ -96,5 +89,6 @@ void Windows::SetActiveWindow(uint window_id) {
         return;
     }
     active_window = windows[window_id];
+    active_window->cursor.current_window = active_window;
     glfwMakeContextCurrent(active_window->glfw_window);
 }

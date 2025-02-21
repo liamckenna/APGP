@@ -64,7 +64,6 @@ struct Uniform {
 			break;
 		case GL_FLOAT_MAT4:
 			glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(std::get<glm::mat4>(value)));
-			std::cout << "updated mat 4 named " << name << std::endl;
 			break;
 		default:
 			std::cerr << "Error: Unsupported uniform data type." << std::endl;

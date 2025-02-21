@@ -59,6 +59,8 @@ layout(std430, binding = 3) buffer MaterialBuffer {
 };
 
 uniform vec3 view_position;
+uniform float ambient_intensity;
+
 in vec3 frag_position;
 in vec3 frag_normal;
 in vec2 frag_tex_coord;
@@ -77,24 +79,25 @@ vec3 GrabTextureCoordinateColor(int texture_index, vec3 fallback_color) {
 void main() {
     int frag_material_index = material_index[gl_PrimitiveID];
 
+    vec3 ambient_value = materials[frag_material_index].ambient * GrabTextureCoordinateColor(materials[frag_material_index].ambient_tex, vec3(1.0));
     vec3 diffuse_value = materials[frag_material_index].diffuse * GrabTextureCoordinateColor(materials[frag_material_index].diffuse_tex, vec3(1.0));
 
 
     vec3 lighting = vec3(0.0);
     
     for (int i = 0; i < MAX_LIGHTS; i++) {
-        if (lights[i].enabled == 0) continue; // Skip inactive lights
+        if (lights[i].enabled == 0) continue;
 
+        //diffuse
         vec3 lightDir = normalize(lights[i].position - frag_position);
         float diff = max(dot(normalize(frag_normal), lightDir), 0.0);
         vec3 diffuse = diff * lights[i].color * lights[i].intensity;
-
         lighting += diffuse;
+
+
     }
-    
-    //if (materials[frag_material_index].alpha_tex != materials[frag_material_index].ambient_tex) {
-    //    diffuse_color = diffuse_color * GrabTextureCoordinateColor(materials[frag_material_index].diffuse_tex);
-    //}
+    //ambient
+    lighting += ambient_value * ambient_intensity;
 
     FragColor = vec4(diffuse_value * lighting, 1.0);
     //FragColor = vec4(1.0, 1.0, 1.0, 1.0);

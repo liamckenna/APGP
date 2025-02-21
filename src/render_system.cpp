@@ -18,8 +18,8 @@ void RenderSystem::Update(EntityManager& entity_manager, ComponentManager& compo
             auto& transform = component_manager.GetComponent<TransformComponent>(entity);
             auto& camera = component_manager.GetComponent<CameraComponent>(entity);
             if (transform.stale) {
-                camera.view = glm::lookAt(transform.position, glm::vec3(0.f),
-                    transform.orientation * glm::vec3(0.f, 1.f, 0.f));
+                camera.view = glm::lookAt(transform.position, transform.position + transform.orientation * glm::vec3(0, 0, -1),
+                    transform.orientation * glm::vec3(0, 1, 0));
                 shader_manager.SetUniform("view", camera.view);
                 transform.stale = false;
             }
@@ -37,7 +37,7 @@ void RenderSystem::Update(EntityManager& entity_manager, ComponentManager& compo
             }
         }
     }
-
+    
 
     for (auto entity : component_manager.GetEntitiesWithComponents<MeshComponent, TransformComponent>()) {
             auto& meshComp = component_manager.GetComponent<MeshComponent>(entity);

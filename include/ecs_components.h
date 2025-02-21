@@ -3,12 +3,58 @@
 #include <glm/gtc/quaternion.hpp>
 #include <string>
 #include <GL/glew.h>
+#include <iostream>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
+#undef GLM_ENABLE_EXPERIMENTAL
 
 struct TransformComponent {
     glm::vec3 position = glm::vec3(0.f);
     glm::quat orientation = glm::quat(1.f, 0.f, 0.f, 0.f);
     glm::vec3 scale = glm::vec3(1.f);
     bool stale = true;
+
+    void TranslateForward(float distance, float delta_time) {
+        position += (delta_time * distance) * (orientation * glm::vec3(0, 0, -1));
+        stale = true;
+    };
+    void TranslateBackward(float distance, float delta_time) {
+        position += (delta_time * distance) * (orientation * glm::vec3(0, 0, 1));
+        stale = true;
+    };
+    void TranslateLeft(float distance, float delta_time) {
+        position += (delta_time * distance) * (orientation * glm::vec3(-1, 0, 0));
+        stale = true;
+    };
+    void TranslateRight(float distance, float delta_time) {
+        position += (delta_time * distance) * (orientation * glm::vec3(1, 0, 0));
+        stale = true;
+    };
+    void TranslateDown(float distance, float delta_time) {
+        position += (delta_time * distance) * (orientation * glm::vec3(0, -1, 0));
+        stale = true;
+    };
+    void TranslateUp(float distance, float delta_time) {
+        position += (delta_time * distance) * (orientation * glm::vec3(0, 1, 0));
+        stale = true;
+    };
+    void RotateYaw(float angle) {
+        glm::quat yaw = glm::angleAxis(glm::radians(angle), glm::vec3(0.f, -1.f, 0.f));
+        orientation = yaw * orientation;
+        stale = true;
+    }
+    void RotatePitch(float angle) {
+        glm::vec3 right = orientation * glm::vec3(1.f, 0.f, 0.f);
+        glm::quat pitch = glm::angleAxis(glm::radians(angle), right);
+        orientation = pitch * orientation;
+        stale = true;
+    }
+    void RotateRoll(float angle) {
+        glm::vec3 forward = orientation * glm::vec3(0.f, 0.f, -1.f);
+        glm::quat roll = glm::angleAxis(glm::radians(angle), forward);
+        orientation = roll * orientation;
+        stale = true;
+    }
 };
 
 struct CameraComponent {
@@ -25,6 +71,7 @@ struct CameraComponent {
 
 struct PrimaryCameraComponent {
     bool enabled = true;
+    float velocity = 5.f;
 };
 
 struct LightComponent {

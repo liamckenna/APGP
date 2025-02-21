@@ -7,7 +7,6 @@
     }
   },
   "uniforms": {
-    "ambient_intensity": 0.2,
-    "phong_exponent": 32
+    "ambient_intensity": 0.2
   }
 }

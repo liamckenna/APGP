@@ -35,7 +35,6 @@ public:
     }
 
     Texture& GetTexture(const std::string& name) {
-        std::cout << "GetTexture called" << std::endl;
         return textures[TextureQuery(name)];
     }
 
@@ -56,7 +55,7 @@ public:
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 
-        LoadObjectFile("default");
+        //LoadObjectFile("default");
         
     };
 
@@ -99,12 +98,6 @@ public:
         glBufferSubData(GL_UNIFORM_BUFFER, 0, flat_materials.size() * sizeof(FlatMaterial), flat_materials.data());
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-        std::cout << "MATERIAL DATA" << std::endl;
-        for (int i = 0; i < flat_materials.size(); i++) {
-            std::cout << "MATERIAL: \t\t" << i << std::endl;
-            std::cout << "NAME: \t\t" << materials[i].name << std::endl;
-            std::cout << "DIFS: \t\t" << glm::to_string(flat_materials[i].diffuse) << std::endl;
-        }
     }
 
     int MaterialQuery(const std::string& name) {
@@ -117,7 +110,6 @@ public:
         }
     }
     int TextureQuery(const std::string& name) {
-        std::cout << "TextureQuery called for \"" << name << "\"" << std::endl;
         if (texture_map.find(name) != texture_map.end()) {
             return texture_map[name];
         }

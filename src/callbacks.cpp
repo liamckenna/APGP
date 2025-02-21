@@ -1,9 +1,8 @@
 #include "callbacks.h"
-#include "user.h"
 #include "program.h"
 #include "clock.h"
 #include "windows.h"
-#include "input.h"
+#include "input_manager.h"
 #include <iostream>
 
 void ErrorCallback(int error, const char* description) {
@@ -14,41 +13,27 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 	Window* user_window = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
 	if (action == GLFW_PRESS) {
-		user_window->program->user.value().input.UpdateKeyState(key, true);
+		user_window->program.input_manager.UpdateKeyState(key, true);
 	}
 	else if (action == GLFW_RELEASE) {
-		user_window->program->user.value().input.UpdateKeyState(key, false);
+		user_window->program.input_manager.UpdateKeyState(key, false);
 	}
 }
 
 void MouseCallback(GLFWwindow* window, double xpos, double ypos) {
 	Window* user_window = static_cast<Window*>(glfwGetWindowUserPointer(window));
-	Program* program = user_window->program;
-	Clock& clock = program->clock;
-	Window* program_window = program->windows->program_window;
-	Cursor* cursor = program_window->cursor;
+	user_window->cursor.Update(xpos, ypos);
+	user_window->cursor.dx *= 100.f / user_window->width;
+	user_window->cursor.dy *= 100.f / user_window->height;
 
-
-	//todo: replace with a program or scene function that handles camera movement i think
-	//in the meantime, we just use the hardcoded method
-
-	cursor->Update(xpos, ypos);
-
-	cursor->offset_x *= cursor->sensitivity * clock.GetDeltaTime() / program_window->width * 100000.f;
-	cursor->offset_y *= cursor->sensitivity * clock.GetDeltaTime() / program_window->height * 100000.f;
-
-
-	//scene->GetObjectByName("camera shell")->t->local.RotateYaw(user->input->cursor->offset_x);
-	//scene->GetObjectByName("camera shell")->t->local.RotatePitch(user->input->cursor->offset_y);
-	//scene->GetObjectByName("camera shell")->UpdateTree();
 }
 
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
 
-	User* user = static_cast<User*>(glfwGetWindowUserPointer(window));
-	Program* program = user->program;
-	Clock& clock = program->clock;
-	Scene* scene = program->scene;
+	Window* user_window = static_cast<Window*>(glfwGetWindowUserPointer(window));
+	Program& program = user_window->program;
+	Clock& clock = program.clock;
+	Scene* scene = program.scene;
 	
 	//todo: need to standardize this and allow for custom code injection
 
@@ -82,10 +67,22 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
 void WindowFocusCallback(GLFWwindow* window, int focused)
 {
 	Window* user_window = static_cast<Window*>(glfwGetWindowUserPointer(window));
-	Input& input = user_window->program->user.value().GetInput();
+	InputManager& input_manager = user_window->program.input_manager;
 
 	if (focused) {
-		input.UpdateAllKeyStates(window);
+		input_manager.UpdateAllKeyStates(window);
+	}
+}
+
+void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+{
+	Window* user_window = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
+	if (action == GLFW_PRESS) {
+		user_window->program.input_manager.UpdateKeyState(button, true);
+	}
+	else if (action == GLFW_RELEASE) {
+		user_window->program.input_manager.UpdateKeyState(button, false);
 	}
 }
 
@@ -96,4 +93,5 @@ void SetCallbacks(Window* window) {
 	glfwSetKeyCallback(window->glfw_window, KeyCallback);
 	glfwSetCursorPosCallback(window->glfw_window, MouseCallback);
 	glfwSetWindowFocusCallback(window->glfw_window, WindowFocusCallback);
+	glfwSetMouseButtonCallback(window->glfw_window, MouseButtonCallback);
 }

@@ -4,8 +4,7 @@
 #include "callbacks.h"
 #include "program.h"
 #include "graphics_config.h"
-Window::Window(const nlohmann::json& settings, Program* program) {
-	this->program = program;
+Window::Window(const nlohmann::json& settings, Program& program) : program(program), cursor(program.input_manager.cursor) {
 	this->width = (settings.contains("width")) ? int(settings["width"]) : 1280;
 	this->height = (settings.contains("height")) ? int(settings["height"]) : 720;
 	this->msaa = (settings.contains("msaa")) ? int(settings["msaa"]) : 0;
@@ -27,43 +26,14 @@ Window::Window(const nlohmann::json& settings, Program* program) {
 		else if (std::string(settings["cursor_mode"]) == "hidden") this->cursor_mode = GLFW_CURSOR_HIDDEN;
 		else if (std::string(settings["cursor_mode"]) == "disabled") this->cursor_mode = GLFW_CURSOR_DISABLED;
 	}
-	this->swap_interval = program->graphics_config->swap_interval;
+	this->swap_interval = program.graphics_config->swap_interval;
 
 	this->title = (settings.contains("title")) ? std::string(settings["title"]) : "Window Title";
-
-	this->cursor = new Cursor(this);
-
-	std::cout << "after cursor" << std::endl;
 
 	SetGLFWwindowHints();
 
 	BindGLFWwindow();
 	
-	SetInputMode();
-	SetSwapInterval();
-}
-
-Window::Window(uint width, uint height, uint msaa, int pos_x, int pos_y, bool resizable, bool decorated, bool focused, bool visible, DISPLAY_MODE display_mode, GLenum cursor_mode, std::string title, uint id) {
-	this->idx = id;
-	this->width = width;
-	this->height = height;
-	this->msaa = msaa;
-	this->pos_x = pos_x;
-	this->pos_y = pos_y;
-	this->resizable = resizable;
-	this->decorated = decorated;
-	this->focused = focused;
-	this->visible = visible;
-	this->display_mode = display_mode;
-	this->cursor_mode = cursor_mode;
-	this->title = title;
-
-	this->cursor = new Cursor(this);
-
-	SetGLFWwindowHints();
-
-	BindGLFWwindow();
-
 	SetInputMode();
 	SetSwapInterval();
 }
@@ -83,7 +53,6 @@ void Window::SetInputMode() {
 
 void Window::SetSwapInterval() {
 	glfwSwapInterval(swap_interval);
-	std::cout << "swap interval set to " << swap_interval << std::endl;
 }
 
 void Window::BindGLFWwindow() {

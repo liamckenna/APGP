@@ -5,11 +5,12 @@
     "depth_mask": true,
     "cull_face": true,
     "cull_side": "back",
-    "front_face": "cw",
+    "front_face": "ccw",
     "line_width": 2.0,
     "blend": true,
-    "default_draw_mode": "GL_TRIANGLES",
-    "ambient_intensity": 0.2
+    "default_draw_mode": "triangles",
+    "polygon_mode": "fill",
+    "polygon_mode_side": "front and back"
   },
   "glfw": {
     "profile": "core",

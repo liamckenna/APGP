@@ -1,13 +1,14 @@
-#include "input.h"
+#include "input_manager.h"
 #include "cursor.h"
+#include "windows.h"
+#include "program.h"
 #include <algorithm>
 #include <iostream>
-Input::Input() {
+InputManager::InputManager(Program& program) : program(program), cursor() {
 	std::memset(key_states, 0, sizeof(key_states));
-	std::cout << "this: " << this << std::endl;
 }
 
-bool Input::UpdateKeyState(int key, bool pressed) {
+bool InputManager::UpdateKeyState(int key, bool pressed) {
 	int index = key / 4;
 	int offset = (key % 4) * 2;
 	byte mask = 0b11 << offset;
@@ -39,7 +40,7 @@ bool Input::UpdateKeyState(int key, bool pressed) {
 	return new_state != previous_state; //to see if state was changed
 }
 
-KEY_STATE Input::GetKeyState(int key) {
+KEY_STATE InputManager::GetKeyState(int key) {
 	int index = key / 4;
 	int offset = (key % 4) * 2;
 	byte mask = 0b11 << offset;
@@ -47,7 +48,7 @@ KEY_STATE Input::GetKeyState(int key) {
 	return static_cast<KEY_STATE> ((key_states[index] & mask) >> offset);
 }
 
-void Input::UpdateKeyStack() {
+void InputManager::UpdateKeyStack() {
 	std::unordered_set<int> current_stack = std::move(active_key_stack);
 
 	for (int key : current_stack) {
@@ -55,7 +56,7 @@ void Input::UpdateKeyStack() {
 	}
 }
 
-void Input::UpdateAllKeyStates(GLFWwindow* window) {
+void InputManager::UpdateAllKeyStates(GLFWwindow* window) {
 	active_key_stack.clear();
 
 	for (int key = 0; key < GLFW_KEY_LAST; key++) {

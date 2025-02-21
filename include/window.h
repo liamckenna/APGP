@@ -15,9 +15,9 @@ struct Cursor;
 struct Program;
 struct Window {
 	GLFWwindow* glfw_window;
-	Cursor* cursor;
+	Cursor& cursor;
 	
-	Program* program;
+	Program& program;
 
 	int idx;
 
@@ -35,7 +35,7 @@ struct Window {
 	GLenum cursor_mode;
 	int swap_interval;
 
-	Window(const nlohmann::json& settings, Program* program);
+	Window(const nlohmann::json& settings, Program& program);
 	Window(uint width, uint height, uint msaa, int pos_x, int pos_y, bool resizable, bool decorated, bool focused, bool visible, DISPLAY_MODE display_mode, GLenum cursor_mode, std::string title, uint id);
 
 	void SetGLFWwindowHints();

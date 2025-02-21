@@ -55,13 +55,13 @@ const static std::unordered_map<std::string, GLenum> GL_ENUMS = {
     {"default", GL_INVALID_ENUM},
 
     //draw modes
-    {"gl_points", GL_POINTS},
-    {"gl_lines", GL_LINES},
-    {"gl_line_strip", GL_LINE_STRIP},
-    {"gl_line_loop", GL_LINE_LOOP},
-    {"gl_triangles", GL_TRIANGLES},
-    {"gl_triangle_strip", GL_TRIANGLE_STRIP},
-    {"gl_triangle_fan", GL_TRIANGLE_FAN},
+    {"points", GL_POINTS},
+    {"lines", GL_LINES},
+    {"line_strip", GL_LINE_STRIP},
+    {"line_loop", GL_LINE_LOOP},
+    {"triangles", GL_TRIANGLES},
+    {"triangle_strip", GL_TRIANGLE_STRIP},
+    {"triangle_fan", GL_TRIANGLE_FAN},
 
     //depth functions
     {"false", GL_NEVER},
@@ -84,7 +84,12 @@ const static std::unordered_map<std::string, GLenum> GL_ENUMS = {
 
     //projection types
     {"perspective", PROJECTION_TYPES::PERSPECTIVE},
-    {"orthographic", PROJECTION_TYPES::ORTHOGRAPHIC}
+    {"orthographic", PROJECTION_TYPES::ORTHOGRAPHIC},
+
+    //polygon modes
+    {"point", GL_POINT},
+    {"line", GL_LINE},
+    {"fill", GL_FILL}
 
 };
 

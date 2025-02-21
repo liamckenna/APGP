@@ -6,7 +6,7 @@
 GraphicsConfig::GraphicsConfig() {
     DefaultOpenGLConfig();
     DefaultGLFWConfig();
-    ApplySettings();
+    ApplyGLFWSettings();
 }
 
 GraphicsConfig::GraphicsConfig(const std::string& filepath) {
@@ -19,7 +19,7 @@ GraphicsConfig::GraphicsConfig(const std::string& filepath) {
     if (settings.contains("glfw")) GLFWConfig(settings["glfw"]);
     else DefaultGLFWConfig();
 
-    ApplySettings();
+    ApplyGLFWSettings();
 }
 
 void GraphicsConfig::OpenGLConfig(const nlohmann::json& settings) {
@@ -38,8 +38,9 @@ void GraphicsConfig::OpenGLConfig(const nlohmann::json& settings) {
 
     line_width = Fetch(settings, "line_width", 1.f);
     blend = Fetch(settings, "blend", true);
-    default_ambient_intensity = Fetch(settings, "ambient_intensity", 0.2f);
-
+    
+    polygon_mode = FetchGLenum(Fetch(settings, "polygon_mode", "fill"));
+    polygon_mode_side = FetchGLenum(Fetch(settings, "polygon_mode_side", "front and back"));
 }
 
 void GraphicsConfig::GLFWConfig(const nlohmann::json& settings) {
@@ -59,7 +60,8 @@ void GraphicsConfig::DefaultOpenGLConfig() {
     front_face = GL_CW;
     line_width = 1.f;
     blend = true;
-    default_ambient_intensity = 0.2f;
+    polygon_mode = GL_FILL;
+    polygon_mode_side = GL_FRONT_AND_BACK;
 }
 
 void GraphicsConfig::DefaultGLFWConfig() {
@@ -76,19 +78,34 @@ void GraphicsConfig::ApplySettings() const {
 }
 
 void GraphicsConfig::ApplyOpenGLSettings() const {
-    if (depth_test) glEnable(GL_DEPTH_TEST);
-    glDepthFunc(depth_function);
-    glDepthMask(depth_mask ? GL_TRUE : GL_FALSE);
 
-    if (cull_face) glEnable(GL_CULL_FACE);
-    glCullFace(cull_side);
+    if (cull_face) {
+        glEnable(GL_CULL_FACE);
+        glCullFace(cull_side);
+    }
+    else {
+        glDisable(GL_CULL_FACE);
+    }
     glFrontFace(front_face);
-
     glLineWidth(line_width);
+
     if (blend) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
+    else {
+        glDisable(GL_BLEND);
+    }
+    if (depth_test) {
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(depth_function);
+        glDepthMask(depth_mask ? GL_TRUE : GL_FALSE);
+    }
+    else {
+        glDisable(GL_DEPTH_TEST);
+    }
+    glPolygonMode(polygon_mode_side, polygon_mode);
+
 }
 
 void GraphicsConfig::ApplyGLFWSettings() const {

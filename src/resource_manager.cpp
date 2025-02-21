@@ -51,10 +51,7 @@ void ResourceManager::LoadObjectFile(const std::string& filename) {
             std::string material_name;
             iss >> material_name;
             material_name = material_file + "." + material_name;
-            std::cout << material_name << " at line " << line_number << std::endl;
-            std::cout << "previous index: " << material_index << std::endl;
             material_index = MaterialQuery(material_name);
-            std::cout << "new index: " << material_index << std::endl;
 
         }
         else if (keyword == "v") {
@@ -121,7 +118,6 @@ void ResourceManager::LoadObjectFile(const std::string& filename) {
                 mesh.indices.push_back(vertexIndices[0]);
                 mesh.indices.push_back(vertexIndices[1]);
                 mesh.indices.push_back(vertexIndices[2]);
-                std::cout << "adding face" << std::endl;
                 mesh.material_index.push_back(material_index);
             }
             else if (vertexIndices.size() == 4) {
@@ -139,6 +135,7 @@ void ResourceManager::LoadObjectFile(const std::string& filename) {
     }
 
     if (normals.empty()) {
+        std::cout << "Generating Normals for " << mesh.name << std::endl;
         for (size_t i = 0; i < mesh.indices.size(); i += 3) {
             int i0 = mesh.indices[i];
             int i1 = mesh.indices[i + 1];
@@ -146,7 +143,7 @@ void ResourceManager::LoadObjectFile(const std::string& filename) {
 
             glm::vec3 edge1 = mesh.vertices[i1].position - mesh.vertices[i0].position;
             glm::vec3 edge2 = mesh.vertices[i2].position - mesh.vertices[i1].position;
-            glm::vec3 normal = glm::normalize(glm::cross(edge2, edge1));
+            glm::vec3 normal = glm::normalize(glm::cross(edge1, edge2));
 
             mesh.vertices[i0].normal += normal;
             mesh.vertices[i1].normal += normal;

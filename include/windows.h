@@ -10,10 +10,10 @@ struct Windows {
     Window* program_window;  // The primary window
     Window* active_window;
 
-    Program* program;
+    Program& program;
     int it;
 
-    Windows(const std::string& filepath, Program* program);
+    Windows(const std::string& filepath, Program& program);
     ~Windows();
 
     bool Initialize(const nlohmann::json& settings);

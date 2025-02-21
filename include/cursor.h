@@ -1,21 +1,17 @@
 #pragma once
-
 struct Window;
-
 struct Cursor {
-	float last_x;
-	float last_y;
+	float x = 0;
+	float y = 0;
 
-	float offset_x;
-	float offset_y;
+	float dx = 0;
+	float dy = 0;
 
-	float sensitivity;
+	float sensitivity = 1;
 
-	bool first;
+	Window* current_window;
 
-	Window* window;
-
-	Cursor(Window* window);
+	Cursor() = default;
 	
-	void Update(double xpos, double ypos);
+	void Update(double nx, double ny);
 };

@@ -11,7 +11,7 @@ Uniforms::Uniforms(GLuint program) {
     GLint uniformCount;
     glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &uniformCount);
 
-    std::cout << "Caching uniforms for program " << program << ", found " << uniformCount << " uniforms." << std::endl;
+
 
     for (GLint i = 0; i < uniformCount; i++) {
         char name[256];
@@ -22,27 +22,22 @@ Uniforms::Uniforms(GLuint program) {
 
         std::string nameStr = name;
         GLint location = glGetUniformLocation(program, name);
-        if (name == "model") std::cout << "HIIHHIFHIOAWEFAIFA" << std::endl;
-        // **Handle UBO-stored uniforms** (they have location = -1)
         if (location == -1) {
-            continue;  // Skip for now, but we may handle them differently later
+            continue;  
         }
 
-        // **Fix array uniforms (e.g., "lights[0]" -> "lights")**
         size_t bracket_pos = nameStr.find("[0]");
         if (bracket_pos != std::string::npos) {
             nameStr = nameStr.substr(0, bracket_pos);
         }
 
         uniforms[nameStr] = Uniform(nameStr, location, type);
-        std::cout << "Cached uniform: " << nameStr << " at location " << location << std::endl;
+
     }
 
     // --- Uniform Buffer Objects (UBOs) ---
     GLint blockCount;
     glGetProgramiv(program, GL_ACTIVE_UNIFORM_BLOCKS, &blockCount);
-
-    std::cout << "Total active UBOs: " << blockCount << std::endl;
 
     for (GLint i = 0; i < blockCount; i++) {
         char blockName[256];
@@ -56,7 +51,6 @@ Uniforms::Uniforms(GLuint program) {
         }
 
         glUniformBlockBinding(program, blockIndex, i);
-        std::cout << "Cached UBO: " << blockName << " at block index " << blockIndex << std::endl;
     }
 }
 

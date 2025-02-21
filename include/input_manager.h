@@ -11,14 +11,18 @@ enum KEY_STATE {
 	DOWN		= 0b10, //active now,	unchanged
 	RELEASED	= 0b01	//inactive now,	changed
 };
+struct Program;
+struct InputManager {
 
-struct Input {
+	Program& program;
 
 	byte key_states[GLFW_KEY_LAST / 4];
 
 	std::unordered_set<int> active_key_stack; //keys with recent activity that need to transition states
 
-	Input();
+	Cursor cursor;
+
+	InputManager(Program& program);
 
 	void UpdateKeyStack();
 

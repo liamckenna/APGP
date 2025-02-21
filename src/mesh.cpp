@@ -36,11 +36,6 @@ void Mesh::PopulateBuffers(std::vector<FlatVertex> flat_vertices) {
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(FlatVertex), (void*)offsetof(FlatVertex, normal));
 	glEnableVertexAttribArray(2);
 
-	std::cout << "printing mat indices, size: " << material_index.size() << std::endl;
-	for (auto& index : material_index) {
-		std::cout << index << std::endl;
-	}
-
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, material_index.size() * sizeof(int), material_index.data(), GL_STATIC_DRAW);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_BINDING_POINT, ssbo); // Bind to binding point 0
@@ -59,7 +54,6 @@ std::vector<FlatVertex> Mesh::Flatten() {
 		fv.position = v.position;
 		fv.texcoord = v.texcoord;
 		fv.normal =	v.normal;
-		std::cout << "flat vertex " << flat_vertices.size() << ":\t\tPosition: " << glm::to_string(fv.position) << "\t\tTexcoord: " << glm::to_string(fv.texcoord) << "\t\tNormal: " << glm::to_string(fv.normal) << std::endl;
 		flat_vertices.push_back(fv);
 	}
 

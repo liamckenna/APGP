@@ -13,6 +13,7 @@ void LightSystem::Init() {
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     glBindBufferBase(GL_UNIFORM_BUFFER, binding_point, ubo);
 }
+
 void LightSystem::Update(EntityManager& entity_manager, ComponentManager& component_manager, float delta_time) {
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
 

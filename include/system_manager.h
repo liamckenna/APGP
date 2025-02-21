@@ -19,8 +19,12 @@ public:
     }
 
     void Update(EntityManager& entity_manager, ComponentManager& component_manager, float delta_time) {
-        for (auto& system : systems) {
-            system->Update(entity_manager, component_manager, delta_time);
+        if (systems.size() > 0) {
+            for (int i = 1; i < systems.size(); i++) {
+                systems[i]->Update(entity_manager, component_manager, delta_time);
+            }
+            systems[0]->Update(entity_manager, component_manager, delta_time); //render system must go last
         }
+        
     }
 };

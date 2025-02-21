@@ -8,6 +8,8 @@ Clock::Clock() {
     last_fps_time = current_time;
     frame_count = 0;
     delta_time = 0.f;
+    seconds = 0;
+    frames = 0;
 }
 
 void Clock::Tick() {
@@ -30,6 +32,8 @@ void Clock::CalculateFrameRate() {
         std::cout << "FPS: " << fps << std::endl;
         last_fps_time = current_time;
         frame_count = 0;
+        seconds += 1;
+        frames += fps;
     }
 }
 
@@ -67,4 +71,8 @@ float Clock::GetElapsedTime() const {
 
 float Clock::GetDeltaTime() const {
     return delta_time;
+}
+
+float Clock::GetFinalFPS() const {
+    return (static_cast<float>(frames) / static_cast<float>(seconds));
 }
