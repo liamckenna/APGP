@@ -1,6 +1,7 @@
 #include "program.h"
 #include "json.h"
 #include <iostream>
+#include <thread>
 #include <GL/glew.h>
 #include "callbacks.h"
 #include "scene.h"
@@ -13,6 +14,9 @@ Program::Program(const std::string& filepath) : clock(), input_manager(*this) {
 	nlohmann::json data = ReadJsonFromFile(filepath);
 
 	hardcoded = Fetch(data, "hardcoded", false);
+	limit_fps = Fetch(data, "limit_fps", false);
+	fps_cap = Fetch(data, "fps_cap", 60);
+	target_frame_time = 1.0 / static_cast<double>(fps_cap);
 
 	glfwInit();
 
@@ -42,7 +46,7 @@ void Program::Run() {
 	
 	do {
 		clock.Tick();
-		
+
 		glfwPollEvents();
 		
 		scene->scene_ecs.Update(clock.GetDeltaTime());

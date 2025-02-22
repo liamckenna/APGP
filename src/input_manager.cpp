@@ -4,7 +4,7 @@
 #include "program.h"
 #include <algorithm>
 #include <iostream>
-InputManager::InputManager(Program& program) : program(program), cursor() {
+InputManager::InputManager(Program& program) : program(program), cursor(), idle_mouse(0.2f) {
 	std::memset(key_states, 0, sizeof(key_states));
 }
 
@@ -53,6 +53,11 @@ void InputManager::UpdateKeyStack() {
 
 	for (int key : current_stack) {
 		UpdateKeyState(key, ((GetKeyState(key) >> 1) & 0b1));
+	}
+	if (wheel.active) {
+		wheel.active = false;
+		wheel.dx = 0;
+		wheel.dy = 0;
 	}
 }
 

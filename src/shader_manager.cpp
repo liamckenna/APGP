@@ -41,7 +41,8 @@ void ShaderManager::LoadFromJSON(const std::string& filepath) {
     std::string default_shader = Fetch(data, "active_shader", "");
     UseShader(default_shader);
     
-    SetUniform("ambient_intensity", static_cast<float>(Fetch(data["uniforms"], "ambient_intensity", 0.2f)));
+    SetUniform("ambient_intensity", static_cast<float>(Fetch(data["uniforms"], "ambient_intensity", 0.02f)));
+    SetUniform("debug_mode", 0);
 
 }
 
@@ -53,7 +54,10 @@ void ShaderManager::CacheUniforms(const std::string& shaderName) {
 }
 
 void ShaderManager::SetUniform(const std::string& shaderName, const std::string& uniformName, DataType value) {
-    if (shader_programs.find(shaderName) == shader_programs.end()) return;
+    if (shader_programs.find(shaderName) == shader_programs.end()) {
+        std::cout << "Shader not found: " << shaderName << std::endl;
+        return;
+    }
     GLuint program = shader_programs[shaderName];
     shader_uniforms[program].FindAndUpdate(uniformName, value);
 }

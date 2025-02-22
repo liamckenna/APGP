@@ -18,6 +18,9 @@ struct FlatMaterial
     glm::vec3 specular;
     float pad4;
 
+    glm::vec3 emissive;
+    float pad5;
+
     int ambient_tex;
     int diffuse_tex;
     int specular_tex;

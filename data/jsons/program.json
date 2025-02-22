@@ -3,5 +3,7 @@
   "graphics_config": "graphics_config.json",
   "shaders": "shaders.json",
   "scene": "sample scene.json",
-  "hardcoded":  true
+  "hardcoded": true,
+  "limit_fps": true,
+  "fps_cap":  1000
 }

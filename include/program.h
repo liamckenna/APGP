@@ -22,6 +22,9 @@ struct Program {
 	InputManager input_manager;
 
 	bool hardcoded;
+	bool limit_fps;
+	int fps_cap;
+	double target_frame_time;
 
 	Program(const std::string& filepath);
 

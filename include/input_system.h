@@ -10,5 +10,5 @@ class InputSystem : public System {
 
 public:
     InputSystem(InputManager& im);
-    void Update(EntityManager& entity_manager, ComponentManager& component_manager, float delta_time);
+    void Update(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
 };

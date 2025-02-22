@@ -38,7 +38,7 @@ void Mesh::PopulateBuffers(std::vector<FlatVertex> flat_vertices) {
 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, material_index.size() * sizeof(int), material_index.data(), GL_STATIC_DRAW);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_BINDING_POINT, ssbo); // Bind to binding point 0
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_BINDING_POINT, ssbo);
 	glVertexAttribIPointer(3, 1, GL_INT, sizeof(int), (void*)0);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 

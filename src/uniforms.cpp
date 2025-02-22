@@ -67,7 +67,7 @@ Uniform& Uniforms::GetByName(const std::string& name) {
 void Uniforms::FindAndUpdate(const std::string& name, DataType value) {
     if (uniforms.find(name) == uniforms.end()) {
         std::cerr << "Uniform not found: " << name << std::endl;
-        //std::cerr << "Printing out list of all uniforms" << std::endl;
+        std::cerr << "too bad cuh" << std::endl;
         for (auto& uniform : uniforms) {
             //std::cout << uniform.second.name << std::endl;
         }

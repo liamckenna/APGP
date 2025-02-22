@@ -12,10 +12,6 @@ out vec3 frag_position;
 out vec3 frag_normal;
 out vec2 frag_tex_coord;
 
-float rand(float seed) {
-    return fract(sin(seed) * 43758.5453123) * 2.0 - 1.0;
-}
-
 void main() {
     frag_position = vec3(model * vec4(position, 1.0));
 

@@ -204,6 +204,9 @@ void ResourceManager::LoadMaterialFile(const std::string& filename) {
         else if (keyword == "Ks") { // Specular color
             iss >> current_material.colors.specular.x >> current_material.colors.specular.y >> current_material.colors.specular.z;
         }
+        else if (keyword == "Ke") { // Emissive color
+            iss >> current_material.colors.emissive.x >> current_material.colors.emissive.y >> current_material.colors.emissive.z;
+        }
         else if (keyword == "Ns") { // Shininess
             iss >> current_material.shininess;
         }
@@ -225,22 +228,27 @@ void ResourceManager::LoadMaterialFile(const std::string& filename) {
             iss >> texture_name;
             current_material.textures.specular = TextureQuery(texture_name);
         }
+        else if (keyword == "map_Ke") { // Emissive texture
+            std::string texture_name;
+            iss >> texture_name;
+            current_material.textures.emissive = TextureQuery(texture_name);
+        }
         else if (keyword == "map_Ns") { // Shininess texture
             std::string texture_name;
             iss >> texture_name;
             current_material.textures.shininess = TextureQuery(texture_name);
         }
-        else if (keyword == "map_bump" || keyword == "bump") { //default to normal map... ill worry bout it later
+        else if (keyword == "map_bump" || keyword == "bump") {
             std::string texture_name;
             iss >> texture_name;
             current_material.textures.bump = TextureQuery(texture_name);
         }
-        else if (keyword == "disp") { //default to normal map... ill worry bout it later
+        else if (keyword == "disp") {
             std::string texture_name;
             iss >> texture_name;
             current_material.textures.displacement = TextureQuery(texture_name);
         }
-        else if (keyword == "refl") { //default to normal map... ill worry bout it later
+        else if (keyword == "refl") {
             std::string texture_name;
             iss >> texture_name;
             current_material.textures.reflection = TextureQuery(texture_name);

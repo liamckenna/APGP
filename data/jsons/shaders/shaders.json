@@ -4,9 +4,13 @@
     "default": {
       "vertex": "default_vs.glsl",
       "fragment": "default_fs.glsl"
+    },
+    "shadow": {
+      "vertex": "shadow_depth.vs.glsl",
+      "fragment": "shadow_depth.fs.glsl"
     }
   },
   "uniforms": {
-    "ambient_intensity": 0.2
+    "ambient_intensity": 0.02
   }
 }

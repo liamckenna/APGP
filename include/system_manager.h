@@ -7,10 +7,10 @@
 
 class SystemManager {
 
-	std::vector<std::unique_ptr<System>> systems;
+	
 
 public:
-
+    std::vector<std::unique_ptr<System>> systems;
     //register a new system to be run every 
     template<typename T, typename... Args>
     T& AddSystem(Args&&... args) {
@@ -21,9 +21,9 @@ public:
     void Update(EntityManager& entity_manager, ComponentManager& component_manager, float delta_time) {
         if (systems.size() > 0) {
             for (int i = 1; i < systems.size(); i++) {
-                systems[i]->Update(entity_manager, component_manager, delta_time);
+                systems[i]->Update(entity_manager, component_manager, *this, delta_time);
             }
-            systems[0]->Update(entity_manager, component_manager, delta_time); //render system must go last
+            systems[0]->Update(entity_manager, component_manager, *this, delta_time); //render system must go last but be index 0
         }
         
     }

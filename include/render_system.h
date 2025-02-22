@@ -10,8 +10,8 @@
 class RenderSystem : public System {
     ResourceManager& resource_manager;
     ShaderManager& shader_manager;
-
 public:
     RenderSystem(ResourceManager& rm, ShaderManager& sm);
-    void Update(EntityManager& entity_manager, ComponentManager& component_manager, float delta_time);
+    void Update(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
+    void RenderMeshes(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
 };

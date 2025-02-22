@@ -6,7 +6,7 @@ Kd 0.8 0.8 0.8
 Ks 1.0 1.0 1.0
 Ns 32.0
 d 1.0
-map_Kd default.png
+
 
 newmtl black
 

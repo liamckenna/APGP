@@ -27,6 +27,8 @@ struct Timer {
 
 	Timer(float length_seconds, Timestamp current_time, bool auto_dispose, bool auto_dismiss);
 
+	Timer(float length_seconds);
+
 	TIMER_STATE Pause(Timestamp current_time); //bool -> successfully paused? if not consider deletion
 	TIMER_STATE Resume(Timestamp current_time);
 	TIMER_STATE Evaluate(Timestamp current_time); //true if timer has expired

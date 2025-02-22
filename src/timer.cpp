@@ -19,6 +19,17 @@ Timer::Timer(float length_seconds, Timestamp current_time, bool auto_dispose, bo
 	state = TICKING;
 }
 
+Timer::Timer(float length_seconds) {	
+	length = Duration(length_seconds);
+	auto_dispose = false;
+	auto_dismiss = false;
+	start_time = Timestamp();
+	end_time = start_time;
+	initial_start = start_time;
+	initial_length = length;
+	state = IDLE;
+}
+
 TIMER_STATE Timer::Pause(Timestamp current_time) {
 	switch (state) {
 	case TICKING:

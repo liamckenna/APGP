@@ -54,8 +54,7 @@ public:
         glBindBufferBase(GL_UNIFORM_BUFFER, MATERIAL_BINDING_POINT, material_ubo);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-
-        //LoadObjectFile("default");
+        LoadObjectFile("default");
         
     };
 
@@ -76,6 +75,8 @@ public:
             flat_material.diffuse = material.colors.diffuse;
             
             flat_material.specular = material.colors.specular;
+
+            flat_material.emissive = material.colors.emissive;
 
             flat_material.ambient_tex = material.textures.ambient;
             flat_material.diffuse_tex = material.textures.diffuse;

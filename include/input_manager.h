@@ -1,6 +1,7 @@
 #pragma once
 #include "cursor.h"
 #include "byte.h"
+#include "timer.h"
 #include <unordered_set>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -21,6 +22,14 @@ struct InputManager {
 	std::unordered_set<int> active_key_stack; //keys with recent activity that need to transition states
 
 	Cursor cursor;
+
+	struct Wheel {
+		float dx = 0;
+		float dy = 0;
+		bool active = false;
+	} wheel;
+
+	Timer idle_mouse;
 
 	InputManager(Program& program);
 

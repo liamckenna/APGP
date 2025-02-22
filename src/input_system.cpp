@@ -1,12 +1,13 @@
 #include "input_system.h"
 #include <iostream>
+#include <algorithm>
 #include "program.h"
 #include "clock.h"
 #include "byte.h"
 #include "window.h"
 InputSystem::InputSystem(InputManager& im) : input_manager(im) {};
 
-void InputSystem::Update(EntityManager& entity_manager, ComponentManager& component_manager, float delta_time) {
+void InputSystem::Update(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
 	
 	Entity camera = component_manager.GetEntitiesWithComponent<PrimaryCameraComponent>()[0];
 	TransformComponent& transform = component_manager.GetComponent<TransformComponent>(camera);
@@ -16,14 +17,18 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	byte a = input_manager.GetKeyState(GLFW_KEY_A);
 	byte s = input_manager.GetKeyState(GLFW_KEY_S);
 	byte d = input_manager.GetKeyState(GLFW_KEY_D);
+	byte one = input_manager.GetKeyState(GLFW_KEY_1);
+	byte two = input_manager.GetKeyState(GLFW_KEY_2);
 	byte lctrl = input_manager.GetKeyState(GLFW_KEY_LEFT_CONTROL);
 	byte lmb = input_manager.GetKeyState(GLFW_MOUSE_BUTTON_LEFT);
 	byte rmb = input_manager.GetKeyState(GLFW_MOUSE_BUTTON_RIGHT);
-	
+	byte mmb = input_manager.GetKeyState(GLFW_MOUSE_BUTTON_MIDDLE);
+
+
 	switch (space) {
 	case PRESSED:
 	case DOWN:
-		transform.TranslateUp(3, delta_time);
+		transform.TranslateUp(5, delta_time);
 		break;
 	case RELEASED:
 		break;
@@ -33,7 +38,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	switch (lctrl) {
 	case PRESSED:
 	case DOWN:
-		transform.TranslateDown(3, delta_time);
+		transform.TranslateDown(5, delta_time);
 		break;
 	case RELEASED:
 		break;
@@ -43,7 +48,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	switch (w) {
 	case PRESSED:
 	case DOWN:
-		transform.TranslateForward(3, delta_time);
+		transform.TranslateForward(5, delta_time);
 		break;
 	case RELEASED:
 		break;
@@ -53,7 +58,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	switch (a) {
 	case PRESSED:
 	case DOWN:
-		transform.TranslateLeft(3, delta_time);
+		transform.TranslateLeft(5, delta_time);
 		break;
 	case RELEASED:
 		break;
@@ -63,7 +68,17 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	switch (s) {
 	case PRESSED:
 	case DOWN:
-		transform.TranslateBackward(3, delta_time);
+		transform.TranslateBackward(5, delta_time);
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+	switch (d) {
+	case PRESSED:
+	case DOWN:
+		transform.TranslateRight(3, delta_time);
 		break;
 	case RELEASED:
 		break;
@@ -72,11 +87,18 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	}
 	switch (lmb) {
 	case PRESSED:
+		double xpos, ypos;
+		glfwGetCursorPos(input_manager.cursor.current_window->glfw_window, &xpos, &ypos);
+		input_manager.cursor.Update(xpos, ypos);
 		glfwSetInputMode(input_manager.cursor.current_window->glfw_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		break;
 	case DOWN:
-		transform.RotateYaw(input_manager.cursor.dx);
-		transform.RotatePitch(input_manager.cursor.dy);
+		if (input_manager.cursor.dx != 0 || input_manager.cursor.dy != 0) {
+			transform.RotateYaw(-input_manager.cursor.dx, 1);
+			transform.RotatePitch(input_manager.cursor.dy, 1);
+			input_manager.cursor.dx = 0;
+			input_manager.cursor.dy = 0;
+		}
 		break;
 	case RELEASED:
 		glfwSetInputMode(input_manager.cursor.current_window->glfw_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -86,7 +108,6 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	}
 	switch (rmb) {
 	case PRESSED:
-		std::cout << "forward vector: " << glm::to_string(transform.orientation * glm::vec3(0, 0, -1.f)) << std::endl;
 		break;
 	case DOWN:
 		break;
@@ -95,12 +116,41 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	case UP:
 		break;
 	}
-	//std::cout << "dx: " << input_manager.cursor.dx << std::endl;
-	//std::cout << "dy: " << input_manager.cursor.dy << std::endl;
+	switch (one) {
+	case PRESSED:
+		input_manager.program.shader_manager.SetUniform("debug_mode", 0);
+		break;
+	case DOWN:
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+	switch (two) {
+	case PRESSED:
+		input_manager.program.shader_manager.SetUniform("debug_mode", 1);
+		break;
+	case DOWN:
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
 	
-	if (input_manager.cursor.dx != 0 || input_manager.cursor.dy != 0) {
-		//transform.RotateYaw(input_manager.cursor.dx);
-		//transform.RotatePitch(input_manager.cursor.dy);
+	
+
+
+	if (input_manager.wheel.active) {
+		if (input_manager.wheel.dy != 0) {
+			for (auto entity : component_manager.GetEntitiesWithComponent<LightComponent>()) {
+				LightComponent& light = component_manager.GetComponent<LightComponent>(entity);
+				light.intensity += (input_manager.wheel.dy * delta_time * 1000.f);
+				light.intensity = std::max(light.intensity, 0.f);
+				light.stale = true;
+			}
+		}
 	}
 
 	input_manager.UpdateKeyStack(); //HAS TO BE AT THE END

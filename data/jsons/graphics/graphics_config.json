@@ -7,7 +7,7 @@
     "cull_side": "back",
     "front_face": "ccw",
     "line_width": 2.0,
-    "blend": true,
+    "blend": false,
     "default_draw_mode": "triangles",
     "polygon_mode": "fill",
     "polygon_mode_side": "front and back"
