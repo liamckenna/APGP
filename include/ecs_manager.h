@@ -30,9 +30,15 @@ public:
         component_manager.AddComponent(entity, component);
     }
 
-    // Overload specifically for MeshComponent
+    //overload specifically for MeshComponent
     void AddComponent(Entity entity, const MeshComponent& component, ResourceManager& resource_manager) {
         resource_manager.GetMesh(component.mesh_name);
+        component_manager.AddComponent(entity, component);
+    }
+
+    //overload specifically for SurfaceComponent
+    void AddComponent(Entity entity, const SurfaceComponent& component, ResourceManager& resource_manager) {
+        resource_manager.GetSurface(component.surface_name);
         component_manager.AddComponent(entity, component);
     }
 

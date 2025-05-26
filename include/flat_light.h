@@ -5,7 +5,7 @@ struct FlatLight {
 	int enabled;
 	int index;
 	float intensity;
-	float pad1;
+	float range;
 
 	glm::vec3 position;
 	float pad2;

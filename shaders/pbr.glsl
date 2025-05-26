@@ -1,51 +1,57 @@
 #version 430 core
+
 #define MAX_LIGHTS 100
 #define MAX_MATERIALS 100
 #define MAX_TEXTURES 10
 
 struct Light {
+
     vec3 position;
     float strength;
     vec3 color;
     int is_active;
+
 };
 
 struct Material {
-    int index;				// 4 bytes
-    int tris;				// 4 bytes
-	int edges; 			    // 4 bytes
-	float refractive_index;	// 4 bytes (total 16 bytes)
 
-    vec3 dif_color;	        // 12 bytes
-    float pad2;			    // 4 bytes (total 16 bytes)
+    int index;
+    int tris;
+	int edges;
+	float refractive_index;
 
-    vec3 amb_color;	        // 12 bytes
-    float pad3;				// 4 bytes padding (total 16 bytes)
+    vec3 dif_color;
+    float pad2;
 
-    vec3 spc_color;	        // 12 bytes
-    float pad4;				// 4 bytes padding (total 16 bytes)
+    vec3 amb_color;
+    float pad3;
 
-    vec3 ems_color;	        // 12 bytes
-	float pad5;				// 4 bytes padding (total 16 bytes)
+    vec3 spc_color;
+    float pad4;
 
-    float shininess;		// 4 bytes
-    float roughness;		// 4 bytes
-    float opacity;			// 4 bytes
-    float metallic;			// 4 bytes (total 16 bytes)
+    vec3 ems_color;
+	float pad5;
 
-    int dif_texture_index;	// 4 bytes
-    int nrm_texture_index;	// 4 bytes
-    int bmp_texture_index;	// 4 bytes
-    int spc_texture_index;	// 4 bytes (total 16 bytes)
+    float shininess;
+    float roughness;
+    float opacity;
+    float metallic;
 
-    int rgh_texture_index;	// 4 bytes
-    int dsp_texture_index;	// 4 bytes
-    int aoc_texture_index;	// 4 bytes
-    int opc_texture_index;	// 4 bytes (total 16 bytes)
-    int ems_texture_index;	// 4 bytes
-    int hgt_texture_index;	// 4 bytes
-    int met_texture_index;	// 4 bytes
-    int pad8;				// 4 bytes padding (total 16 bytes)
+    int dif_texture_index;
+    int nrm_texture_index;
+    int bmp_texture_index;
+    int spc_texture_index;
+
+    int rgh_texture_index;
+    int dsp_texture_index;
+    int aoc_texture_index;
+    int opc_texture_index;
+
+    int ems_texture_index;
+    int hgt_texture_index;
+    int met_texture_index;
+    int pad8;
+
 };
 
 uniform vec3 camera_position;
@@ -55,11 +61,15 @@ uniform float ambient_intensity;
 uniform int light_count;
 
 layout(std140, binding = 0) uniform LightData {
+
     Light lights[MAX_LIGHTS];
+
 };
 
 layout(std140, binding = 1) uniform MaterialBuffer {
+
     Material materials[MAX_MATERIALS];
+
 };
 
 layout(binding = 2) uniform sampler2D textures[MAX_TEXTURES];
@@ -77,40 +87,59 @@ layout(location = 0) out vec4 AccumColor;
 layout(location = 1) out float AccumAlpha;
 
 vec3 GrabTextureCoordinateColor(int texture_index, vec3 fallback_color) {
+
     if (texture_index >= 0) {
+
         vec4 texColor = texture(textures[texture_index], vec2(frag_tex_coords.x, 1.0 - frag_tex_coords.y));
         return texColor.xyz;
+
     } else {
+
         return fallback_color;
+    
     }
+
 }
 
 float GrabTextureCoordinateValue(int texture_index, float fallback_value) {
+
     if (texture_index >= 0) {
+
         vec4 texColor = texture(textures[texture_index], vec2(frag_tex_coords.x, 1.0 - frag_tex_coords.y));
         return texColor.x;
+
     } else {
+
         return fallback_value;
+    
     }
+
 }
 
 vec3 FresnelSchlick(float cos_theta, vec3 F0) {
+
     return F0 + (1.0 - F0) * pow(1.0 - cos_theta, 5.0);
+
 }
 
 float DistributionGGX(float NdotH, float roughness) {
+
     float a = roughness * roughness;
     float a2 = a * a;
     float denom = (NdotH * NdotH) * (a2 - 1.0) + 1.0;
     return a2 / (3.14159 * denom * denom);
+
 }
 
 float GeometrySchlickGGX(float NdotV, float roughness) {
+
     float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
     return NdotV / (NdotV * (1.0 - k) + k);
+
 }
 
 void main() {
+
     Material material = materials[frag_material_index];
     
     vec3 base_color                 = GrabTextureCoordinateColor(material.dif_texture_index, material.dif_color);       //used
@@ -173,6 +202,7 @@ void main() {
         
         total_diffuse_lighting += diffuse_lighting;
         total_specular_lighting + specular_lighting;
+
     }
 
     //emissive
@@ -190,8 +220,8 @@ void main() {
     //vec3 weighted_total = weighted_diffuse + weighted_specular + weighted_refraction;
     vec3 weighted_total = weighted_diffuse + weighted_specular;
 
-    // Outputs
     AccumColor = vec4(weighted_total, opacity_value);
     AccumAlpha = opacity_value;
     //AccumColor = vec4(1.0, 0.0, 0.0, 1.0);
+
 }

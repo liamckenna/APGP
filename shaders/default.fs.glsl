@@ -1,23 +1,26 @@
 #version 450 core
+
 #define MAX_LIGHTS 10
 #define MAX_MATERIALS 20
 #define MAX_TEXTURES 10
 
 struct Light {
+
 	int enabled;
     int index;
 	float intensity;
-	float pad1;
+	float range;
 
 	vec3 position;
 	float pad2;
 
 	vec3 color;
 	float pad3;
+
 };
 
-struct Material
-{
+struct Material {
+ 
     int index;
     float shininess;
     float alpha;
@@ -48,21 +51,26 @@ struct Material
 
 
 layout (std140, binding = 0) uniform LightBlock {
+
     Light lights[MAX_LIGHTS];
+
 };
 
 layout(std140, binding = 1) uniform MaterialBlock {
+
     Material materials[MAX_MATERIALS];
+
 };
 
 layout(binding = 2) uniform sampler2D textures[MAX_TEXTURES];
 
 layout(std430, binding = 3) buffer MaterialBuffer {
+
     int material_index[];
+
 };
 
 uniform float ambient_intensity;
-
 uniform samplerCube shadowCubeMap;
 uniform vec3 lightPos;
 uniform float far_plane;
@@ -76,46 +84,57 @@ in vec2 frag_tex_coord;
 out vec4 FragColor;
 
 vec3 GrabTextureCoordinateColor(int texture_index, vec3 fallback_color) {
+
     if (texture_index >= 0) {
+
         vec4 tex_color = texture(textures[texture_index], vec2(frag_tex_coord.x, 1.0 - frag_tex_coord.y));
+
         return tex_color.xyz;
+
     } else {
+
         return fallback_color;
+
     }
+
 }
 
 float GrabTextureCoordinateValue(int texture_index, float fallback_value) {
+
     if (texture_index >= 0) {
+
         float tex_value = texture(textures[texture_index], vec2(frag_tex_coord.x, 1.0 - frag_tex_coord.y)).x;
+
         return tex_value;
+
     } else {
+
         return fallback_value;
+
     }
+
 }
 
 float LinearizeDepth(float z_buffer, float near, float far) {
+
     return (near * far) / (far + z_buffer * (near - far));
+
 }
 
 void main() {
 
     vec3 view_direction = normalize(view_position - frag_position);
     vec3 normal = normalize(frag_normal);
-
-    vec3 fragToLight = normalize(frag_position - lightPos); // Get direction to light
+    vec3 fragToLight = normalize(frag_position - lightPos);
     vec3 lightDir = normalize(lightPos - frag_position);
     float z = texture(shadowCubeMap, fragToLight).r;
     float closest_depth = LinearizeDepth(z, 0.1, 1000);
     float current_depth = length(frag_position - lightPos);
-    float bias = 0.25 * current_depth; // Scales with depth
+    float bias = 0.25 * current_depth;
     float shadow = (closest_depth + bias < current_depth) ? 1.0 : 0.0;
 
-    if (debug_mode == 1) {
-        
-        FragColor = vec4(vec3(1 - shadow), 1);
-        
+    if (debug_mode == 0) {
 
-    } else {
         int frag_material_index = material_index[gl_PrimitiveID];
 
         vec3    amb_mat =   materials[frag_material_index].ambient      * GrabTextureCoordinateColor(materials[frag_material_index].ambient_tex,    vec3(1.0));
@@ -125,20 +144,18 @@ void main() {
         float   shn_mat =   materials[frag_material_index].shininess    * GrabTextureCoordinateValue(materials[frag_material_index].shininess_tex,  1.0);
         float   alf_mat =   materials[frag_material_index].alpha;
 
-        
-
         vec3 amb_lgt = vec3(0);
         vec3 dif_lgt = vec3(0);
         vec3 spc_lgt = vec3(0);
 
-        
-
         for (int i = 0; i < MAX_LIGHTS; i++) {
+
             if (lights[i].enabled == 0) continue;
             
             //light
             vec3 light_vector = lights[i].position - frag_position;
             float dist = length(light_vector);
+            if (dist > lights[i].range) continue;
             vec3 light_direction = normalize(light_vector);
             float attenuation = 1.0 / (1.0 + (dist * dist));
             vec3 light_reflection = reflect(-light_direction, normal);
@@ -158,6 +175,7 @@ void main() {
             spc_lgt += specular;
 
         }
+
         vec3 clr_end = vec3(0);
 
         //ambient
@@ -176,9 +194,12 @@ void main() {
         clr_end += ems_mat;
 
         clr_end = clamp(clr_end, 0.0, 1.0); 
+        FragColor = vec4(clr_end, alf_mat);        
+
+    } else if (debug_mode == 1) {
         
-        FragColor = vec4(clr_end, alf_mat);
+        FragColor = vec4(vec3(1 - shadow), 1);
+
     }
-    
     
 }

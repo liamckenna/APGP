@@ -4,17 +4,18 @@
 #include <string>
 #include <iostream>
 #include "mesh.h"
+#include "surface.h"
 #include "material.h"
 #include "flat_material.h"
 #include "texture.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/string_cast.hpp"
 
-
 class ResourceManager {
 public:
 
     std::unordered_map<std::string, Mesh> meshes;
+    std::unordered_map<std::string, Surface> surfaces;
 
     std::vector<Material> materials;
     std::unordered_map<std::string, int> material_map;
@@ -28,6 +29,13 @@ public:
             LoadObjectFile(name);
         }
         return meshes[name];
+    }
+
+    Surface& GetSurface(const std::string& name) {
+        if (surfaces.find(name) == surfaces.end()) {
+            LoadSurfaceFile(name);
+        }
+        return surfaces[name];
     }
 
     Material& GetMaterial(const std::string& name) {
@@ -110,6 +118,7 @@ public:
             return 0;
         }
     }
+
     int TextureQuery(const std::string& name) {
         if (texture_map.find(name) != texture_map.end()) {
             return texture_map[name];
@@ -126,6 +135,8 @@ public:
     }
 
     void LoadObjectFile(const std::string& filename);
+    void LoadSurfaceFile(const std::string& filename);
     void LoadMaterialFile(const std::string& filename);
     void LoadTextureFile(const std::string& filename);
+
 };

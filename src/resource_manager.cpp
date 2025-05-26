@@ -1,5 +1,6 @@
 #include "resource_manager.h"
 #include "mesh.h"
+#include "surface.h"
 #include "vertex.h"
 #include "material.h"
 #include "texture.h"
@@ -157,6 +158,140 @@ void ResourceManager::LoadObjectFile(const std::string& filename) {
     mesh.SetupBuffers();
 
     meshes.emplace(mesh.name, std::move(mesh));
+}
+
+
+
+void ResourceManager::LoadSurfaceFile(const std::string& filename) {
+    std::string filepath = "data/surfaces/" + filename + ".srf";
+    std::ifstream file(filepath);
+
+    Surface surface;
+    surface.name = filename;
+
+    if (!file.is_open()) {
+        std::cerr << "Failed to open .srf file: " << filepath << std::endl;
+        return;
+    }
+
+    std::string line;
+    std::string material_file;
+    int material_index = 0;
+    std::vector<glm::vec3> positions;
+    std::vector<glm::vec3> normals;
+    std::vector<glm::vec2> texcoords;
+    int line_number = 0;
+    while (std::getline(file, line)) {
+        line_number++;
+        std::istringstream iss(line);
+        std::string keyword;
+        iss >> keyword;
+
+        if (keyword == "mtllib") {
+            iss >> material_file;
+
+            std::ifstream testMaterialFile("data/materials/" + material_file);
+            if (testMaterialFile.good()) {
+                LoadMaterialFile(material_file);
+            }
+            else {
+                std::cerr << "Warning: Material file not found: " << material_file << std::endl;
+            }
+        }
+        else if (keyword == "usemtl") {
+            std::string material_name;
+            iss >> material_name;
+            material_name = material_file + "." + material_name;
+            material_index = MaterialQuery(material_name);
+
+        }
+        else if (keyword == "v") {
+            glm::vec3 position;
+            iss >> position.x >> position.y >> position.z;
+            positions.push_back(position);
+        }
+        else if (keyword == "vn") {
+            glm::vec3 normal;
+            iss >> normal.x >> normal.y >> normal.z;
+            normals.push_back(normal);
+        }
+        else if (keyword == "vt") {
+            glm::vec2 texcoord;
+            iss >> texcoord.x >> texcoord.y;
+            texcoords.push_back(texcoord);
+        }
+        else if (keyword == "ps") {
+            int patch_size;
+			iss >> patch_size;
+            surface.patch_size = patch_size;
+        }
+        else if (keyword == "cv") {
+            std::vector<int> vertexIndices;
+            std::string vertexData;
+
+            while (iss >> vertexData) {
+                std::istringstream viss(vertexData);
+                std::string posIdx, texIdx, normIdx;
+
+                std::getline(viss, posIdx, '/');
+                std::getline(viss, texIdx, '/');
+                std::getline(viss, normIdx, '/');
+
+                int vIndex = std::stoi(posIdx);
+                int tIndex = texIdx.empty() ? -1 : std::stoi(texIdx) - 1;
+                int nIndex = normIdx.empty() ? -1 : std::stoi(normIdx) - 1;
+
+                std::cout << "vIndex: " << vIndex << std::endl;
+                if (vIndex < 0 || vIndex >= positions.size()) {
+                    std::cerr << "Invalid position index: " << vIndex << std::endl;
+                    continue;
+                }
+                if (tIndex != -1 && (tIndex < 0 || tIndex >= texcoords.size())) {
+                    std::cerr << "Invalid texcoord index: " << tIndex << std::endl;
+                    continue;
+                }
+                if (nIndex != -1 && (nIndex < 0 || nIndex >= normals.size())) {
+                    std::cerr << "Invalid normal index: " << nIndex << std::endl;
+                    continue;
+                }
+
+                VertexKey key{ vIndex, tIndex, nIndex };
+
+                if (surface.unique_vertices.find(key) == surface.unique_vertices.end()) {
+                    Vertex vertex;
+                    vertex.position = positions[vIndex];
+                    vertex.texcoord = (tIndex != -1) ? texcoords[tIndex] : glm::vec2(0.0f);
+                    vertex.normal = (nIndex != -1) ? normals[nIndex] : glm::vec3(0.0f);
+
+                    int newIndex = static_cast<int>(surface.vertices.size());
+                    surface.vertices.push_back(vertex);
+                    surface.unique_vertices[key] = newIndex;
+                }
+                vertexIndices.push_back(surface.unique_vertices[key]);
+            }
+            std::cout << "vertexIndices size: " << vertexIndices.size() << std::endl;
+            if (vertexIndices.size() == 4) {
+                surface.indices.push_back(vertexIndices[0]);
+                surface.indices.push_back(vertexIndices[1]);
+                surface.indices.push_back(vertexIndices[2]);
+                surface.indices.push_back(vertexIndices[3]);
+                surface.material_index.push_back(material_index);
+            }
+        }
+    }
+    //just in case
+    if (normals.empty()) {
+        std::cout << "Generating Normals for " << surface.name << std::endl;
+        for (size_t i = 0; i < surface.vertices.size(); i++) {
+
+            surface.vertices[i].normal = glm::vec3(0.f);
+
+        }   
+    }
+
+    surface.SetupBuffers();
+
+    surfaces.emplace(surface.name, std::move(surface));
 }
 
 

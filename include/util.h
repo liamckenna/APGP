@@ -9,9 +9,15 @@
 
 typedef unsigned int uint;
 
-enum PROJECTION_TYPES {
+enum PROJECTION_TYPE {
     ORTHOGRAPHIC = 0xFF,
     PERSPECTIVE = 0X00,
+};
+
+enum LIGHT_TYPE {
+    POINT_LIGHT = 0x00,
+    SPOT_LIGHT  = 0x01,
+    DIRECTIONAL_LIGHT = 0x02
 };
 
 #define LIGHT_BINDING_POINT     0
@@ -83,8 +89,8 @@ const static std::unordered_map<std::string, GLenum> GL_ENUMS = {
     {"ccw", GL_CCW},
 
     //projection types
-    {"perspective", PROJECTION_TYPES::PERSPECTIVE},
-    {"orthographic", PROJECTION_TYPES::ORTHOGRAPHIC},
+    {"perspective", PROJECTION_TYPE::PERSPECTIVE},
+    {"orthographic", PROJECTION_TYPE::ORTHOGRAPHIC},
 
     //polygon modes
     {"point", GL_POINT},

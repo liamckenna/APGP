@@ -14,4 +14,6 @@ public:
     RenderSystem(ResourceManager& rm, ShaderManager& sm);
     void Update(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
     void RenderMeshes(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
+    void RenderSurfaces(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
+
 };

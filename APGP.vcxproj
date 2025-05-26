@@ -151,7 +151,7 @@
   <ImportGroup Label="ExtensionTargets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties data_4jsons_4graphics_4graphics_1json__JsonSchema="https://cdn.sdf.com/schemas/sdf-schema-1.3.json" />
+      <UserProperties />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

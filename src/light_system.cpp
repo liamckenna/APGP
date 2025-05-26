@@ -75,6 +75,7 @@ void LightSystem::Update(EntityManager& entity_manager, ComponentManager& compon
         fl.enabled = 1;
         fl.index = index;
         fl.intensity = light.intensity;
+        fl.range = light.range;
         fl.position = transform.position;
         fl.color = light.color;
 

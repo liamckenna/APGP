@@ -32,7 +32,6 @@ Uniforms::Uniforms(GLuint program) {
         }
 
         uniforms[nameStr] = Uniform(nameStr, location, type);
-
     }
 
     // --- Uniform Buffer Objects (UBOs) ---

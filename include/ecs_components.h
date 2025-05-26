@@ -14,6 +14,11 @@ struct TransformComponent {
     glm::vec3 scale = glm::vec3(1.f);
     bool stale = true;
 
+    void SetPosition(glm::vec3 destination) {
+        position = destination;
+        stale = true;
+    }
+
     void TranslateForward(float distance, float delta_time) {
         position += (delta_time * distance) * (orientation * glm::vec3(0, 0, -1));
         stale = true;
@@ -76,6 +81,7 @@ struct LightComponent {
     bool enabled = true;
     int index = -1;
     float intensity = 1.f;
+    float range = 10.f;
     glm::vec3 color = glm::vec3(1.f);
     bool stale = true;
 };
@@ -127,6 +133,16 @@ struct MeshComponent {
     std::string mesh_name = "";
     GLuint vao = 0;
     GLuint vbo = 0;
+    glm::mat4 model = glm::mat4(1.0f);
+};
+
+struct SurfaceComponent {
+    bool enabled = true;
+    std::string surface_name = "";
+    GLuint vao = 0;
+    GLuint vbo = 0;
+    GLuint ebo = 0;
+    GLuint patch_buffer = 0;
     glm::mat4 model = glm::mat4(1.0f);
 };
 

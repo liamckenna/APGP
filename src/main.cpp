@@ -28,7 +28,9 @@
 
 
 int main() {
-	//main should create our program object, then do our program loop i think, then cleanup
+	
+	//----------		LOAD CALL			----------//
+
 	std::string program_filepath = "/data/jsons/program.json";
 
 	Program program{program_filepath};
@@ -36,8 +38,10 @@ int main() {
 	nlohmann::json program_json = ReadJsonFromFile(program_filepath);
 
 	std::string scene_filepath = "/data/jsons/scenes/" + std::string(program_json["scene"]);
+
 	program.scene = new Scene(scene_filepath, program);
-	std::cout << "initialized scene" << std::endl;
+
+	std::cout << "finished loading scene" << std::endl;
 
 	//----------		RENDER CALL			----------//
 

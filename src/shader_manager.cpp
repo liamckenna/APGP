@@ -94,7 +94,7 @@ void ShaderManager::UseShader(const std::string& name) {
         glUseProgram(program);
         active_shader = program;
     }
-    std::cout << "using shader program \"" << name << "\"" << std::endl;
+    //std::cout << "using shader program \"" << name << "\"" << std::endl;
 }
 
 GLuint ShaderManager::CompileShaderProgram(const std::string& vertexPath, const std::string& fragmentPath, 
