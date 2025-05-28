@@ -78,7 +78,7 @@ void GraphicsConfig::ApplySettings() const {
 }
 
 void GraphicsConfig::ApplyOpenGLSettings() const {
-
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     if (cull_face) {
         glEnable(GL_CULL_FACE);
         glCullFace(cull_side);

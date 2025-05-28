@@ -14,6 +14,8 @@ void LightSystem::Init() {
     glBufferData(GL_UNIFORM_BUFFER, sizeof(FlatLight) * MAX_LIGHTS, nullptr, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     glBindBufferBase(GL_UNIFORM_BUFFER, binding_point, ubo);
+
+
 }
 
 void LightSystem::Update(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
@@ -47,7 +49,10 @@ void LightSystem::Update(EntityManager& entity_manager, ComponentManager& compon
                 }
                 glBindFramebuffer(GL_FRAMEBUFFER, point.depth_map_fbo);
                 shader_manager.SetUniform("default", "lightPos", lightPos);
+
+                //far plane currently not being used so it is being discarded by opengl
                 shader_manager.SetUniform("default", "far_plane", far_plane);
+
                 GLint viewport[4];
                 glGetIntegerv(GL_VIEWPORT, viewport);
                 glViewport(0, 0, 1024, 1024); // Set viewport to match the cubemap resolution

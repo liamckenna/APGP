@@ -12,7 +12,10 @@ class RenderSystem : public System {
     ShaderManager& shader_manager;
 public:
     RenderSystem(ResourceManager& rm, ShaderManager& sm);
+    void Clear();
     void Update(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
+    void UpdateShadows(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
+    void UpdateProjection(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
     void RenderMeshes(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
     void RenderSurfaces(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
 

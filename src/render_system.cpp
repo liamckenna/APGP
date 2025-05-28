@@ -7,25 +7,41 @@ RenderSystem::RenderSystem(ResourceManager& rm, ShaderManager& sm)
 }
 
 void RenderSystem::Update(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
+    
+    UpdateShadows(entity_manager, component_manager, system_manager, delta_time);
+
+    Clear();
+
+    UpdateProjection(entity_manager, component_manager, system_manager, delta_time);
+
+    RenderMeshes(entity_manager, component_manager, system_manager, delta_time);
+
+
+    RenderSurfaces(entity_manager, component_manager, system_manager, delta_time);
+
+
+}
+
+void RenderSystem::Clear() {
+
+    glClearColor(0.1f, 0.1f, 0.1f, 1.f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+}
+
+void RenderSystem::UpdateShadows(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
     if (shader_manager.GetActiveShader() != shader_manager.GetShaderID("default")) shader_manager.UseShader("default");
     std::vector<Entity>& point_light_entities = component_manager.GetEntitiesWithComponent<PointLightComponent>();
     for (int i = 0; i < point_light_entities.size(); i++) {
         PointLightComponent& point = component_manager.GetComponent<PointLightComponent>(point_light_entities[i]);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_CUBE_MAP, point.depth_map_cube);
-        
-        //shader_manager.SetUniform("shadowCubeMap", 1); // Use texture unit 1
-        glUniform1i(glGetUniformLocation(shader_manager.GetActiveShader(), "shadowCubeMap"), 1);
 
     }
+}
+
+void RenderSystem::UpdateProjection(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
     
-
-    glClearColor(0.1f, 0.1f, 0.1f, 1.f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    GLuint lightBlockIndex = glGetUniformBlockIndex(shader_manager.GetActiveShader(), "LightBlock");
-    glUniformBlockBinding(shader_manager.GetActiveShader(), lightBlockIndex, LIGHT_BINDING_POINT);
-
     for (auto entity : component_manager.GetEntitiesWithComponent<CameraComponent>()) {
         if (component_manager.HasComponent<PrimaryCameraComponent>(entity)) {
             auto& transform = component_manager.GetComponent<TransformComponent>(entity);
@@ -51,13 +67,6 @@ void RenderSystem::Update(EntityManager& entity_manager, ComponentManager& compo
             }
         }
     }
-
-    RenderMeshes(entity_manager, component_manager, system_manager, delta_time);
-
-
-    RenderSurfaces(entity_manager, component_manager, system_manager, delta_time);
-
-
 }
 
 void RenderSystem::RenderMeshes(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {

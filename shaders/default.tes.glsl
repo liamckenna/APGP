@@ -2,6 +2,8 @@
 
 layout(quads, fractional_even_spacing, cw) in;
 
+uniform int surface_type;
+
 // per-control-point data from TCS
 in  vec3 tc_frag_position[];
 in  vec3 tc_frag_normal[];

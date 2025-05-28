@@ -3,8 +3,7 @@
   "shader_programs": {
     "default": {
       "vertex": "default.vs.glsl",
-      "tess_control": "default.tcs.glsl",
-      "tess_eval": "default.tes.glsl",
+
       "fragment": "default.fs.glsl"
     },
     "shadow": {

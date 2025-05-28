@@ -155,7 +155,7 @@ void main() {
             //light
             vec3 light_vector = lights[i].position - frag_position;
             float dist = length(light_vector);
-            if (dist > lights[i].range) continue;
+            //if (dist > lights[i].range) continue;
             vec3 light_direction = normalize(light_vector);
             float attenuation = 1.0 / (1.0 + (dist * dist));
             vec3 light_reflection = reflect(-light_direction, normal);

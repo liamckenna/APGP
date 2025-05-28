@@ -17,7 +17,10 @@ out vec2 tc_frag_tex_coord[];
 in  gl_PerVertex { vec4 gl_Position; } gl_in[];
 out gl_PerVertex { vec4 gl_Position; } gl_out[];
 
+uniform int surface_type;
+
 void main() {
+
     // copy clip‐space pos
     gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
 

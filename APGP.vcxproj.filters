@@ -25,7 +25,43 @@
     <ClInclude Include="include\**\*.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <None Include="shaders\**\*.*">
+    <None Include="shaders\cvs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\default.fs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\default.tcs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\default.tes.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\default.vs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\fs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\gs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\pbr.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shadow_debug.fs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shadow_debug.vs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shadow_depth.fs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shadow_depth.vs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\vs.glsl">
       <Filter>Shader Files</Filter>
     </None>
     <None Include="data\jsons\**\*.json">
@@ -91,6 +127,69 @@
     <ClCompile Include="src\**\*.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\**\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\**\*.h">
@@ -195,6 +294,111 @@
     <ClInclude Include="include\**\*.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\**\*.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\**\*.*">
@@ -213,6 +417,177 @@
       <Filter>Shader Files</Filter>
     </None>
     <None Include="shaders\**\*.*">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\**\*.*">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\**\*.*">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\**\*.*">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\**\*.*">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\**\*.*">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="data\jsons\**\*.json">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\jsons\**\*.json">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\jsons\**\*.json">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\jsons\**\*.json">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\jsons\**\*.json">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\jsons\**\*.json">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\jsons\**\*.json">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="data\jsons\**\*.json">
+      <Filter>Json Files</Filter>
+    </None>
+    <None Include="shaders\cvs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\default.fs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\default.tcs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\default.tes.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\default.vs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\fs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\gs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\pbr.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shadow_debug.fs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shadow_debug.vs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shadow_depth.fs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shadow_depth.vs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\vs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\**\*.*">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\**\*.*">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\**\*.*">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\**\*.*">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\cvs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\default.fs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\default.tcs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\default.tes.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\default.vs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\fs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\gs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\pbr.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shadow_debug.fs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shadow_debug.vs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shadow_depth.fs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shadow_depth.vs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\vs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\**\*.*">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\cvs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\default.fs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\default.tcs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\default.tes.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\default.vs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\fs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\gs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\pbr.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shadow_debug.fs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shadow_debug.vs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shadow_depth.fs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\shadow_depth.vs.glsl">
+      <Filter>Shader Files</Filter>
+    </None>
+    <None Include="shaders\vs.glsl">
       <Filter>Shader Files</Filter>
     </None>
     <None Include="shaders\**\*.*">

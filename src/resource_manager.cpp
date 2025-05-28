@@ -241,7 +241,6 @@ void ResourceManager::LoadSurfaceFile(const std::string& filename) {
                 int tIndex = texIdx.empty() ? -1 : std::stoi(texIdx) - 1;
                 int nIndex = normIdx.empty() ? -1 : std::stoi(normIdx) - 1;
 
-                std::cout << "vIndex: " << vIndex << std::endl;
                 if (vIndex < 0 || vIndex >= positions.size()) {
                     std::cerr << "Invalid position index: " << vIndex << std::endl;
                     continue;
@@ -269,7 +268,6 @@ void ResourceManager::LoadSurfaceFile(const std::string& filename) {
                 }
                 vertexIndices.push_back(surface.unique_vertices[key]);
             }
-            std::cout << "vertexIndices size: " << vertexIndices.size() << std::endl;
             if (vertexIndices.size() == 4) {
                 surface.indices.push_back(vertexIndices[0]);
                 surface.indices.push_back(vertexIndices[1]);

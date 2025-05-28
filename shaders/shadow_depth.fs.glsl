@@ -1,5 +1,7 @@
+// shadow_depth.fs.glsl
 #version 450 core
 
+// no outputs needed—depth writes go to the DEPTH_ATTACHMENT
 void main() {
-    // Empty shader - depth is automatically written to the depth buffer
+    // empty
 }
