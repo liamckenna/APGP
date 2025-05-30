@@ -95,7 +95,6 @@ struct PointLightComponent {
     GLuint depth_map_cube;
     bool stale = true;
     PointLightComponent() { 
-        
         glGenTextures(1, &depth_map_cube);
         glBindTexture(GL_TEXTURE_CUBE_MAP, depth_map_cube);
         // Create an empty depth texture for each face of the cubemap
@@ -133,6 +132,42 @@ struct PointLightComponent {
     };
 };
 
+class ShaderManager;
+class SystemManager;
+class EntityManager;
+class ComponentManager;
+
+struct ParaboloidPointLightComponent {
+    GLuint maps[2];
+    GLuint dp_fbo;
+    GLuint depth_rb;
+    ParaboloidPointLightComponent() {
+        std::cout << "paraboloid light created... ";
+        glGenFramebuffers(1, &dp_fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, dp_fbo);
+
+        glGenTextures(2, maps);
+    
+        for (int i = 0; i < 2; i++) {
+            glBindTexture(GL_TEXTURE_2D, maps[i]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 1024, 1024, 0, GL_RED, GL_FLOAT, nullptr);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, maps[i], 0);
+        }
+
+        glGenRenderbuffers(1, &depth_rb);
+        glBindRenderbuffer(GL_RENDERBUFFER, depth_rb);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 1024, 1024);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_rb);
+        std::cout << " successfully!" << std::endl;
+    }
+
+    void RenderShadows(ShaderManager& shader_manager, SystemManager& system_manager, EntityManager& entity_manager, ComponentManager& component_manager, TransformComponent& light_transform, float delta_time);
+
+    bool stale = true;
+};
+
 struct MeshComponent {
     bool enabled = true;
     std::string mesh_name = "";
@@ -153,4 +188,33 @@ struct SurfaceComponent {
 
 struct DebugComponent {
     bool enabled = true;
+};
+
+struct ScreenComponent {
+
+    GLuint vao;
+    GLuint vbo;
+
+    ScreenComponent() {
+        float quadVertices[] = {
+            // positions   // texCoords
+            -1.0f,  1.0f,  0.0f, 1.0f,
+            -1.0f, -1.0f,  0.0f, 0.0f,
+             1.0f,  1.0f,  1.0f, 1.0f,
+             1.0f, -1.0f,  1.0f, 0.0f,
+        };
+        glGenVertexArrays(1, &vao);
+        glGenBuffers(1, &vbo);
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+        // positions
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+        // texcoords
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+    }
 };

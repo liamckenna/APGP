@@ -8,17 +8,25 @@ RenderSystem::RenderSystem(ResourceManager& rm, ShaderManager& sm)
 
 void RenderSystem::Update(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
     
-    UpdateShadows(entity_manager, component_manager, system_manager, delta_time);
+    //std::cout << "Main render update has started" << std::endl;
 
-    Clear();
+    //UpdateShadows(entity_manager, component_manager, system_manager, delta_time);
+
+    //std::cout << "shadows updated." << std::endl;
+
+    UpdateParaboloid(entity_manager, component_manager, system_manager, delta_time);
 
     UpdateProjection(entity_manager, component_manager, system_manager, delta_time);
 
     RenderMeshes(entity_manager, component_manager, system_manager, delta_time);
+    
+    RenderScreenQuad(entity_manager, component_manager, system_manager, delta_time);
+    
 
 
-    RenderSurfaces(entity_manager, component_manager, system_manager, delta_time);
+    //RenderSurfaces(entity_manager, component_manager, system_manager, delta_time);
 
+    //std::cout << "Main render update has finished!" << std::endl;
 
 }
 
@@ -39,6 +47,32 @@ void RenderSystem::UpdateShadows(EntityManager& entity_manager, ComponentManager
 
     }
 }
+
+void RenderSystem::UpdateParaboloid(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
+
+    //std::cout << "Updating Paraboloid... ";
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    shader_manager.UseShader("default");
+
+    std::vector<Entity>& point_light_entities = component_manager.GetEntitiesWithComponent<ParaboloidPointLightComponent>();
+    for (auto entity : point_light_entities) {
+        auto& paraboloid = component_manager.GetComponent<ParaboloidPointLightComponent>(entity);
+        auto& transform = component_manager.GetComponent<TransformComponent>(entity);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, paraboloid.maps[0]);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, paraboloid.maps[1]);
+        shader_manager.SetUniform("shadowMap0", 0);
+        shader_manager.SetUniform("shadowMap1", 1);
+        shader_manager.SetUniform("lightPos", transform.position);
+        
+    }
+
+    //std::cout << "complete!" << std::endl;
+}
+
 
 void RenderSystem::UpdateProjection(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
     
@@ -76,28 +110,20 @@ void RenderSystem::RenderMeshes(EntityManager& entity_manager, ComponentManager&
 
         Mesh& mesh = resource_manager.GetMesh(meshComp.mesh_name);
 
-        //if (!meshComp.enabled) continue; // Skip inactive meshes
-
-        /*if (transform.stale)
-        {
-            meshComp.model =
-                glm::translate(glm::mat4(1.0f), transform.position) *
-                glm::mat4_cast(transform.orientation) *
-                glm::scale(glm::mat4(1.0f), transform.scale);
-            transform.stale = false;
-        }*/
-
         meshComp.model =
             glm::translate(glm::mat4(1.0f), transform.position) *
             glm::mat4_cast(transform.orientation) *
             glm::scale(glm::mat4(1.0f), transform.scale);
 
-        shader_manager.SetUniform("model", meshComp.model);
+        if (shader_manager.GetActiveShader() == shader_manager.GetShaderID("default")) shader_manager.SetUniform("model", meshComp.model);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_BINDING_POINT, mesh.ssbo);
         glBindVertexArray(mesh.vao);
         glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }
+    /*std::cout << "meshes have been rendered from ";
+    if (shader_manager.GetActiveShader() == shader_manager.GetShaderID("default")) std::cout << "default shader!" << std::endl;
+    else if (shader_manager.GetActiveShader() == shader_manager.GetShaderID("paraboloid")) std::cout << "paraboloid shader!" << std::endl;*/
 }
 
 void RenderSystem::RenderSurfaces(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
@@ -129,5 +155,15 @@ void RenderSystem::RenderSurfaces(EntityManager& entity_manager, ComponentManage
         
         glDrawElements(GL_PATCHES, surface.vertices.size(), GL_UNSIGNED_INT, 0);
 
+    }
+}
+
+void RenderSystem::RenderScreenQuad(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
+    shader_manager.UseShader("debug_quad");
+    for (auto entity : component_manager.GetEntitiesWithComponents<ScreenComponent>()) {
+        auto& screen = component_manager.GetComponent<ScreenComponent>(entity);
+        glBindVertexArray(screen.vao);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glBindVertexArray(0);
     }
 }

@@ -5,6 +5,7 @@
 #include "clock.h"
 #include "byte.h"
 #include "window.h"
+#include "render_system.h"
 #define SPEED 3
 InputSystem::InputSystem(InputManager& im) : input_manager(im) {};
 
@@ -15,6 +16,8 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 
 	byte esc = input_manager.GetKeyState(GLFW_KEY_ESCAPE);
 	byte space = input_manager.GetKeyState(GLFW_KEY_SPACE);
+	byte tab = input_manager.GetKeyState(GLFW_KEY_TAB);
+	byte lshift = input_manager.GetKeyState(GLFW_KEY_LEFT_SHIFT);
 	byte lctrl = input_manager.GetKeyState(GLFW_KEY_LEFT_CONTROL);
 
 	byte w = input_manager.GetKeyState(GLFW_KEY_W);
@@ -24,6 +27,10 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 
 	byte one = input_manager.GetKeyState(GLFW_KEY_1);
 	byte two = input_manager.GetKeyState(GLFW_KEY_2);
+	byte three = input_manager.GetKeyState(GLFW_KEY_3);
+	byte four = input_manager.GetKeyState(GLFW_KEY_4);
+	byte five = input_manager.GetKeyState(GLFW_KEY_5);
+
 		
 	byte lmb = input_manager.GetKeyState(GLFW_MOUSE_BUTTON_LEFT);
 	byte rmb = input_manager.GetKeyState(GLFW_MOUSE_BUTTON_RIGHT);
@@ -55,6 +62,16 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 		break;
 	}
 	switch (lctrl) { //left control
+	case PRESSED:
+	case DOWN:
+		transform.TranslateDown(SPEED, delta_time);
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+	switch (tab) { //left control
 	case PRESSED:
 	case DOWN:
 		transform.TranslateDown(SPEED, delta_time);
@@ -148,6 +165,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 
 	switch (one) { //1
 	case PRESSED:
+		if (lshift == DOWN) input_manager.program.shader_manager.UseShader("debug_quad");
 		input_manager.program.shader_manager.SetUniform("debug_mode", 0);
 		break;
 	case DOWN:
@@ -159,7 +177,44 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	}
 	switch (two) { //2
 	case PRESSED:
+		if (lshift == DOWN) input_manager.program.shader_manager.UseShader("debug_quad");
 		input_manager.program.shader_manager.SetUniform("debug_mode", 1);
+		break;
+	case DOWN:
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+	switch (three) { //3
+	case PRESSED:
+		if (lshift == DOWN) input_manager.program.shader_manager.UseShader("debug_quad");
+		input_manager.program.shader_manager.SetUniform("debug_mode", 2);
+		break;
+	case DOWN:
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+	switch (four) { //4
+	case PRESSED:
+		if (lshift == DOWN) input_manager.program.shader_manager.UseShader("debug_quad");
+		input_manager.program.shader_manager.SetUniform("debug_mode", 3);
+		break;
+	case DOWN:
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+	switch (five) { //5
+	case PRESSED:
+		if (lshift == DOWN) input_manager.program.shader_manager.UseShader("debug_quad");
+		input_manager.program.shader_manager.SetUniform("debug_mode", 4);
 		break;
 	case DOWN:
 		break;
@@ -176,7 +231,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 			light_transform.SetPosition(transform.position);
 			LightComponent& light = component_manager.GetComponent<LightComponent>(entity);
 			light.stale = true;
-			PointLightComponent& point_light = component_manager.GetComponent<PointLightComponent>(entity);
+			ParaboloidPointLightComponent& point_light = component_manager.GetComponent<ParaboloidPointLightComponent>(entity);
 			point_light.stale = true;
 			break;
 		}

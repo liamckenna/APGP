@@ -38,22 +38,25 @@ Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resou
 		scene_ecs.AddComponent(camera_entity, PrimaryCameraComponent{});
 
 		Entity light_entity = scene_ecs.CreateEntity();
-		scene_ecs.AddComponent(light_entity, TransformComponent{.position = glm::vec3(0.f, 5.f, 0.f)});
+		scene_ecs.AddComponent(light_entity, TransformComponent{.position = glm::vec3(5.f, 5.f, 5.f)});
 		scene_ecs.AddComponent(light_entity, LightComponent{});
-		scene_ecs.AddComponent(light_entity, PointLightComponent());
-		scene_ecs.AddComponent(light_entity, MeshComponent{ .mesh_name = "default" }, resource_manager);
+		scene_ecs.AddComponent(light_entity, ParaboloidPointLightComponent());
+		//scene_ecs.AddComponent(light_entity, MeshComponent{ .mesh_name = "default" }, resource_manager);
 
 		Entity pokeball_entity = scene_ecs.CreateEntity();
 		scene_ecs.AddComponent(pokeball_entity, TransformComponent{ .position = glm::vec3(0.f, 1.f, -7.f) });
 		scene_ecs.AddComponent(pokeball_entity, MeshComponent{.mesh_name = "pokeball"}, resource_manager);
 
 		Entity floor_entity = scene_ecs.CreateEntity();
-		scene_ecs.AddComponent(floor_entity, TransformComponent{});
+		scene_ecs.AddComponent(floor_entity, TransformComponent{.scale = glm::vec3(5.f)});
 		scene_ecs.AddComponent(floor_entity, MeshComponent{ .mesh_name = "floor" }, resource_manager);
 
 		Entity surface_entity = scene_ecs.CreateEntity();
 		scene_ecs.AddComponent(surface_entity, TransformComponent{ .scale = glm::vec3(5, 5, 5)});
 		scene_ecs.AddComponent(surface_entity, SurfaceComponent{ .surface_name = "test_surface" }, resource_manager);
+
+		Entity screen_entity = scene_ecs.CreateEntity();
+		scene_ecs.AddComponent(screen_entity, ScreenComponent{});
 
 
 	}

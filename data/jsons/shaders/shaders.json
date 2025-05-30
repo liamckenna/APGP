@@ -15,6 +15,14 @@
       "tess_control": "default.tcs.glsl",
       "tess_eval": "default.tes.glsl",
       "fragment": "default.fs.glsl"
+    },
+    "paraboloid": {
+      "vertex": "paraboloid.vs.glsl",
+      "fragment": "paraboloid.fs.glsl"
+    },
+    "debug_quad": {
+      "vertex": "debug_quad.vs.glsl",
+      "fragment": "debug_quad.fs.glsl"
     }
   },
   "uniforms": {

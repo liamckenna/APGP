@@ -39,6 +39,7 @@ struct Uniform {
 		else value = new_value;
 		switch (type) {
 		case GL_INT:
+		case GL_SAMPLER_2D:
 			glUniform1i(location, std::get<int>(value));
 			break;
 		case GL_UNSIGNED_INT:

@@ -4,12 +4,12 @@
 #include "system.h"
 
 //system manager handles all systems and calls their update function
-
 class SystemManager {
 
-	
+    
 
 public:
+    
     std::vector<std::unique_ptr<System>> systems;
     //register a new system to be run every 
     template<typename T, typename... Args>

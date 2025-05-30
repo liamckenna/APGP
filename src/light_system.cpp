@@ -60,7 +60,6 @@ void LightSystem::Update(EntityManager& entity_manager, ComponentManager& compon
                 for (int i = 0; i < 6; ++i) {
                     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, point.depth_map_cube, 0);
                     glClear(GL_DEPTH_BUFFER_BIT);
-
                     // Set the shader and pass the correct light-space matrix
                     shader_manager.UseShader("shadow");
                     shader_manager.SetUniform("lightSpaceMatrix", shadowTransforms[i]);
@@ -71,6 +70,14 @@ void LightSystem::Update(EntityManager& entity_manager, ComponentManager& compon
                 glBindFramebuffer(GL_FRAMEBUFFER, 0); // Unbind framebuffer
                 glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
                 point.stale = false;
+            }
+        }
+
+        if (component_manager.HasComponent<ParaboloidPointLightComponent>(entity)) {
+            auto& paraboloid = component_manager.GetComponent<ParaboloidPointLightComponent>(entity);
+            if (paraboloid.stale) {
+                paraboloid.RenderShadows(shader_manager, system_manager, entity_manager, component_manager, transform, delta_time);
+                paraboloid.stale = false;
             }
         }
 

@@ -1,3 +1,4 @@
+//default.fs.glsl
 #version 450 core
 
 #define MAX_LIGHTS 10
@@ -72,6 +73,8 @@ layout(std430, binding = 3) buffer MaterialBuffer {
 
 uniform float ambient_intensity;
 uniform samplerCube shadowCubeMap;
+uniform sampler2D shadowMap0;
+uniform sampler2D shadowMap1;
 uniform vec3 lightPos;
 uniform float far_plane;
 uniform vec3 view_position;
@@ -127,11 +130,19 @@ void main() {
     vec3 normal = normalize(frag_normal);
     vec3 fragToLight = normalize(frag_position - lightPos);
     vec3 lightDir = normalize(lightPos - frag_position);
-    float z = texture(shadowCubeMap, fragToLight).r;
-    float closest_depth = LinearizeDepth(z, 0.1, 1000);
-    float current_depth = length(frag_position - lightPos);
-    float bias = 0.25 * current_depth;
-    float shadow = (closest_depth + bias < current_depth) ? 1.0 : 0.0;
+
+    vec3 L = frag_position - lightPos;
+    float dist = length(L);
+    int side = (L.z >= 0.0) ? 0 : 1;
+    vec3 v = (side == 0) ? L : vec3(L.xy, -L.z);
+    float m = 2.0 / (dist + v.z);
+    vec2 uv = v.xy * m * 0.5 + 0.5;
+    float mapDepth = (side == 0)
+        ? texture(shadowMap0, uv).r
+        : texture(shadowMap1, uv).r;
+    float bias = 0.25 * dist;
+    float shadow = (mapDepth + bias < dist) ? 1.0 : 0.0;
+
 
     if (debug_mode == 0) {
 
@@ -197,9 +208,16 @@ void main() {
         FragColor = vec4(clr_end, alf_mat);        
 
     } else if (debug_mode == 1) {
-        
+        // visualize UV coords
+        FragColor = vec4(uv, 0.0, 1.0);
+    } else if (debug_mode == 2) {
+        // visualize raw depth
+        FragColor = vec4(mapDepth, mapDepth, mapDepth, 1.0);
+    } else if (debug_mode == 3) {
+        // show which side used
+        FragColor = side == 0 ? vec4(1,0,0,1) : vec4(0,1,0,1);
+    } else if (debug_mode == 4) {
         FragColor = vec4(vec3(1 - shadow), 1);
-
     }
     
 }
