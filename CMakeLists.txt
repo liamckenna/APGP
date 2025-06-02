@@ -23,7 +23,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/out)
 file(GLOB_RECURSE SOURCES "${SRC_DIR}/*.cpp")
 
 # Add the executable target
-add_executable(APGP ${SOURCES} "include/surface.h" "src/surface.cpp" "src/ecs_components.cpp")
+add_executable(APGP ${SOURCES} )
 
 # Include local libraries (e.g., json.hpp, stb_image.h)
 target_include_directories(APGP PRIVATE ${INCLUDE_DIR} ${LIBS_DIR})
