@@ -140,14 +140,7 @@
     <!-- Include all .h files in include and its subfolders -->
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\default.fs.glsl" />
-    <None Include="shaders\default.tcs.glsl" />
-    <None Include="shaders\default.tes.glsl" />
-    <None Include="shaders\default.vs.glsl" />
-    <None Include="shaders\paraboloid.fs.glsl" />
-    <None Include="shaders\paraboloid.vs.glsl" />
-    <None Include="shaders\shadow_depth.fs.glsl" />
-    <None Include="shaders\shadow_depth.vs.glsl" />
+    <None Include="shaders\*.glsl" />
     <!-- Include all files in shaders and its subfolders -->
   </ItemGroup>
   <ItemGroup>
