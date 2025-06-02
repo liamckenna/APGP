@@ -73,8 +73,8 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	}
 	switch (tab) { //left control
 	case PRESSED:
+		break;
 	case DOWN:
-		transform.TranslateDown(SPEED, delta_time);
 		break;
 	case RELEASED:
 		break;

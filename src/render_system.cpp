@@ -7,22 +7,14 @@ RenderSystem::RenderSystem(ResourceManager& rm, ShaderManager& sm)
 }
 
 void RenderSystem::Update(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
-    
-    //std::cout << "Main render update has started" << std::endl;
-
-    //UpdateShadows(entity_manager, component_manager, system_manager, delta_time);
-
-    //std::cout << "shadows updated." << std::endl;
-
-    UpdateParaboloid(entity_manager, component_manager, system_manager, delta_time);
+  
+    Clear();
 
     UpdateProjection(entity_manager, component_manager, system_manager, delta_time);
 
     RenderMeshes(entity_manager, component_manager, system_manager, delta_time);
     
     RenderScreenQuad(entity_manager, component_manager, system_manager, delta_time);
-    
-
 
     //RenderSurfaces(entity_manager, component_manager, system_manager, delta_time);
 
@@ -36,43 +28,6 @@ void RenderSystem::Clear() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 }
-
-void RenderSystem::UpdateShadows(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
-    if (shader_manager.GetActiveShader() != shader_manager.GetShaderID("default")) shader_manager.UseShader("default");
-    std::vector<Entity>& point_light_entities = component_manager.GetEntitiesWithComponent<PointLightComponent>();
-    for (int i = 0; i < point_light_entities.size(); i++) {
-        PointLightComponent& point = component_manager.GetComponent<PointLightComponent>(point_light_entities[i]);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, point.depth_map_cube);
-
-    }
-}
-
-void RenderSystem::UpdateParaboloid(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
-
-    //std::cout << "Updating Paraboloid... ";
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    shader_manager.UseShader("default");
-
-    std::vector<Entity>& point_light_entities = component_manager.GetEntitiesWithComponent<ParaboloidPointLightComponent>();
-    for (auto entity : point_light_entities) {
-        auto& paraboloid = component_manager.GetComponent<ParaboloidPointLightComponent>(entity);
-        auto& transform = component_manager.GetComponent<TransformComponent>(entity);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, paraboloid.maps[0]);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, paraboloid.maps[1]);
-        shader_manager.SetUniform("shadowMap0", 0);
-        shader_manager.SetUniform("shadowMap1", 1);
-        shader_manager.SetUniform("lightPos", transform.position);
-        
-    }
-
-    //std::cout << "complete!" << std::endl;
-}
-
 
 void RenderSystem::UpdateProjection(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
     
