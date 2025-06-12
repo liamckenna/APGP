@@ -62,8 +62,8 @@ void SurfaceRenderer::updateIPASSTexture(Surface* surface, const glm::mat4& MVP,
 	int numPatches = 4;
 	std::vector<float> data(numPatches);
 	glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, data.size() * sizeof(float), data.data());
-	for (int i = 0; i < std::min(10, numPatches); i++)
-		std::cout << "slot " << i << " = " << data[i] << "\n";
+	//for (int i = 0; i < std::min(10, numPatches); i++)
+	//	std::cout << "slot " << i << " = " << data[i] << "\n";
 }
 
 
@@ -88,6 +88,6 @@ void SurfaceRenderer::updateIPASSTexture_CS(int num_vertices, GLuint vbuffer_id,
 	int numPatches = 4;
 	std::vector<float> data(numPatches);
 	glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, data.size() * sizeof(float), data.data());
-	for (int i = 0; i < std::min(10, numPatches); i++)
-		std::cout << "slot " << i << " = " << data[i] << "\n";
+	//for (int i = 0; i < std::min(10, numPatches); i++)
+	//	std::cout << "slot " << i << " = " << data[i] << "\n";
 }
