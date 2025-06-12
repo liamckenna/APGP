@@ -2,21 +2,25 @@
 #include "system_manager.h"
 #include <iostream>
 
+#include "universal_vars.h"
+
 RenderSystem::RenderSystem(ResourceManager& rm, ShaderManager& sm)
     : resource_manager(rm), shader_manager(sm) {
+    surface_renderer = SurfaceRenderer();
 }
 
 void RenderSystem::Update(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
-  
+    if (shader_manager.GetActiveShader() != shader_manager.GetShaderID("surface")) shader_manager.UseShader("surface");
     Clear();
 
     UpdateProjection(entity_manager, component_manager, system_manager, delta_time);
 
-    RenderMeshes(entity_manager, component_manager, system_manager, delta_time);
+    //RenderMeshes(entity_manager, component_manager, system_manager, delta_time);
     
-    RenderScreenQuad(entity_manager, component_manager, system_manager, delta_time);
+    //RenderScreenQuad(entity_manager, component_manager, system_manager, delta_time);
 
-    //RenderSurfaces(entity_manager, component_manager, system_manager, delta_time);
+    RenderSurfaces(entity_manager, component_manager, system_manager, delta_time);
+
 
     //std::cout << "Main render update has finished!" << std::endl;
 
@@ -40,6 +44,7 @@ void RenderSystem::UpdateProjection(EntityManager& entity_manager, ComponentMana
                     transform.orientation * glm::vec3(0, 1, 0));
                 shader_manager.SetUniform("view", camera.view);
                 shader_manager.SetUniform("view_position", transform.position);
+                ViewMatrix = camera.view;
                 transform.stale = false;
             }
             if (camera.stale) {
@@ -51,6 +56,7 @@ void RenderSystem::UpdateProjection(EntityManager& entity_manager, ComponentMana
                     camera.projection = glm::ortho(-size * camera.aspect_ratio, size * camera.aspect_ratio,
                         -size, size, camera.near, camera.far);
                 }
+                ProjectionMatrix = camera.projection;
                 shader_manager.SetUniform("projection", camera.projection);
                 camera.stale = false;
             }
@@ -76,41 +82,6 @@ void RenderSystem::RenderMeshes(EntityManager& entity_manager, ComponentManager&
         glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }
-    /*std::cout << "meshes have been rendered from ";
-    if (shader_manager.GetActiveShader() == shader_manager.GetShaderID("default")) std::cout << "default shader!" << std::endl;
-    else if (shader_manager.GetActiveShader() == shader_manager.GetShaderID("paraboloid")) std::cout << "paraboloid shader!" << std::endl;*/
-}
-
-void RenderSystem::RenderSurfaces(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
-    
-    for (auto entity : component_manager.GetEntitiesWithComponents<SurfaceComponent, TransformComponent>()) {
-        auto& surfaceComp = component_manager.GetComponent<SurfaceComponent>(entity);
-        auto& transform = component_manager.GetComponent<TransformComponent>(entity);
-
-        Surface& surface = resource_manager.GetSurface(surfaceComp.surface_name);
-
-        surfaceComp.model =
-            glm::translate(glm::mat4(1.0f), transform.position) *
-            glm::mat4_cast(transform.orientation) *
-            glm::scale(glm::mat4(1.0f), transform.scale);
-
-        shader_manager.SetUniform("model", surfaceComp.model);
-
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_1D, surface.connectivity_texture);
-
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, surface.patch_buffer);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, surface.patch_buffer);
-
-        glBindVertexArray(surface.vao);
-        glBindBuffer(GL_ARRAY_BUFFER, surface.vbo);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, surface.ebo);
-
-        glPatchParameteri(GL_PATCH_VERTICES, surface.patch_size);
-        
-        glDrawElements(GL_PATCHES, surface.vertices.size(), GL_UNSIGNED_INT, 0);
-
-    }
 }
 
 void RenderSystem::RenderScreenQuad(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
@@ -121,4 +92,26 @@ void RenderSystem::RenderScreenQuad(EntityManager& entity_manager, ComponentMana
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glBindVertexArray(0);
     }
+}
+
+void RenderSystem::RenderSurfaces(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glDisable(GL_CULL_FACE);
+
+    for (auto entity : component_manager.GetEntitiesWithComponents<SurfaceComponent, TransformComponent>()) {
+        auto& transform = component_manager.GetComponent<TransformComponent>(entity);
+        auto& surfaceComp = component_manager.GetComponent<SurfaceComponent>(entity);
+        Surface& surface = resource_manager.GetSurface(surfaceComp.surface_name);
+
+        surfaceComp.model =
+            glm::translate(glm::mat4(1.0f), transform.position) *
+            glm::mat4_cast(transform.orientation) *
+            glm::scale(glm::mat4(1.0f), transform.scale);
+
+        ModelMatrix = surfaceComp.model;
+        //bool is use_compute
+        surface_renderer.renderSurface(&surface, 1440, is_first_frame, use_compute, glm::vec3(0.2, 0.2, 0.2), glm::vec3(0.9, 0.8, 0.2), glm::vec3(0.5, 0.5, 0.5), ViewMatrix * ModelMatrix, ProjectionMatrix, shader_manager);
+    }
+    is_first_frame = false;
 }

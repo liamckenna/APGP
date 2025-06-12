@@ -36,7 +36,6 @@ struct Surface {
 	// for iPass
 	GLuint patch_tess_level_texture;
 	GLuint connectivity_texture;
-	GLuint patch_buffer;
 
 	int num_patches;
 	glm::vec3 bbox[2];

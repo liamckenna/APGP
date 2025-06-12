@@ -5,7 +5,7 @@
       "vertex": "default.vs.glsl",
 
       "fragment": "default.fs.glsl"
-    }
+    },
     "surface": {
       "vertex": "default.vs.glsl",
       "tess_control": "default.tcs.glsl",
@@ -15,6 +15,15 @@
     "debug_quad": {
       "vertex": "debug_quad.vs.glsl",
       "fragment": "debug_quad.fs.glsl"
+    },
+    "render_pass": {
+      "vertex": "render_pass.vs.glsl",
+      "tess_control": "render_pass.tcs.glsl",
+      "tess_eval": "render_pass.tes.glsl",
+      "fragment": "render_pass.fs.glsl"
+    },
+    "patch_tess_pass": {
+      "compute": "patch_tess_pass.cs.glsl"
     }
   },
   "uniforms": {

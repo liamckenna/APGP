@@ -68,7 +68,7 @@ void Surface::CreatePatches()
 {
 
 	
-
+	 
 	num_patches = vertices.size() / patch_size;
 
 	// update bounding box
@@ -83,6 +83,7 @@ void Surface::CreatePatches()
 
 
 	// calculate connectivity
+	//calConnectivityOfPatches
 
 	float eps = 0.00001;
 	int edge_point_idices[4][4] = { {0,1,2,3},		// top row

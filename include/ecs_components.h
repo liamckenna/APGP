@@ -100,8 +100,19 @@ struct SurfaceComponent {
     GLuint vao = 0;
     GLuint vbo = 0;
     GLuint ebo = 0;
-    GLuint patch_buffer = 0;
     glm::mat4 model = glm::mat4(1.0f);
+};
+
+struct iPASSComponent {
+
+    glm::mat4 ModelViewMatrix;
+    glm::mat4 ProjectionMatrix;
+
+    glm::vec3 Ka;
+    glm::vec3 Kd;
+    glm::vec3 Ks;
+    
+    bool use_compute;
 };
 
 struct DebugComponent {

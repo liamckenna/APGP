@@ -7,6 +7,10 @@
 #include "window.h"
 #include "render_system.h"
 #define SPEED 3
+
+#include "universal_vars.h"
+
+
 InputSystem::InputSystem(InputManager& im) : input_manager(im) {};
 
 void InputSystem::Update(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
@@ -31,12 +35,18 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	byte four = input_manager.GetKeyState(GLFW_KEY_4);
 	byte five = input_manager.GetKeyState(GLFW_KEY_5);
 
+	byte f1 = input_manager.GetKeyState(GLFW_KEY_F1);
+	byte f2 = input_manager.GetKeyState(GLFW_KEY_F2);
+
 		
 	byte lmb = input_manager.GetKeyState(GLFW_MOUSE_BUTTON_LEFT);
 	byte rmb = input_manager.GetKeyState(GLFW_MOUSE_BUTTON_RIGHT);
 	byte mmb = input_manager.GetKeyState(GLFW_MOUSE_BUTTON_MIDDLE);
 
 	byte f = input_manager.GetKeyState(GLFW_KEY_F);
+	byte o = input_manager.GetKeyState(GLFW_KEY_O);
+	byte p = input_manager.GetKeyState(GLFW_KEY_P);
+
 
 	switch (esc) { //escape
 	case PRESSED:
@@ -223,6 +233,29 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	case UP:
 		break;
 	}
+	
+	switch (f1) { //F1
+	case PRESSED:
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		break;
+	case DOWN:
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+	switch (f2) { //F2
+	case PRESSED:
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		break;
+	case DOWN:
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
 
 	switch (f) { //f
 	case PRESSED:
@@ -231,10 +264,32 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 			light_transform.SetPosition(transform.position);
 			LightComponent& light = component_manager.GetComponent<LightComponent>(entity);
 			light.stale = true;
-			ParaboloidPointLightComponent& point_light = component_manager.GetComponent<ParaboloidPointLightComponent>(entity);
-			point_light.stale = true;
+			
 			break;
 		}
+		break;
+	case DOWN:
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+
+	switch (o) { //o
+	case PRESSED:
+		use_compute = true;
+		break;
+	case DOWN:
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+	switch (p) { //p
+	case PRESSED:
+		use_compute = false;
 		break;
 	case DOWN:
 		break;

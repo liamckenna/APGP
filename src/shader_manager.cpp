@@ -8,9 +8,23 @@ ShaderManager::~ShaderManager() {
     }
 }
 
+int max_group_count_x = 65536;
+
 
 void ShaderManager::LoadFromJSON(const std::string& filepath) {
     nlohmann::json data = ReadJsonFromFile(filepath);
+
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &max_group_count_x);
+    std::cout << "GL_MAX_COMPUTE_WORK_GROUP_COUNT[0]: " << max_group_count_x << std::endl;
+
+    int max_texture_size = 0;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+    std::cout << "GL_MAX_TEXTURE_SIZE: " << max_texture_size << std::endl;
+
+    GLint64  msize;
+    glGetInteger64i_v(GL_SHADER_STORAGE_BUFFER_SIZE, 1, &msize);
+    glGetInteger64v(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &msize);
+    std::cout << "GL_SHADER_STORAGE_BUFFER_SIZE: " << msize << std::endl;
 
     if (!data.contains("shader_programs")) {
         std::cerr << "Error: No shader programs defined in JSON." << std::endl;
@@ -18,13 +32,13 @@ void ShaderManager::LoadFromJSON(const std::string& filepath) {
     }
 
     for (const auto& [name, shaderData] : data["shader_programs"].items()) {
-        if (!shaderData.contains("vertex") || !shaderData.contains("fragment")) {
+        /*if (!shaderData.contains("vertex") || !shaderData.contains("fragment")) {
             std::cerr << "Skipping shader program '" << name << "' (missing vertex or fragment shader)." << std::endl;
             continue;
-        }
+        }*/
 
-        std::string vertexPath = "shaders/" + shaderData["vertex"].get<std::string>();
-        std::string fragmentPath = "shaders/" + shaderData["fragment"].get<std::string>();
+        std::string vertexPath = shaderData.contains("vertex") ? "shaders/" + shaderData["vertex"].get<std::string>() : "";
+        std::string fragmentPath = shaderData.contains("fragment") ? "shaders/" + shaderData["fragment"].get<std::string>() : "";
         std::string geometryPath = shaderData.contains("geometry") ? "shaders/" + shaderData["geometry"].get<std::string>() : "";
         std::string tessControlPath = shaderData.contains("tess_control") ? "shaders/" + shaderData["tess_control"].get<std::string>() : "";
         std::string tessEvalPath = shaderData.contains("tess_eval") ? "shaders/" + shaderData["tess_eval"].get<std::string>() : "";

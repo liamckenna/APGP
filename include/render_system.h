@@ -6,10 +6,16 @@
 #include "ecs_components.h"
 #include "resource_manager.h"
 #include "shader_manager.h"
+#include "surface_renderer.h"
 
 class RenderSystem : public System {
     ResourceManager& resource_manager;
     ShaderManager& shader_manager;
+    SurfaceRenderer surface_renderer;
+    bool is_first_frame = true;
+    glm::mat4 ModelMatrix;
+    glm::mat4 ViewMatrix;
+    glm::mat4 ProjectionMatrix;
 public:
     RenderSystem(ResourceManager& rm, ShaderManager& sm);
     void Clear();

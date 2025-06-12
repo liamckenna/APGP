@@ -8,6 +8,8 @@
 #include "clock.h"
 #include "windows.h"
 #include "graphics_config.h"
+#include "universal_vars.h"
+
 
 Program::Program(const std::string& filepath) : clock(), input_manager(*this) {
 
@@ -15,6 +17,7 @@ Program::Program(const std::string& filepath) : clock(), input_manager(*this) {
 
 	hardcoded = Fetch(data, "hardcoded", false);
 	limit_fps = Fetch(data, "limit_fps", false);
+	use_compute = Fetch(data, "use_compute", true);
 	fps_cap = Fetch(data, "fps_cap", 60);
 	target_frame_time = 1.0 / static_cast<double>(fps_cap);
 

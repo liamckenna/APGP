@@ -16,7 +16,6 @@ Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resou
 	nlohmann::json data = ReadJsonFromFile(filepath);
 	name = Fetch(data, "name", "My Scene");
 
-	
 	scene_ecs.AddSystem<RenderSystem>(resource_manager, program.shader_manager);
 	scene_ecs.AddSystem<LightSystem>(program.shader_manager);
 	scene_ecs.AddSystem<InputSystem>(program.input_manager);
@@ -47,10 +46,10 @@ Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resou
 
 		Entity floor_entity = scene_ecs.CreateEntity();
 		scene_ecs.AddComponent(floor_entity, TransformComponent{.scale = glm::vec3(5.f)});
-		scene_ecs.AddComponent(floor_entity, MeshComponent{ .mesh_name = "floor" }, resource_manager);
+		scene_ecs.AddComponent(floor_entity, SurfaceComponent{ .surface_name = "floor" }, resource_manager);
 
 		Entity surface_entity = scene_ecs.CreateEntity();
-		scene_ecs.AddComponent(surface_entity, TransformComponent{ .position = glm::vec3(0.f, 5.f, 0.f), .scale = glm::vec3(5)});
+		scene_ecs.AddComponent(surface_entity, TransformComponent{ .position = glm::vec3(0.f, 1.f, 0.f), .scale = glm::vec3(5)});
 		scene_ecs.AddComponent(surface_entity, SurfaceComponent{ .surface_name = "test_surface" }, resource_manager);
 
 		Entity screen_entity = scene_ecs.CreateEntity();
