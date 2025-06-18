@@ -1,3 +1,4 @@
+//patch.cpp
 #include "patch.h"
 #include <iostream>
 #include <algorithm>
@@ -150,7 +151,7 @@ vector<float> determine_patch_tess_levels(Vertex* vertices, int num_patches, int
 
 	for (int patch_idx = 0; patch_idx < num_patches; patch_idx++)
 	{
-
+		
 		/* calculate the slefe on each coordinate */
 
 		for (int i = 0; i < 3; i++) // for each coordinate
@@ -308,7 +309,7 @@ vector<float> determine_patch_tess_levels(Vertex* vertices, int num_patches, int
 				patch_max_error = max(point_max_error, patch_max_error);
 			}
 		}
-
+		
 		tess_levels[patch_idx] = std::min(std::max(float(3 * sqrt(2 * patch_max_error / pixel_size)), 1.0f), 64.0f);
 	} // for each patch
 

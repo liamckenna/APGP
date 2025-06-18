@@ -1,3 +1,4 @@
+﻿//patch_tess_pass.glsl
 #version 430
 
 precision highp float;
@@ -11,22 +12,21 @@ precision highp float;
 layout( local_size_x = 32,  local_size_y = 1, local_size_z = 1 )   in;
 
 struct Vertex { 
-	vec4 XYZW;	// position
-	vec4 RGBA;	// color
-	vec4 ST;	// tex_coord
-	//vec4 Du;	// tex_coord
-	//vec4 Dv;	// tex_coord
-};
- 
-layout(std430, binding = 0) readonly buffer InputBuffer { 
-	Vertex Vertices[ ]; // unsized array allowed at end of buffer 
+	vec3 position;	// position
+	float pad0;		// pad after vec3
+	vec2 texcoord;	// texcoord
+	vec2 pad1;      // pad after vec2
+	vec3 normal;	// normal
+	float pad2;     // pad after vec3
 };
 
+layout(std430, binding = 0) readonly buffer VertexBuffer {
+    float raw_data[];
+};
 
 layout(std430, binding = 1) writeonly buffer PatchBuffer { 
 	float patch_tess_levels[ ]; // unsized array allowed at end of buffer 
 };
-
 
 uniform int num_vertices;
 uniform float pixel_size;
@@ -193,7 +193,30 @@ void main(void)
 	local_panel_width_lower[group_patch_id*3 + local_thread_id%3] = 0;
 
 	// copy control points into shared array
-	cpts[local_thread_id + patch_base_idx] = Vertices[tid].XYZW;	
+	//CHANGE
+	vec3 position = vec3(
+	    raw_data[tid * 8 + 0],
+	    raw_data[tid * 8 + 1],
+	    raw_data[tid * 8 + 2]
+	);
+	
+	// optional if needed
+	vec2 texcoord = vec2(
+	    raw_data[tid * 8 + 3],
+	    raw_data[tid * 8 + 4]
+	);
+	
+	vec3 normal = vec3(
+	    raw_data[tid * 8 + 5],
+	    raw_data[tid * 8 + 6],
+	    raw_data[tid * 8 + 7]
+	);
+	
+
+	int patch_vertex_base = patch_id * NUM_VERTEX_PER_PATCH;
+	int cpu_style_idx = patch_vertex_base + row * 4 + column;
+	cpts[local_thread_id + patch_base_idx] = vec4(position, 1.0);
+
 
 	barrier();
 
@@ -202,9 +225,10 @@ void main(void)
 
 	if(column < 2)
 	{
-		D2b[column + row*4 + patch_base_idx] = cpts[4*row + column + patch_base_idx] 
-								- 2.0f * cpts[4*row + column + 1 + patch_base_idx]
-								+ cpts[4*row + column + 2 + patch_base_idx];
+		D2b[column + row*4 + patch_base_idx] = 
+			cpts[4*row + column + patch_base_idx] 
+			- 2.0f * cpts[4*row + column + 1 + patch_base_idx]
+			+ cpts[4*row + column + 2 + patch_base_idx];
 	}
 
 	barrier();
@@ -358,10 +382,8 @@ void main(void)
 		vec3 error_p = bb_max - bb_min;
 		float point_max_error = max(error_p.x,max(error_p.y, error_p.z));
 		atomicMax(local_tess_level[group_patch_id], int(10000*min(max(3*sqrt(2*point_max_error/pixel_size), 1.0f), 64.0f)));
-		if (gl_LocalInvocationID.x==0) {
-			patch_tess_levels[patch_id] = point_max_error;
-	}
-
+		
+	
 
 	if(local_thread_id == 0)
 		patch_tess_levels[patch_id] = max(1.0f, local_tess_level[group_patch_id]/10000.0f);

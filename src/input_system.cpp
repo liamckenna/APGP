@@ -278,7 +278,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 
 	switch (o) { //o
 	case PRESSED:
-		use_compute = true;
+		use_compute = false;
 		break;
 	case DOWN:
 		break;
@@ -289,7 +289,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	}
 	switch (p) { //p
 	case PRESSED:
-		use_compute = false;
+		use_compute = true;
 		break;
 	case DOWN:
 		break;
