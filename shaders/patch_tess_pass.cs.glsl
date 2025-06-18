@@ -9,7 +9,7 @@ precision highp float;
 #define GROUP_SIZE (NUM_PATCH_PER_GROUP*NUM_VERTEX_PER_PATCH)
 #define NUM_TILES_PER_PATCH 9
 
-layout( local_size_x = 32,  local_size_y = 1, local_size_z = 1 )   in;
+layout( local_size_x = 32,  local_size_y = 1, local_size_z = 1 ) in;
 
 struct Vertex { 
 	vec3 position;	// position
