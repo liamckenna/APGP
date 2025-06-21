@@ -121,6 +121,12 @@ This project uses the following third-party libraries:
 - **Copyright**: (c) 2013-2023 Niels Lohmann.
 - **Summary**: Permission is granted to use, modify, and distribute this library for any purpose, provided the original copyright and license are retained.
 
+### iPASS / Pixel-Accurate Rendering
+- **License**: GNU General Public License v3.0
+- **Copyright**: (c) 2017–2023, Yeo, Bin, Peters
+- **Source**: Derived from the iPASS system described in Efficient Pixel-Accurate Rendering of Curved Surfaces ([paper link] (https://www.cise.ufl.edu/research/SurfLab/papers/1109reyes.pdf)) and associated code release.
+- **Summary**: Portions of this project, including compute shaders and tessellation logic, are adapted under the terms of the GNU GPL v3.0. See the full license in [LICENSE_GPL.txt] for details.
+
 ---
 
 For detailed licensing information, see the respective library's documentation or license file.
