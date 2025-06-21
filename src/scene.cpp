@@ -50,7 +50,7 @@ Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resou
 		scene_ecs.AddComponent(pokeball_entity, MeshComponent{.mesh_name = "pokeball"}, resource_manager);
 
 		Entity floor_entity = scene_ecs.CreateEntity();
-		scene_ecs.AddComponent(floor_entity, TransformComponent{.scale = glm::vec3(0.1f)});
+		scene_ecs.AddComponent(floor_entity, TransformComponent{.scale = glm::vec3(1.f)});
 		scene_ecs.AddComponent(floor_entity, SurfaceComponent{ .surface_name = "floor" }, resource_manager);
 
 		Entity surface_entity = scene_ecs.CreateEntity();

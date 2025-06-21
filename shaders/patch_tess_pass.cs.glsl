@@ -28,10 +28,14 @@ layout(std430, binding = 1) writeonly buffer PatchBuffer {
 	float patch_tess_levels[ ]; // unsized array allowed at end of buffer 
 };
 
+layout(binding = 0, r32ui) uniform uimage2D depth_texture;
+
 uniform int num_vertices;
 uniform float pixel_size;
 uniform mat4 MVP;
+uniform mat4 light_MVP;
 uniform int light_pass;
+uniform ivec2 shadow_res;
 
 uniform float slefe_lower_3_3[] = {
 	// base 1
@@ -260,28 +264,10 @@ void check_patch_offscreen (
 
 void main(void)
 {
-	uint tid = gl_GlobalInvocationID.x;
-	int patch_id = int(tid / NUM_THREAD_PER_PATCH);
-	int group_patch_id = int(patch_id % NUM_PATCH_PER_GROUP);
-	int local_thread_id = int(tid % NUM_THREAD_PER_PATCH);
-
-	int row = local_thread_id / 4;
-	int column = local_thread_id % 4;
 	
-	vec4 seg_lower, seg_upper;
-	vec4 final_lower, final_upper;
 
-	if(tid >= num_vertices)
-		return;
-
-	int patch_base_idx = group_patch_id * NUM_THREAD_PER_PATCH;
-
-	// init tess_level
-	local_tess_level[group_patch_id] = 0;
-
-	// init panel width
-	local_panel_width_upper[group_patch_id*3 + local_thread_id%3] = 0;
-	local_panel_width_lower[group_patch_id*3 + local_thread_id%3] = 0;
+	
+	uint tid = gl_GlobalInvocationID.x;
 
 	// convert raw data to ctrl point info
 	vec3 position = vec3(
@@ -291,6 +277,7 @@ void main(void)
 	);
 	
 	// optional if needed
+	/*
 	vec2 texcoord = vec2(
 	    raw_data[tid * 8 + 3],
 	    raw_data[tid * 8 + 4]
@@ -301,154 +288,193 @@ void main(void)
 	    raw_data[tid * 8 + 6],
 	    raw_data[tid * 8 + 7]
 	);
-	
-
-	int patch_vertex_base = patch_id * NUM_VERTEX_PER_PATCH;
-	int cpu_style_idx = patch_vertex_base + row * 4 + column;
-	cpts[local_thread_id + patch_base_idx] = vec4(position, 1.0);
-
-
-	barrier();
-
-	// calc 2nd derivative on u direction
-	// input vertices are row major
-
-	bool do_deriv = column < 2;
-	float u = float(column) / 3.0f;
-	upper[local_thread_id + patch_base_idx] = slefe_segment_pass(
-		cpts,				// src array
-		patch_base_idx,		
-		row, column,		
-		1,					// row major
-		u,					// interpolation factor
-		D2b,				// derivative output buffer
-		do_deriv,
-		row * 4				// D2b offset (row major)
-	);
-	lower[local_thread_id + patch_base_idx] = upper[local_thread_id + patch_base_idx];
-
-
-	barrier();
-
-
-	// calculate upper slefe of upper
-	// calc 2nd derivative on u direction on v direction
-
-	bool do_deriv_v = row < 2;
-	float v = float(row) / 3.0f;
-	
-	final_upper = slefe_segment_pass(
-	    upper,              // src array
-	    patch_base_idx,
-	    row, column,        //
-	    0,                  // column major
-	    v,                  // interpolation factor
-	    D2b,                // derivative output buffer
-	    do_deriv_v,
-	    column              // D2b offset (column major)
-	);
-
-
-
-	barrier();
-
-	// calculate lower slefe of lower
-	// calc 2nd derivative on v direction
-
-	bool do_deriv_v_lower = row < 2;
-	v = float(row) / 3.0f;
-	
-	final_lower = slefe_segment_pass(
-	    lower,              // src array
-	    patch_base_idx,
-	    row, column,        //
-	    0,                  // column major
-	    v,                  // interpolation factor
-	    D2b,                // derivative output buffer
-	    do_deriv_v_lower,
-	    column              // D2b offset (column major)
-	);
-
-	/* 
-	* note that for bivariate the bound is bi-linear instead of linear
-	* the width of the flat enclosure (triangle) of bi-linear bound 
-	* should also be taken into account
 	*/
 
+	if (light_pass == 1) { //manual z-buffer
+		
+		vec4 clip = light_MVP * vec4(position, 1.0);
+        vec3 ndc  = clip.xyz / clip.w;
 
-	// write the upper and lower of each thread(vertex) 
-	// back into the upper/lower array, which is used later
-	// when computing tile center vertex. This is not necessary if 
-	// only estimate width at tile coner.
+        vec2 uv = ndc.xy * 0.5 + 0.5;
+        ivec2 px = ivec2(uv * vec2(shadow_res)); 
+		px = clamp(px, ivec2(0), shadow_res - 1);
 
-	upper[local_thread_id + patch_base_idx] = final_upper;
-	lower[local_thread_id + patch_base_idx] = final_lower;
+        uint d = floatBitsToUint(ndc.z);
+        imageAtomicMin(depth_texture, px, d);
 
-	barrier();
+        return;
 
-	float max_upper_panel_width[3] = {0,0,0};
-	float max_lower_panel_width[3] = {0,0,0};
+	} else {
 
-	vec4 tile_upper[2];
-	vec4 tile_lower[2];
+		int patch_id = int(tid / NUM_THREAD_PER_PATCH);
+		int group_patch_id = int(patch_id % NUM_PATCH_PER_GROUP);
+		int local_thread_id = int(tid % NUM_THREAD_PER_PATCH);
 
-	if(local_thread_id < 9) // for each tile
-	{
-		int i1 = tile_indices[local_thread_id][0];
-		int i2 = tile_indices[local_thread_id][1];
-		int i3 = tile_indices[local_thread_id][2];
-		int i4 = tile_indices[local_thread_id][3];
+		int row = local_thread_id / 4;
+		int column = local_thread_id % 4;
+		
+		vec4 seg_lower, seg_upper;
+		vec4 final_lower, final_upper;
 
-		vec4 u1 = (upper[i1] + upper[i4])/2.0f;
-		vec4 u2 = (upper[i2] + upper[i3])/2.0f;
+		if(tid >= num_vertices)
+			return;
 
-		vec4 l1 = (lower[i1] + lower[i4])/2.0f;
-		vec4 l2 = (lower[i2] + lower[i3])/2.0f;
+		int patch_base_idx = group_patch_id * NUM_THREAD_PER_PATCH;
 
-		tile_upper[0] = (u1 + u2) / 2.0f;
-		tile_lower[0] = min(l1,l2);
+		// init tess_level
+		local_tess_level[group_patch_id] = 0;
 
-		tile_upper[1] = max(u1,u2); 
-		tile_lower[1] = (l1 + l2) / 2.0f;
+		// init panel width
+		local_panel_width_upper[group_patch_id*3 + local_thread_id%3] = 0;
+		local_panel_width_lower[group_patch_id*3 + local_thread_id%3] = 0;
 
-        /* get the 8 corner of the average center box and find the one
-         * that closest to the camera.
-         *
-         * This is determined purely by the MVP matrix.
-         */ 
+		int patch_vertex_base = patch_id * NUM_VERTEX_PER_PATCH;
+		int cpu_style_idx = patch_vertex_base + row * 4 + column;
+		cpts[local_thread_id + patch_base_idx] = vec4(position, 1.0);
+
+
+		barrier();
+
+		// calc 2nd derivative on u direction
+		// input vertices are row major
+
+		bool do_deriv = column < 2;
+		float u = float(column) / 3.0f;
+		upper[local_thread_id + patch_base_idx] = slefe_segment_pass(
+			cpts,				// src array
+			patch_base_idx,		
+			row, column,		
+			1,					// row major
+			u,					// interpolation factor
+			D2b,				// derivative output buffer
+			do_deriv,
+			row * 4				// D2b offset (row major)
+		);
+		lower[local_thread_id + patch_base_idx] = upper[local_thread_id + patch_base_idx];
+
+
+		barrier();
+
+
+		// calculate upper slefe of upper
+		// calc 2nd derivative on u direction on v direction
+
+		bool do_deriv_v = row < 2;
+		float v = float(row) / 3.0f;
+		
+		final_upper = slefe_segment_pass(
+		    upper,              // src array
+		    patch_base_idx,
+		    row, column,        //
+		    0,                  // column major
+		    v,                  // interpolation factor
+		    D2b,                // derivative output buffer
+		    do_deriv_v,
+		    column              // D2b offset (column major)
+		);
+
+
+
+		barrier();
+
+		// calculate lower slefe of lower
+		// calc 2nd derivative on v direction
+
+		bool do_deriv_v_lower = row < 2;
+		v = float(row) / 3.0f;
+		
+		final_lower = slefe_segment_pass(
+		    lower,              // src array
+		    patch_base_idx,
+		    row, column,        //
+		    0,                  // column major
+		    v,                  // interpolation factor
+		    D2b,                // derivative output buffer
+		    do_deriv_v_lower,
+		    column              // D2b offset (column major)
+		);
+
+		/* 
+		* note that for bivariate the bound is bi-linear instead of linear
+		* the width of the flat enclosure (triangle) of bi-linear bound 
+		* should also be taken into account
+		*/
+
+
+		// write the upper and lower of each thread(vertex) 
+		// back into the upper/lower array, which is used later
+		// when computing tile center vertex. This is not necessary if 
+		// only estimate width at tile coner.
+
+		upper[local_thread_id + patch_base_idx] = final_upper;
+		lower[local_thread_id + patch_base_idx] = final_lower;
+
+		barrier();
+
+		float max_upper_panel_width[3] = {0,0,0};
+		float max_lower_panel_width[3] = {0,0,0};
+
+		vec4 tile_upper[2];
+		vec4 tile_lower[2];
+
+		if(local_thread_id < 9) // for each tile
 		{
-			int x_range = MVP[0][2] < 0 ? 1 : 0;
-			int y_range = MVP[1][2] < 0 ? 1 : 0;
-			int z_range = MVP[2][2] < 0 ? 1 : 0;
+			int i1 = tile_indices[local_thread_id][0];
+			int i2 = tile_indices[local_thread_id][1];
+			int i3 = tile_indices[local_thread_id][2];
+			int i4 = tile_indices[local_thread_id][3];
 
-            vec4 center_upper = vec4(tile_upper[x_range].x, tile_upper[y_range].y, tile_upper[z_range].z, 0.0);
-			vec4 center_lower = vec4(tile_lower[x_range].x, tile_lower[y_range].y, tile_lower[z_range].z, 0.0);
+			vec4 u1 = (upper[i1] + upper[i4])/2.0f;
+			vec4 u2 = (upper[i2] + upper[i3])/2.0f;
 
-			vec3 center_bb_min, center_bb_max;
-			cal_screen_bb(center_lower, center_upper, center_bb_min, center_bb_max);
+			vec4 l1 = (lower[i1] + lower[i4])/2.0f;
+			vec4 l2 = (lower[i2] + lower[i3])/2.0f;
 
-			update_tess_level(center_bb_min, center_bb_max, pixel_size, group_patch_id);
+			tile_upper[0] = (u1 + u2) / 2.0f;
+			tile_lower[0] = min(l1,l2);
+
+			tile_upper[1] = max(u1,u2); 
+			tile_lower[1] = (l1 + l2) / 2.0f;
+
+		    /* get the 8 corner of the average center box and find the one
+		     * that closest to the camera.
+		     *
+		     * This is determined purely by the MVP matrix.
+		     */ 
+			{
+				int x_range = MVP[0][2] < 0 ? 1 : 0;
+				int y_range = MVP[1][2] < 0 ? 1 : 0;
+				int z_range = MVP[2][2] < 0 ? 1 : 0;
+
+		        vec4 center_upper = vec4(tile_upper[x_range].x, tile_upper[y_range].y, tile_upper[z_range].z, 0.0);
+				vec4 center_lower = vec4(tile_lower[x_range].x, tile_lower[y_range].y, tile_lower[z_range].z, 0.0);
+
+				vec3 center_bb_min, center_bb_max;
+				cal_screen_bb(center_lower, center_upper, center_bb_min, center_bb_max);
+
+				update_tess_level(center_bb_min, center_bb_max, pixel_size, group_patch_id);
+			}
 		}
+
+		barrier();
+
+		// calculate bounding box in screen space
+		vec3 bb_min, bb_max;
+
+		cal_screen_bb(final_lower, final_upper, bb_min, bb_max);
+
+		cube_min[local_thread_id + patch_base_idx] = bb_min;
+		cube_max[local_thread_id + patch_base_idx] = bb_max;
+
+		barrier();
+
+		update_tess_level(bb_min, bb_max, pixel_size, group_patch_id);
+
+		if(local_thread_id == 0)
+			patch_tess_levels[patch_id] = max(1.0f, local_tess_level[group_patch_id]/10000.0f);
+
+		check_patch_offscreen(local_thread_id, patch_base_idx, patch_id);
 	}
-
-	barrier();
-
-	// calculate bounding box in screen space
-	vec3 bb_min, bb_max;
-
-	cal_screen_bb(final_lower, final_upper, bb_min, bb_max);
-
-	cube_min[local_thread_id + patch_base_idx] = bb_min;
-	cube_max[local_thread_id + patch_base_idx] = bb_max;
-
-	barrier();
-
-	update_tess_level(bb_min, bb_max, pixel_size, group_patch_id);
-
-	if(local_thread_id == 0)
-		patch_tess_levels[patch_id] = max(1.0f, local_tess_level[group_patch_id]/10000.0f);
-
-	check_patch_offscreen(local_thread_id, patch_base_idx, patch_id);
 
 }
 

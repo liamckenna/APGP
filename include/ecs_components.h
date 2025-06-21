@@ -106,8 +106,7 @@ struct DirectionalLightComponent {
 
     GLuint patch_buffer;
 
-    glm::mat4 view;
-    glm::mat4 projection;
+    GLuint depth_texture;
 
     DirectionalLightComponent() {
 
@@ -115,6 +114,16 @@ struct DirectionalLightComponent {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_buffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(PatchBuffer), NULL, GL_STATIC_DRAW);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        glGenTextures(1, &depth_texture);
+        glBindTexture(GL_TEXTURE_2D, depth_texture);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 1024, 1024);
+
+        // no filtering
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
 
 };

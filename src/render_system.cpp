@@ -101,7 +101,7 @@ void RenderSystem::RenderSurfaceLighting(EntityManager& entity_manager, Componen
 
     for (auto entity : component_manager.GetEntitiesWithComponents<DirectionalLightComponent, TransformComponent>()) {
         auto& light_transform = component_manager.GetComponent<TransformComponent>(entity);
-        auto& dirLightComp = component_manager.GetComponent<DirectionalLightComponent>(entity);
+        auto& directional_light = component_manager.GetComponent<DirectionalLightComponent>(entity);
         glm::vec3 pos = glm::vec3(0, 50, 0);
         glm::vec3 dir = glm::normalize(glm::vec3(0, -1, 0));
         light_transform.SetPosition(pos);
@@ -113,6 +113,14 @@ void RenderSystem::RenderSurfaceLighting(EntityManager& entity_manager, Componen
 
         //ProjectionMatrix = proj;
         //ViewMatrix = view;
+
+        // bind the texture so we can clear it
+        glBindTexture(GL_TEXTURE_2D, directional_light.depth_texture);
+
+        // fill with 0xFFFFFFFF (i.e. floatBitsToUint(1.0f))
+        GLuint clearVal = 0xFFFFFFFFu;
+        glClearTexImage(directional_light.depth_texture, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &clearVal);
+
 
         for (auto entity : component_manager.GetEntitiesWithComponents<SurfaceComponent, TransformComponent>()) {
             auto& transform = component_manager.GetComponent<TransformComponent>(entity);
@@ -131,11 +139,11 @@ void RenderSystem::RenderSurfaceLighting(EntityManager& entity_manager, Componen
 
 
             surface_renderer.renderSurface(&surface, 1440, is_first_frame, use_compute, true, 
-                glm::vec3(0.2, 0.2, 0.2), glm::vec3(0.9, 0.8, 0.2), glm::vec3(0.5, 0.5, 0.5), dirLightComp.patch_buffer, 
+                glm::vec3(0.2, 0.2, 0.2), glm::vec3(0.9, 0.8, 0.2), glm::vec3(0.5, 0.5, 0.5), directional_light.patch_buffer, directional_light.depth_texture,
                 view * ModelMatrix, proj, shader_manager);
 
         }
-
+        
     }
 
 }
@@ -159,7 +167,7 @@ void RenderSystem::RenderSurfaces(EntityManager& entity_manager, ComponentManage
         ModelMatrix = surfaceComp.model;
         //bool is use_compute
         surface_renderer.renderSurface(&surface, 1440, is_first_frame, use_compute, false, 
-            glm::vec3(0.2, 0.2, 0.2), glm::vec3(0.9, 0.8, 0.2), glm::vec3(0.5, 0.5, 0.5), 0, 
+            glm::vec3(0.2, 0.2, 0.2), glm::vec3(0.9, 0.8, 0.2), glm::vec3(0.5, 0.5, 0.5), 0, 0,
             ViewMatrix * ModelMatrix, ProjectionMatrix, shader_manager);
     }
     is_first_frame = false;
