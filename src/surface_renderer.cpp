@@ -67,7 +67,6 @@ void SurfaceRenderer::updateIPASSTexture(Surface* surface, const glm::mat4& MVP,
 
 void SurfaceRenderer::updateIPASSTexture_CS(int num_vertices, GLuint vbuffer_id, GLuint patch_tess_level_texture_id, const glm::mat4& MVP, float pixel_size, ShaderManager& shader_manager)
 {
-
 	shader_manager.UseShader("patch_tess_pass");
 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, vbuffer_id);
@@ -75,7 +74,6 @@ void SurfaceRenderer::updateIPASSTexture_CS(int num_vertices, GLuint vbuffer_id,
 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_buffer);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, patch_buffer);
-
 
 	shader_manager.SetUniform("num_vertices", num_vertices);
 	shader_manager.SetUniform("pixel_size", pixel_size);
@@ -86,4 +84,8 @@ void SurfaceRenderer::updateIPASSTexture_CS(int num_vertices, GLuint vbuffer_id,
 	int numPatches = 4;
 	std::vector<float> data(numPatches);
 	glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, data.size() * sizeof(float), data.data());
+
+	for (int i = 0; i < numPatches; i++) {
+		std::cout << "slot " << i << ": " << data[i] << std::endl;
+	}
 }

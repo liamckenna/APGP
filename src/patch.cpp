@@ -236,7 +236,7 @@ vector<float> determine_patch_tess_levels(Vertex* vertices, int num_patches, int
 			int i3 = tile_indices[i][2];
 			int i4 = tile_indices[i][3];
 
-			for (int j = 0; j < 3; j++) // for each coordinate, calculate width for both upper bonud and lower bound
+			for (int j = 0; j < 3; j++) // for each coordinate, calculate width for both upper bound and lower bound
 			{
 				float u1 = (upper[i1 * 3 + j] + upper[i4 * 3 + j]) / 2.0f;
 				float u2 = (upper[i2 * 3 + j] + upper[i3 * 3 + j]) / 2.0f;

@@ -46,7 +46,7 @@ Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resou
 
 		Entity floor_entity = scene_ecs.CreateEntity();
 		scene_ecs.AddComponent(floor_entity, TransformComponent{.scale = glm::vec3(5.f)});
-		scene_ecs.AddComponent(floor_entity, SurfaceComponent{ .surface_name = "floor" }, resource_manager);
+		//scene_ecs.AddComponent(floor_entity, SurfaceComponent{ .surface_name = "floor" }, resource_manager);
 
 		Entity surface_entity = scene_ecs.CreateEntity();
 		scene_ecs.AddComponent(surface_entity, TransformComponent{ .position = glm::vec3(0.f, 1.f, 0.f), .scale = glm::vec3(5)});

@@ -167,7 +167,7 @@ void cal_screen_bb(in vec4 sb_min, in vec4 sb_max, out vec3 cube_min, out vec3 c
 	}
 }
 
-vec4 cal_second_deriv(in vec4 src[GROUP_SIZE], int base_idx, int major_idx, int minor_idx, int row_maj)
+vec4 cal_second_deriv (in vec4 src[GROUP_SIZE], int base_idx, int major_idx, int minor_idx, int row_maj)
 {
     int idx0, idx1, idx2;
 
@@ -184,7 +184,7 @@ vec4 cal_second_deriv(in vec4 src[GROUP_SIZE], int base_idx, int major_idx, int 
     return src[idx0] - 2.0 * src[idx1] + src[idx2];
 }
 
-vec4 slefe_segment_pass(
+vec4 slefe_segment_pass (
     in vec4 src[GROUP_SIZE], 
     in int patch_base_idx,
     in int row, 
@@ -230,6 +230,32 @@ void update_tess_level(vec3 bb_min, vec3 bb_max, float pixel_size, int group_pat
 	atomicMax(local_tess_level[group_patch_id], int(10000.0 * tess));
 }
 
+void check_patch_offscreen (
+    int local_thread_id,
+    int patch_base_idx,
+    int patch_id)
+{
+    if (local_thread_id != 0) return;
+
+    vec3 patch_bb_min = vec3(MAX_FLOAT);
+    vec3 patch_bb_max = vec3(-MAX_FLOAT);
+
+    for (int i = 0; i < 16; ++i)
+    {
+        patch_bb_min = min(patch_bb_min, cube_min[patch_base_idx + i]);
+        patch_bb_max = max(patch_bb_max, cube_max[patch_base_idx + i]);
+    }
+
+    bool offscreen =
+        patch_bb_max.x < -1.0 || patch_bb_min.x > 1.0 ||
+        patch_bb_max.y < -1.0 || patch_bb_min.y > 1.0 ||
+        patch_bb_max.z < -1.0 || patch_bb_min.z > 1.0;
+
+    if (offscreen)
+    {
+        patch_tess_levels[patch_id] = 0.0; // force minimum tess
+    }
+}
 
 void main(void)
 {
@@ -256,8 +282,7 @@ void main(void)
 	local_panel_width_upper[group_patch_id*3 + local_thread_id%3] = 0;
 	local_panel_width_lower[group_patch_id*3 + local_thread_id%3] = 0;
 
-	// copy control points into shared array
-	//CHANGE
+	// convert raw data to ctrl point info
 	vec3 position = vec3(
 	    raw_data[tid * 8 + 0],
 	    raw_data[tid * 8 + 1],
@@ -333,14 +358,14 @@ void main(void)
 	v = float(row) / 3.0f;
 	
 	final_lower = slefe_segment_pass(
-	    lower,              // source array
+	    lower,              // src array
 	    patch_base_idx,
-	    row, column,        // major = row, minor = column
-	    0,                  // column-major
+	    row, column,        //
+	    0,                  // column major
 	    v,                  // interpolation factor
 	    D2b,                // derivative output buffer
 	    do_deriv_v_lower,
-	    column              // D2b offset (column-major)
+	    column              // D2b offset (column major)
 	);
 
 	/* 
@@ -409,8 +434,8 @@ void main(void)
 
 	// calculate bounding box in screen space
 	vec3 bb_min, bb_max;
+
 	cal_screen_bb(final_lower, final_upper, bb_min, bb_max);
-	
 
 	cube_min[local_thread_id + patch_base_idx] = bb_min;
 	cube_max[local_thread_id + patch_base_idx] = bb_max;
@@ -421,5 +446,8 @@ void main(void)
 
 	if(local_thread_id == 0)
 		patch_tess_levels[patch_id] = max(1.0f, local_tess_level[group_patch_id]/10000.0f);
+
+	check_patch_offscreen(local_thread_id, patch_base_idx, patch_id);
+
 }
 

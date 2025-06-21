@@ -5,6 +5,6 @@
   "scene": "sample scene.json",
   "hardcoded": true,
   "limit_fps": true,
-  "use_compute":  false,
+  "use_compute":  true,
   "fps_cap":  1000
 }
