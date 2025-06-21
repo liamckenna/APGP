@@ -22,7 +22,7 @@ void SurfaceRenderer::renderSurface(Surface* surface, int CurrentWidth, bool is_
 			updateIPASSTexture_CS(surface->vertices.size(), surface->vbo, light_patch_buffer, 0, MVP, pixel_size, shader_manager);
 		}
 		else {
-			updateIPASSTexture_CS(surface->vertices.size(), surface->vbo, patch_buffer, 0, MVP, pixel_size, shader_manager);
+			updateIPASSTexture_CS(surface->vertices.size(), surface->vbo, surface->patch_buffer, 0, MVP, pixel_size, shader_manager);
 		}
 	} else
 		updateIPASSTexture(surface, MVP, pixel_size);
@@ -44,8 +44,8 @@ void SurfaceRenderer::renderSurface(Surface* surface, int CurrentWidth, bool is_
 		glActiveTexture(GL_TEXTURE5);
 		glBindTexture(GL_TEXTURE_1D, surface->connectivity_texture);
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_buffer);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, patch_buffer);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, surface->patch_buffer);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, surface->patch_buffer);
 
 
 		glBindVertexArray(surface->vao);
@@ -62,7 +62,7 @@ void SurfaceRenderer::updateIPASSTexture(Surface* surface, const glm::mat4& MVP,
 {
 	vector<float> patch_tess_levels = determine_patch_tess_levels(&surface->vertices[0], surface->num_patches, 3, 3, MVP, pixel_size);
 
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_buffer);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, surface->patch_buffer);
 	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, patch_tess_levels.size() * sizeof(float), &patch_tess_levels[0]);
 	int numPatches = 4;
 	std::vector<float> data(numPatches);

@@ -17,6 +17,7 @@ struct Surface {
 	GLuint vbo = 0;
 	GLuint ebo = 0;
 	GLuint ssbo = 0;
+	GLuint patch_buffer = 0;
 	std::string name;
 
 	Surface() = default;

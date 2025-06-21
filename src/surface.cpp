@@ -19,6 +19,7 @@ void Surface::GenerateBuffers() {
 	glGenBuffers(1, &vbo);
 	glGenBuffers(1, &ebo);
 	glGenBuffers(1, &ssbo);
+	glGenBuffers(1, &patch_buffer);
 }
 
 void Surface::PopulateBuffers(std::vector<FlatVertex> flat_vertices) {
@@ -47,6 +48,10 @@ void Surface::PopulateBuffers(std::vector<FlatVertex> flat_vertices) {
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 	glBindVertexArray(0);
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_buffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(float) * (vertices.size() / patch_size), NULL, GL_STATIC_DRAW);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 std::vector<FlatVertex> Surface::Flatten() {
