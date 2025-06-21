@@ -167,6 +167,70 @@ void cal_screen_bb(in vec4 sb_min, in vec4 sb_max, out vec3 cube_min, out vec3 c
 	}
 }
 
+vec4 cal_second_deriv(in vec4 src[GROUP_SIZE], int base_idx, int major_idx, int minor_idx, int row_maj)
+{
+    int idx0, idx1, idx2;
+
+    if (row_maj ==1) {
+        idx0 = base_idx + 4 * major_idx + minor_idx;
+        idx1 = base_idx + 4 * major_idx + minor_idx + 1;
+        idx2 = base_idx + 4 * major_idx + minor_idx + 2;
+    } else {
+        idx0 = base_idx + 4 * (major_idx + 0) + minor_idx;
+        idx1 = base_idx + 4 * (major_idx + 1) + minor_idx;
+        idx2 = base_idx + 4 * (major_idx + 2) + minor_idx;
+    }
+
+    return src[idx0] - 2.0 * src[idx1] + src[idx2];
+}
+
+vec4 slefe_segment_pass(
+    in vec4 src[GROUP_SIZE], 
+    in int patch_base_idx,
+    in int row, 
+    in int col, 
+    in int row_maj,
+    in float interp,
+    inout vec4 D2b[GROUP_SIZE], 
+    in bool compute_deriv,
+    in int d2b_offset)
+{
+    if (compute_deriv) {
+        D2b[col + row * 4 + patch_base_idx] = cal_second_deriv(src, patch_base_idx, row, col, row_maj);
+    }
+
+    barrier();
+
+    vec4 seg = mix(
+        src[row_maj == 1 ? row * 4 + patch_base_idx : col + patch_base_idx],
+        src[row_maj == 1 ? row * 4 + 3 + patch_base_idx : row * 4 + col + patch_base_idx],
+        interp
+    );
+
+    vec4 seg_upper = seg;
+    vec4 seg_lower = seg;
+
+    for (int j = 0; j < 2; j++) {
+        add_up_basis(
+            seg_lower, seg_upper,
+            D2b[d2b_offset + j * (row_maj == 1 ? 1 : 4) + patch_base_idx],
+            slefe_lower_3_3[col + 4 * j].x,
+            slefe_upper_3_3[col + 4 * j].x
+        );
+    }
+
+    return row_maj == 1 ? seg_upper : seg_lower; // or return both if needed
+}
+
+void update_tess_level(vec3 bb_min, vec3 bb_max, float pixel_size, int group_patch_id)
+{
+	vec3 error_p = bb_max - bb_min;
+	float max_error = max(error_p.x, max(error_p.y, error_p.z));
+	float tess = min(max(3.0 * sqrt(2.0 * max_error / pixel_size), 1.0), 64.0);
+	atomicMax(local_tess_level[group_patch_id], int(10000.0 * tess));
+}
+
+
 void main(void)
 {
 	uint tid = gl_GlobalInvocationID.x;
@@ -223,30 +287,20 @@ void main(void)
 	// calc 2nd derivative on u direction
 	// input vertices are row major
 
-	if(column < 2)
-	{
-		D2b[column + row*4 + patch_base_idx] = 
-			cpts[4*row + column + patch_base_idx] 
-			- 2.0f * cpts[4*row + column + 1 + patch_base_idx]
-			+ cpts[4*row + column + 2 + patch_base_idx];
-	}
+	bool do_deriv = column < 2;
+	float u = float(column) / 3.0f;
+	upper[local_thread_id + patch_base_idx] = slefe_segment_pass(
+		cpts,				// src array
+		patch_base_idx,		
+		row, column,		
+		1,					// row major
+		u,					// interpolation factor
+		D2b,				// derivative output buffer
+		do_deriv,
+		row * 4				// D2b offset (row major)
+	);
+	lower[local_thread_id + patch_base_idx] = upper[local_thread_id + patch_base_idx];
 
-	barrier();
-
-	// calculate the upper and lower slefe for each row
-	float u = float(column)/3.0f;
-	seg_upper = (1-u) * cpts[row*4 + patch_base_idx] + u*cpts[row*4 + 3 + patch_base_idx];
-	seg_lower = seg_upper;
-
-	for(int j = 0; j < 2; j++) // for each base
-	{
-
-		add_up_basis(seg_lower, seg_upper, D2b[row*4 + j + patch_base_idx], 
-					slefe_lower_3_3[column + 4*j], slefe_upper_3_3[column + 4*j]);
-	}
-	
-	upper[local_thread_id + patch_base_idx] = seg_upper;
-	lower[local_thread_id + patch_base_idx] = seg_lower;
 
 	barrier();
 
@@ -254,52 +308,40 @@ void main(void)
 	// calculate upper slefe of upper
 	// calc 2nd derivative on u direction on v direction
 
-	if(row < 2)
-	{
-		D2b[column + row*4 + patch_base_idx] = upper[4*row + column + patch_base_idx] 
-								- 2.0f * upper[4*(row + 1) + column + patch_base_idx]
-								+ upper[4*(row + 2) + column + patch_base_idx];
-	}
-	barrier();
-
-	float v = float(row)/3.0f;
-	seg_upper = (1-v) * upper[column + patch_base_idx] + v * upper[row*4 + column + patch_base_idx];
-	seg_lower = seg_upper;
-
-	for(int j = 0; j < 2; j++) // for each base
-	{
-
-		add_up_basis(seg_lower, seg_upper, D2b[j*4 + column + patch_base_idx], 
-					slefe_lower_3_3[column + 4*j], slefe_upper_3_3[column + 4*j]);
-	}
+	bool do_deriv_v = row < 2;
+	float v = float(row) / 3.0f;
 	
-	final_upper = seg_upper;
+	final_upper = slefe_segment_pass(
+	    upper,              // src array
+	    patch_base_idx,
+	    row, column,        //
+	    0,                  // column major
+	    v,                  // interpolation factor
+	    D2b,                // derivative output buffer
+	    do_deriv_v,
+	    column              // D2b offset (column major)
+	);
+
+
+
 	barrier();
 
 	// calculate lower slefe of lower
 	// calc 2nd derivative on v direction
 
-	if(row < 2)
-	{
-		D2b[column + row*4 + patch_base_idx] = lower[4*row + column + patch_base_idx] 
-								- 2.0f * lower[4*(row + 1) + column + patch_base_idx]
-								+ lower[4*(row + 2) + column + patch_base_idx];
-	}
-	barrier();
-
-	v = float(row)/3.0f;
-	seg_upper = (1-v) * lower[column + patch_base_idx] + v*lower[row*4 + column + patch_base_idx];
-	seg_lower = seg_upper;
-
-	for(int j = 0; j < 2; j++) // for each base
-	{
-
-		add_up_basis(seg_lower, seg_upper, D2b[j*4 + column + patch_base_idx], 
-					slefe_lower_3_3[column + 4*j], slefe_upper_3_3[column + 4*j]);
-	}
+	bool do_deriv_v_lower = row < 2;
+	v = float(row) / 3.0f;
 	
-	final_lower = seg_lower;
-	barrier();
+	final_lower = slefe_segment_pass(
+	    lower,              // source array
+	    patch_base_idx,
+	    row, column,        // major = row, minor = column
+	    0,                  // column-major
+	    v,                  // interpolation factor
+	    D2b,                // derivative output buffer
+	    do_deriv_v_lower,
+	    column              // D2b offset (column-major)
+	);
 
 	/* 
 	* note that for bivariate the bound is bi-linear instead of linear
@@ -359,10 +401,7 @@ void main(void)
 			vec3 center_bb_min, center_bb_max;
 			cal_screen_bb(center_lower, center_upper, center_bb_min, center_bb_max);
 
-			vec3 error_p = center_bb_max - center_bb_min;
-			float center_point_max_error = max(error_p.x,max(error_p.y, error_p.z));
-			atomicMax(local_tess_level[group_patch_id], int(10000*min(max(3*sqrt(2*center_point_max_error/pixel_size), 1.0f), 64.0f)));
-
+			update_tess_level(center_bb_min, center_bb_max, pixel_size, group_patch_id);
 		}
 	}
 
@@ -378,19 +417,9 @@ void main(void)
 
 	barrier();
 
-	{
-		vec3 error_p = bb_max - bb_min;
-		float point_max_error = max(error_p.x,max(error_p.y, error_p.z));
-		atomicMax(local_tess_level[group_patch_id], int(10000*min(max(3*sqrt(2*point_max_error/pixel_size), 1.0f), 64.0f)));
-		
-	
+	update_tess_level(bb_min, bb_max, pixel_size, group_patch_id);
 
 	if(local_thread_id == 0)
 		patch_tess_levels[patch_id] = max(1.0f, local_tess_level[group_patch_id]/10000.0f);
-
-	
-
-	}
-
 }
 
