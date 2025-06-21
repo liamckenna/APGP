@@ -10,46 +10,51 @@ using std::vector;
 
 
 
-void SurfaceRenderer::renderSurface(Surface* surface, int CurrentWidth, bool is_first_frame, bool use_compute,
-	glm::vec3 Ka, glm::vec3 Kd, glm::vec3 Ks,
+void SurfaceRenderer::renderSurface(Surface* surface, int CurrentWidth, bool is_first_frame, bool use_compute, bool light_pass,
+	glm::vec3 Ka, glm::vec3 Kd, glm::vec3 Ks, GLuint light_patch_buffer,
 	const glm::mat4& ModelViewMatrix, const glm::mat4& ProjectionMatrix, ShaderManager& shader_manager)
 {
 	float pixel_size = 2.0 / CurrentWidth; // pixel size in clipping space
-
 	glm::mat4 MVP = ProjectionMatrix * ModelViewMatrix;
-	//std::cout << "MVP: " << glm::to_string(MVP) << std::endl;
-	if (use_compute)
-		updateIPASSTexture_CS(surface->vertices.size(), surface->vbo, 0, MVP, pixel_size, shader_manager);
-	else
+	
+	if (use_compute) {
+		if (light_pass) {
+			updateIPASSTexture_CS(surface->vertices.size(), surface->vbo, light_patch_buffer, 0, MVP, pixel_size, shader_manager);
+		}
+		else {
+			updateIPASSTexture_CS(surface->vertices.size(), surface->vbo, patch_buffer, 0, MVP, pixel_size, shader_manager);
+		}
+	} else
 		updateIPASSTexture(surface, MVP, pixel_size);
 
-	shader_manager.UseShader("render_pass");
-	shader_manager.SetUniform("ModelViewMatrix", ModelViewMatrix);
-	shader_manager.SetUniform("ProjectionMatrix", ProjectionMatrix);
-	shader_manager.SetUniform("NormalMatrix", glm::inverseTranspose(glm::mat3(ModelViewMatrix)));
+	if (!light_pass) {
+		shader_manager.UseShader("render_pass");
+		shader_manager.SetUniform("ModelViewMatrix", ModelViewMatrix);
+		shader_manager.SetUniform("ProjectionMatrix", ProjectionMatrix);
+		shader_manager.SetUniform("NormalMatrix", glm::inverseTranspose(glm::mat3(ModelViewMatrix)));
 
-	shader_manager.SetUniform("Ka", Ka);
-	shader_manager.SetUniform("Ks", Ks);
+		shader_manager.SetUniform("Ka", Ka);
+		shader_manager.SetUniform("Ks", Ks);
 
-	if (surface->selected)
-		shader_manager.SetUniform("Kd", glm::vec3(0, 0, 1));
-	else
-		shader_manager.SetUniform("Kd", Kd);
+		if (surface->selected)
+			shader_manager.SetUniform("Kd", glm::vec3(0, 0, 1));
+		else
+			shader_manager.SetUniform("Kd", Kd);
 
-	glActiveTexture(GL_TEXTURE5);
-	glBindTexture(GL_TEXTURE_1D, surface->connectivity_texture);
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_1D, surface->connectivity_texture);
 
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_buffer);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, patch_buffer);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_buffer);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, patch_buffer);
 
 
-	glBindVertexArray(surface->vao);
-	glBindBuffer(GL_ARRAY_BUFFER, surface->vbo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, surface->ebo);
+		glBindVertexArray(surface->vao);
+		glBindBuffer(GL_ARRAY_BUFFER, surface->vbo);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, surface->ebo);
 
-	glPatchParameteri(GL_PATCH_VERTICES, 16);
-	glDrawElements(GL_PATCHES, surface->vertices.size(), GL_UNSIGNED_INT, 0);
-
+		glPatchParameteri(GL_PATCH_VERTICES, 16);
+		glDrawElements(GL_PATCHES, surface->vertices.size(), GL_UNSIGNED_INT, 0);
+	}
 }
 
 
@@ -65,19 +70,20 @@ void SurfaceRenderer::updateIPASSTexture(Surface* surface, const glm::mat4& MVP,
 }
 
 
-void SurfaceRenderer::updateIPASSTexture_CS(int num_vertices, GLuint vbuffer_id, GLuint patch_tess_level_texture_id, const glm::mat4& MVP, float pixel_size, ShaderManager& shader_manager)
+void SurfaceRenderer::updateIPASSTexture_CS(int num_vertices, GLuint vbuffer_id, GLuint pbuffer_id, GLuint patch_tess_level_texture_id, const glm::mat4& MVP, float pixel_size, ShaderManager& shader_manager)
 {
 	shader_manager.UseShader("patch_tess_pass");
 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, vbuffer_id);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vbuffer_id);
 
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_buffer);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, patch_buffer);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, pbuffer_id);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, pbuffer_id);
 
 	shader_manager.SetUniform("num_vertices", num_vertices);
 	shader_manager.SetUniform("pixel_size", pixel_size);
 	shader_manager.SetUniform("MVP", MVP);
+	//shader_manager.SetUniform("light_pass", 0);
 
 	int groupSize = 32;
 	glDispatchCompute(num_vertices / groupSize + 1, 1, 1);
@@ -85,7 +91,7 @@ void SurfaceRenderer::updateIPASSTexture_CS(int num_vertices, GLuint vbuffer_id,
 	std::vector<float> data(numPatches);
 	glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, data.size() * sizeof(float), data.data());
 
-	for (int i = 0; i < numPatches; i++) {
-		std::cout << "slot " << i << ": " << data[i] << std::endl;
-	}
+	//for (int i = 0; i < numPatches; i++) {
+	//	std::cout << "slot " << i << ": " << data[i] << std::endl;
+	//}
 }

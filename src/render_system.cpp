@@ -19,6 +19,8 @@ void RenderSystem::Update(EntityManager& entity_manager, ComponentManager& compo
     
     //RenderScreenQuad(entity_manager, component_manager, system_manager, delta_time);
 
+    RenderSurfaceLighting(entity_manager, component_manager, system_manager, delta_time);
+
     RenderSurfaces(entity_manager, component_manager, system_manager, delta_time);
 
 
@@ -94,10 +96,55 @@ void RenderSystem::RenderScreenQuad(EntityManager& entity_manager, ComponentMana
     }
 }
 
+void RenderSystem::RenderSurfaceLighting(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
+    
+
+    for (auto entity : component_manager.GetEntitiesWithComponents<DirectionalLightComponent, TransformComponent>()) {
+        auto& light_transform = component_manager.GetComponent<TransformComponent>(entity);
+        auto& dirLightComp = component_manager.GetComponent<DirectionalLightComponent>(entity);
+        glm::vec3 pos = glm::vec3(0, 50, 0);
+        glm::vec3 dir = glm::normalize(glm::vec3(0, -1, 0));
+        light_transform.SetPosition(pos);
+        light_transform.SetDirection(dir);
+
+        glm::mat4 proj = glm::ortho(-10.f, 10.f, -10.f, 10.f, 0.1f, 100.f);
+        glm::mat4 view = glm::lookAt(light_transform.position, glm::vec3(0),
+            light_transform.orientation * glm::vec3(0, 1, 0));
+
+        //ProjectionMatrix = proj;
+        //ViewMatrix = view;
+
+        for (auto entity : component_manager.GetEntitiesWithComponents<SurfaceComponent, TransformComponent>()) {
+            auto& transform = component_manager.GetComponent<TransformComponent>(entity);
+            auto& surfaceComp = component_manager.GetComponent<SurfaceComponent>(entity);
+            Surface& surface = resource_manager.GetSurface(surfaceComp.surface_name);
+
+            if (surfaceComp.surface_name == "test_surface") transform.SetDirection(glm::vec3(0, 1, 0));
+
+            surfaceComp.model =
+                glm::translate(glm::mat4(1.0f), transform.position) *
+                glm::mat4_cast(transform.orientation) *
+                glm::scale(glm::mat4(1.0f), transform.scale);
+
+            ModelMatrix = surfaceComp.model;
+
+
+
+            surface_renderer.renderSurface(&surface, 1440, is_first_frame, use_compute, true, 
+                glm::vec3(0.2, 0.2, 0.2), glm::vec3(0.9, 0.8, 0.2), glm::vec3(0.5, 0.5, 0.5), dirLightComp.patch_buffer, 
+                view * ModelMatrix, proj, shader_manager);
+
+        }
+
+    }
+
+}
+
 void RenderSystem::RenderSurfaces(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDisable(GL_CULL_FACE);
+
 
     for (auto entity : component_manager.GetEntitiesWithComponents<SurfaceComponent, TransformComponent>()) {
         auto& transform = component_manager.GetComponent<TransformComponent>(entity);
@@ -111,7 +158,9 @@ void RenderSystem::RenderSurfaces(EntityManager& entity_manager, ComponentManage
 
         ModelMatrix = surfaceComp.model;
         //bool is use_compute
-        surface_renderer.renderSurface(&surface, 1440, is_first_frame, use_compute, glm::vec3(0.2, 0.2, 0.2), glm::vec3(0.9, 0.8, 0.2), glm::vec3(0.5, 0.5, 0.5), ViewMatrix * ModelMatrix, ProjectionMatrix, shader_manager);
+        surface_renderer.renderSurface(&surface, 1440, is_first_frame, use_compute, false, 
+            glm::vec3(0.2, 0.2, 0.2), glm::vec3(0.9, 0.8, 0.2), glm::vec3(0.5, 0.5, 0.5), 0, 
+            ViewMatrix * ModelMatrix, ProjectionMatrix, shader_manager);
     }
     is_first_frame = false;
 }

@@ -31,6 +31,7 @@ layout(std430, binding = 1) writeonly buffer PatchBuffer {
 uniform int num_vertices;
 uniform float pixel_size;
 uniform mat4 MVP;
+uniform int light_pass;
 
 uniform float slefe_lower_3_3[] = {
 	// base 1

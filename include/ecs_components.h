@@ -6,7 +6,9 @@
 #include <iostream>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/vector_angle.hpp>
 #undef GLM_ENABLE_EXPERIMENTAL
+#include "surface_renderer.h"
 
 struct TransformComponent {
     glm::vec3 position = glm::vec3(0.f);
@@ -16,6 +18,19 @@ struct TransformComponent {
 
     void SetPosition(glm::vec3 destination) {
         position = destination;
+        stale = true;
+    }
+
+    void SetDirection(glm::vec3 direction) {
+        glm::vec3 forward = glm::normalize(glm::vec3(0, 0, -1));
+        glm::vec3 target = glm::normalize(direction);
+
+        // Avoid NaNs for zero-length vectors
+        if (glm::length(target) < 1e-6f)
+            return;
+
+        // Get rotation from forward to target
+        orientation = glm::rotation(forward, target);
         stale = true;
     }
 
@@ -84,6 +99,24 @@ struct LightComponent {
     float range = 10.f;
     glm::vec3 color = glm::vec3(1.f);
     bool stale = true;
+};
+
+
+struct DirectionalLightComponent {
+
+    GLuint patch_buffer;
+
+    glm::mat4 view;
+    glm::mat4 projection;
+
+    DirectionalLightComponent() {
+
+        glGenBuffers(1, &patch_buffer);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(PatchBuffer), NULL, GL_STATIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    }
+
 };
 
 struct MeshComponent {

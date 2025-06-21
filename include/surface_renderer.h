@@ -57,12 +57,12 @@ public:
 
 	}
 
-	void renderSurface(Surface* surface, int CurrentWidth, bool is_first_frame, bool use_compute,
-		glm::vec3 Ka, glm::vec3 Kd, glm::vec3 Ks,
+	void renderSurface(Surface* surface, int CurrentWidth, bool is_first_frame, bool use_compute, bool light_pass,
+		glm::vec3 Ka, glm::vec3 Kd, glm::vec3 Ks, GLuint light_patch_buffer,
 		const glm::mat4& ModelViewMatrix, const glm::mat4& ProjectionMatrix, ShaderManager& shader_manager);
 
 private:
 
 	void updateIPASSTexture(Surface* surface, const glm::mat4& MVP, float pixel_size);
-	void updateIPASSTexture_CS(int num_vertices, GLuint vbuffer_id, GLuint patch_tess_level_texture_id, const glm::mat4& MVP, float pixel_size, ShaderManager& shader_manager);
+	void updateIPASSTexture_CS(int num_vertices, GLuint vbuffer_id, GLuint pbuffer_id, GLuint patch_tess_level_texture_id, const glm::mat4& MVP, float pixel_size, ShaderManager& shader_manager);
 };

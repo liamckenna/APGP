@@ -24,4 +24,5 @@ public:
     void RenderMeshes(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
     void RenderSurfaces(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
     void RenderScreenQuad(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
+    void RenderSurfaceLighting(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
 };
