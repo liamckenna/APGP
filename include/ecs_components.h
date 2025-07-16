@@ -78,7 +78,7 @@ struct TransformComponent {
 struct CameraComponent {
     bool enabled = true;
     float fov = 60.f;
-    float aspect_ratio = 8.f / 6.f;
+    float aspect_ratio = 1.f;
     float near = 0.1f;
     float far = 100.f;
     bool perspective = true;
@@ -106,6 +106,8 @@ struct DirectionalLightComponent {
 
     GLuint patch_buffer;
 
+    GLuint shadow_buffer;
+
     GLuint depth_texture;
 
     DirectionalLightComponent() {
@@ -117,13 +119,22 @@ struct DirectionalLightComponent {
 
         glGenTextures(1, &depth_texture);
         glBindTexture(GL_TEXTURE_2D, depth_texture);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 1024, 1024);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 1080, 1080);
+
+        GLuint clearVal = glm::floatBitsToUint(1.0f);
+        glClearTexImage(depth_texture, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &clearVal);
 
         // no filtering
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        glGenBuffers(1, &shadow_buffer);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, shadow_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(uint) * 65536, NULL, GL_STATIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
     }
 
 };

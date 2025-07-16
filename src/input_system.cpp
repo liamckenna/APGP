@@ -17,12 +17,25 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	
 	Entity camera = component_manager.GetEntitiesWithComponent<PrimaryCameraComponent>()[0];
 	TransformComponent& transform = component_manager.GetComponent<TransformComponent>(camera);
+	Entity surface = component_manager.GetEntitiesWithComponent<SurfaceComponent>()[0];
+	TransformComponent* surface_transform = nullptr;
+	for (auto entity : component_manager.GetEntitiesWithComponent<SurfaceComponent>()) {
+		if (component_manager.GetComponent<SurfaceComponent>(entity).surface_name == "test_surface") {
+			surface_transform = &component_manager.GetComponent<TransformComponent>(entity);
+		}
+	}
+	
 
 	byte esc = input_manager.GetKeyState(GLFW_KEY_ESCAPE);
 	byte space = input_manager.GetKeyState(GLFW_KEY_SPACE);
 	byte tab = input_manager.GetKeyState(GLFW_KEY_TAB);
 	byte lshift = input_manager.GetKeyState(GLFW_KEY_LEFT_SHIFT);
 	byte lctrl = input_manager.GetKeyState(GLFW_KEY_LEFT_CONTROL);
+
+	byte up = input_manager.GetKeyState(GLFW_KEY_UP);
+	byte down = input_manager.GetKeyState(GLFW_KEY_DOWN);
+	byte left = input_manager.GetKeyState(GLFW_KEY_LEFT);
+	byte right = input_manager.GetKeyState(GLFW_KEY_RIGHT);
 
 	byte w = input_manager.GetKeyState(GLFW_KEY_W);
 	byte a = input_manager.GetKeyState(GLFW_KEY_A);
@@ -81,7 +94,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	case UP:
 		break;
 	}
-	switch (tab) { //left control
+	switch (tab) { //tab
 	case PRESSED:
 		break;
 	case DOWN:
@@ -126,6 +139,51 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	case PRESSED:
 	case DOWN:
 		transform.TranslateRight(SPEED, delta_time);
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+
+	switch (up) { //up
+	case PRESSED:
+		break;
+	case DOWN:
+		surface_transform->TranslateUp(3.0, delta_time);
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+	switch (down) { //down
+	case PRESSED:
+		break;
+	case DOWN:
+		surface_transform->TranslateDown(3.0, delta_time);
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+	switch (left) { //left
+	case PRESSED:
+		break;
+	case DOWN:
+		surface_transform->TranslateLeft(3.0, delta_time);
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+	switch (right) { //right
+	case PRESSED:
+		break;
+	case DOWN:
+		surface_transform->TranslateRight(3.0, delta_time);
 		break;
 	case RELEASED:
 		break;

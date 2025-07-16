@@ -19,6 +19,7 @@ out vec3 teNormal;
 out float teOneOverZ;
 out vec4 teDu;
 out vec4 teDv;
+flat out uint tePatch;
 
 uniform mat4 ModelViewMatrix;
 uniform mat4 ProjectionMatrix;
@@ -110,6 +111,8 @@ void main()
 	
 	vec4 projectedPosition = ProjectionMatrix * tePosition;
 	// teUV = vec2(u,v);
-	gl_Position = projectedPosition; 	
+	gl_Position = projectedPosition;
+
+	tePatch = gl_PrimitiveID;
 }
 

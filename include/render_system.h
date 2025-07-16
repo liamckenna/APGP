@@ -16,6 +16,7 @@ class RenderSystem : public System {
     glm::mat4 ModelMatrix;
     glm::mat4 ViewMatrix;
     glm::mat4 ProjectionMatrix;
+    GLuint launch_point_buffer;
 public:
     RenderSystem(ResourceManager& rm, ShaderManager& sm);
     void Clear();

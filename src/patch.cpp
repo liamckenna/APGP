@@ -3,8 +3,8 @@
 #include <iostream>
 #include <algorithm>
 
-#define WINDOW_WIDTH 1920
-#define WINDOW_HEIGHT 1440
+#define WINDOW_WIDTH 1080
+#define WINDOW_HEIGHT 1080
 
 // buffer constants
 #define MAX_NUM_PATCH 65536 
