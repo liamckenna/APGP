@@ -1,4 +1,4 @@
-﻿//patch_tess_pass.glsl
+﻿//patch_tess_pass.cs.glsl
 #version 430
 
 precision highp float;
@@ -28,47 +28,36 @@ layout(std430, binding = 1) writeonly buffer PatchBuffer {
 	float patch_tess_levels[ ]; // unsized array allowed at end of buffer 
 };
 
-layout(std430, binding = 2) writeonly buffer DebugBuffer { 
-	vec4 debug_value[ ]; // unsized array allowed at end of buffer 
+layout(std430, binding = 2) writeonly buffer PatchDepthBuffer { 
+	uint patch_depth[ ]; // unsized array allowed at end of buffer 
 };
 
-layout(std430, binding = 4) writeonly buffer LightDebugBuffer { 
-	vec4 light_debug_value[ ]; // unsized array allowed at end of buffer 
+layout(std430, binding = 3) writeonly buffer PatchSpanBuffer { 
+	uvec4 patch_span[ ]; // unsized array allowed at end of buffer 
 };
 
-layout(std430, binding = 3) buffer LightMatrixBuffer {
-    mat4 light_MVPs[];
+layout(std430, binding = 4) buffer LightMVPBuffer {
+    mat4 light_mvps[];
 };
 
-layout(std430, binding = 5) writeonly buffer InShadow {
-	uint in_shadow[];
+layout(std430, binding = 5) buffer LaunchPointBuffer {
+    uint launch_points[];
 };
 
-layout(std430, binding = 6) readonly buffer LaunchPoint {
-	uint launch_points[];
-};
-
-layout(std430, binding = 7) writeonly buffer CurrentDepth {
-	uint depth_value[];
-};
-
-layout(std430, binding = 8) writeonly buffer BufferSpan {
-	uvec4 pixel_span[]; // (min x, max x, min y, max y)
+layout(std430, binding = 6) writeonly buffer DebugBuffer { 
+	vec4 debug[ ]; // unsized array allowed at end of buffer 
 };
 
 uniform int surface_id;
-
-mat4 light_MVP = light_MVPs[surface_id];
+//mat4 light_MVP = light_MVPs[surface_id];
+mat4 light_MVP = light_mvps[surface_id];
 uint launch_point = launch_points[surface_id];
-
-layout(binding = 0, r32ui) uniform uimage2D depth_texture;
 
 uniform int num_vertices;
 uniform float pixel_size;
 uniform mat4 MVP;
 uniform int light_pass;
 uniform ivec2 shadow_res = ivec2(1080, 1080);
-uniform uint shadow_buffer_launch_point;
 
 uniform float slefe_lower_3_3[] = {
 	// base 1
@@ -268,19 +257,6 @@ void slefe_segment_pass(
 	);
 
 	float basis_scale = segment_length * segment_length;
-
-
-	//debugging
-	uint tid = gl_GlobalInvocationID.x;
-	int patch_id = int(tid / NUM_THREAD_PER_PATCH);
-	if (row_maj == 1){
-	
-	}
-	else {
-	
-
-	}
-	
 
     for (int j = 0; j < 2; j++) {
 		add_up_basis(
@@ -498,75 +474,13 @@ void main(void)
 
 			update_tess_level(center_bb_min, center_bb_max, pixel_size, group_patch_id);
 		}
-	}
-
-	barrier();
-
-	if (light_pass == 0) {
-
-		vec3 bb_min, bb_max;
-
-		calculate_bb(final_lower, final_upper, MVP, bb_min, bb_max);
-
-		cube_min[local_thread_id + patch_base_idx] = bb_min;
-		cube_max[local_thread_id + patch_base_idx] = bb_max;
 
 		barrier();
-
-		update_tess_level(bb_min, bb_max, pixel_size, group_patch_id);
 
 		if(local_thread_id == 0) {
 			patch_tess_levels[patch_id] = max(1.0f, local_tess_level[group_patch_id]/10000.0f);
 			check_patch_offscreen(local_thread_id, patch_base_idx, patch_id);
 		}
-
-		barrier();
-
-		if (local_thread_id == 0) {
-			
-			vec3 light_bb_min, light_bb_max;
-			calculate_bb(final_lower, final_upper, light_MVP, light_bb_min, light_bb_max);
-
-			float min_ndc_z = MAX_FLOAT;
-
-			for (int j = 0; j < 8; ++j) {
-			    vec3 p;
-			    p.x = (j & 0x01) != 0 ? light_bb_max.x : light_bb_min.x;
-			    p.y = (j & 0x02) != 0 ? light_bb_max.y : light_bb_min.y;
-			    p.z = (j & 0x04) != 0 ? light_bb_max.z : light_bb_min.z;
-			
-			    min_ndc_z = min(min_ndc_z, p.z);
-			}
-
-			vec2 uv_min = light_bb_min.xy * 0.5 + 0.5;
-			vec2 uv_max = light_bb_max.xy * 0.5 + 0.5;
-
-			ivec2 px_min = ivec2(floor(uv_min * vec2(shadow_res)));
-			ivec2 px_max = ivec2(ceil(uv_max * vec2(shadow_res)));
-
-			px_min = clamp(px_min, ivec2(0), shadow_res - 1);
-			px_max = clamp(px_max, ivec2(0), shadow_res - 1);
-
-			ivec2 px = ivec2((px_min.x + px_max.x) / 2, (px_min.y + px_max.y) / 2);
-			
-			float current_depth = min_ndc_z + 1.0;
-			
-			uint stored = imageLoad(depth_texture, px).r;
-			float stored_depth = uintBitsToFloat(stored);
-
-			float bias = 0.005;
-			int shadow = current_depth - bias > stored_depth ? 1 : 0;
-			in_shadow[patch_id] = shadow;
-			//patch_tess_levels[patch_id] = shadow == 1 ? 64.0 : 1.0;
-			
-
-			debug_value[patch_id].x = px.x;
-			debug_value[patch_id].y = px.y;
-			debug_value[patch_id].z = current_depth;
-			debug_value[patch_id].w = stored_depth;
-
-		}
-
 	} else if (local_thread_id == 0) {
 	
 		vec3 light_bb_min, light_bb_max;
@@ -591,40 +505,23 @@ void main(void)
 
 		px_min = clamp(px_min, ivec2(0), shadow_res - 1);
 		px_max = clamp(px_max, ivec2(0), shadow_res - 1);
-
-		ivec2 px = ivec2((px_min.x + px_max.x) / 2, (px_min.y + px_max.y) / 2);
 		
 		float current_depth = min_ndc_z + 1.0;
 		
-		uint stored = imageLoad(depth_texture, px).r;
-		float stored_depth = uintBitsToFloat(stored);
-
-		float bias = 0.005;
-		int shadow = current_depth - bias > stored_depth ? 1 : 0;
-		in_shadow[launch_point + patch_id] = shadow;
-
-		light_debug_value[patch_id].x = launch_point;
-		light_debug_value[patch_id].y = patch_id;
-		light_debug_value[patch_id].z = launch_point + patch_id;
-		light_debug_value[patch_id].w = shadow;
-		
 		uint depth_bits = floatBitsToUint(current_depth);
 
-		depth_value[patch_id] = depth_bits;
+		patch_depth[launch_point + patch_id] = depth_bits;
 
-		pixel_span[patch_id].x = px_min.x;
-		pixel_span[patch_id].y = px_max.x;
-		pixel_span[patch_id].z = px_min.y;
-		pixel_span[patch_id].w = px_max.y;
+		patch_span[launch_point + patch_id].x = px_min.x;
+		patch_span[launch_point + patch_id].y = px_max.x;
+		patch_span[launch_point + patch_id].z = px_min.y;
+		patch_span[launch_point + patch_id].w = px_max.y;
 
-		
-		for (int y = px_min.y; y <= px_max.y; ++y) {
-			for (int x = px_min.x; x <= px_max.x; ++x) {
-			    ivec2 px = ivec2(x, y);
-				imageAtomicMin(depth_texture, px, depth_bits);
-			}
-		}
-		
+		debug[patch_id].x = 0;
+		debug[patch_id].y = 0;
+		debug[patch_id].z = 0;
+		debug[patch_id].w = 0;
+
 	}	
 
 }

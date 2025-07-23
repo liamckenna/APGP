@@ -50,16 +50,21 @@ Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resou
 		scene_ecs.AddComponent(pokeball_entity, MeshComponent{.mesh_name = "pokeball"}, resource_manager);
 
 
+		
+
+
+		Entity floor_entity = scene_ecs.CreateEntity();
+		scene_ecs.AddComponent(floor_entity, TransformComponent{ .position = glm::vec3(0.f, 3.f, 0.f), .scale = glm::vec3(0.5f)});
+		scene_ecs.AddComponent(floor_entity, SurfaceComponent{ .surface_name = "floor" }, resource_manager);
+
 		Entity surface_entity = scene_ecs.CreateEntity();
 		scene_ecs.AddComponent(surface_entity, TransformComponent{ .position = glm::vec3(8.f, 0.f, 1.f), .scale = glm::vec3(20) });
 		scene_ecs.AddComponent(surface_entity, SurfaceComponent{ .surface_name = "test_surface" }, resource_manager);
 
+		Entity other_floor_entity = scene_ecs.CreateEntity();
+		scene_ecs.AddComponent(other_floor_entity, TransformComponent{ .position = glm::vec3(0.f, 6.f, 0.f), .scale = glm::vec3(0.1f) });
+		scene_ecs.AddComponent(other_floor_entity, SurfaceComponent{ .surface_name = "other_floor" }, resource_manager);
 
-		Entity floor_entity = scene_ecs.CreateEntity();
-		scene_ecs.AddComponent(floor_entity, TransformComponent{ .position = glm::vec3(0.f, 5.f, 0.f), .scale = glm::vec3(0.5f)});
-		scene_ecs.AddComponent(floor_entity, SurfaceComponent{ .surface_name = "floor" }, resource_manager);
-
-		
 		
 		
 

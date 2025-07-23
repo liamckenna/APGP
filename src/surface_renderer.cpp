@@ -8,72 +8,174 @@
 #include <glm/gtx/string_cast.hpp>
 using std::vector;
 
+void SurfaceRenderer::RenderSurface(glm::mat4 model_matrix, glm::mat4 view_matrix, glm::mat4 projection_matrix,
+									glm::vec3 Ka, glm::vec3 Kd, glm::vec3 Ks, GLuint vao, GLuint vbo, GLuint ebo,
+									GLuint patch_buffer, GLuint patch_shadow_buffer, GLuint launch_point_buffer,
+									uint vertex_count, int surface_id, ShaderManager& shader_manager) {
 
+	shader_manager.UseShader("render_pass");
 
-void SurfaceRenderer::renderSurface(Surface* surface, int surface_id,  int CurrentWidth, bool is_first_frame, bool use_compute, bool light_pass,
-	glm::vec3 Ka, glm::vec3 Kd, glm::vec3 Ks, GLuint shadow_buffer, GLuint launch_point_buffer, GLuint depth_texture, glm::mat4 mvp,
-	const glm::mat4& ModelViewMatrix, const glm::mat4& ProjectionMatrix, ShaderManager& shader_manager, bool debug)
-{
-	float pixel_size = 2.0 / CurrentWidth;
+	glm::mat4 model_view_matrix = view_matrix * model_matrix;
+	shader_manager.SetUniform("ModelViewMatrix", model_view_matrix);
+	shader_manager.SetUniform("ProjectionMatrix", projection_matrix);
+	shader_manager.SetUniform("NormalMatrix", glm::inverseTranspose(glm::mat3(model_view_matrix)));
 
-	if (use_compute) {
+	shader_manager.SetUniform("Ka", Ka);
+	shader_manager.SetUniform("Kd", Kd);
+	shader_manager.SetUniform("Ks", Ks);
 
-		updateIPASSTexture_CS(surface->vertices.size(), surface_id, surface->vbo, surface->patch_buffer, 0, mvp, pixel_size, shader_manager, debug, depth_texture);
-		
-	} else
-		updateIPASSTexture(surface, mvp, pixel_size);
+	shader_manager.SetUniform("surface_id", surface_id);
 
-	if (!light_pass) {
-		shader_manager.UseShader("render_pass");
-		shader_manager.SetUniform("ModelViewMatrix", ModelViewMatrix);
-		shader_manager.SetUniform("ProjectionMatrix", ProjectionMatrix);
-		shader_manager.SetUniform("NormalMatrix", glm::inverseTranspose(glm::mat3(ModelViewMatrix)));
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_buffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, patch_buffer);
 
-		shader_manager.SetUniform("Ka", Ka);
-		shader_manager.SetUniform("Ks", Ks);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_shadow_buffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, patch_shadow_buffer);
 
-		if (surface->selected)
-			shader_manager.SetUniform("Kd", glm::vec3(0, 0, 1));
-		else
-			shader_manager.SetUniform("Kd", Kd);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, launch_point_buffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, launch_point_buffer);
 
-		shader_manager.SetUniform("surface_id", surface_id);
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
-		glActiveTexture(GL_TEXTURE5);
-		glBindTexture(GL_TEXTURE_1D, surface->connectivity_texture);
+	glPatchParameteri(GL_PATCH_VERTICES, 16);
+	glDrawElements(GL_PATCHES, vertex_count, GL_UNSIGNED_INT, 0);
+}
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, surface->patch_buffer);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, surface->patch_buffer);
+void SurfaceRenderer::UpdatePatchTessLevels(GLuint vertex_buffer, GLuint patch_buffer, glm::mat4 MVP,
+											int vertex_count, int surface_id, float pixel_size, ShaderManager& shader_manager) {
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, shadow_buffer);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, shadow_buffer);
+	shader_manager.UseShader("patch_tess_pass");
 
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, launch_point_buffer);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, launch_point_buffer);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, vertex_buffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer);
 
-		glBindVertexArray(surface->vao);
-		glBindBuffer(GL_ARRAY_BUFFER, surface->vbo);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, surface->ebo);
-		
-		glPatchParameteri(GL_PATCH_VERTICES, 16);
-		glDrawElements(GL_PATCHES, surface->vertices.size(), GL_UNSIGNED_INT, 0);
-	}
-	debug = false;
-	if (debug) {
-		std::cout << "-- Actual Render Debug --" << std::endl;
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, shadow_buffer);
-		uint* test_values = (uint*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-		for (int i = 0; i < 8; ++i) {
-			std::cout << i << ": " << test_values[i] << "\n";
-		}
-		std::cout << std::endl;
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	}
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_buffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, patch_buffer);
+
+	shader_manager.SetUniform("num_vertices", vertex_count);
+	shader_manager.SetUniform("pixel_size", pixel_size);
+	shader_manager.SetUniform("MVP", MVP);
+	shader_manager.SetUniform("light_pass", 0);
+
+	int groupSize = 32;
+	shader_manager.SetUniform("surface_id", surface_id);
+
+	glDispatchCompute(vertex_count / groupSize + 1, 1, 1);
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 
 }
 
+void SurfaceRenderer::WriteDepthBuffer(GLuint vertex_buffer, GLuint launch_point_buffer, GLuint depth_buffer_texture,
+									GLuint patch_depth_buffer, GLuint patch_span_buffer, GLuint light_mvp_buffer,
+									int vertex_count, int surface_id, float pixel_size, ShaderManager& shader_manager) {
+	
+	shader_manager.UseShader("patch_tess_pass");
 
+	uint patch_count = (vertex_count + 15) / 16;
 
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, vertex_buffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer);
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_depth_buffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, patch_depth_buffer);
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_span_buffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, patch_span_buffer);
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, light_mvp_buffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, light_mvp_buffer);
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, launch_point_buffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, launch_point_buffer);
+
+	GLuint debug_buffer;
+	glGenBuffers(1, &debug_buffer);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, debug_buffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * patch_count, NULL, GL_STATIC_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, debug_buffer);
+
+	shader_manager.SetUniform("num_vertices", vertex_count);
+	shader_manager.SetUniform("pixel_size", pixel_size);
+	shader_manager.SetUniform("light_pass", 1);
+	shader_manager.SetUniform("surface_id", surface_id);
+
+	int groupSize = 32;
+
+	glDispatchCompute(vertex_count / groupSize + 1, 1, 1);
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
+
+	shader_manager.UseShader("patch_depth_buffer");
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_depth_buffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, patch_depth_buffer);
+
+	std::vector<glm::uint> launch_point_values(surface_id + 1);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, launch_point_buffer);
+	glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::uint) * (surface_id + 1), launch_point_values.data());
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, launch_point_buffer);
+	uint launch_point = launch_point_values[surface_id];
+
+	std::vector<glm::uvec4> patch_span_values(launch_point + patch_count);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_span_buffer);
+	glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::uvec4) * (launch_point + patch_count), patch_span_values.data());
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, patch_span_buffer);
+
+	glBindImageTexture(0, depth_buffer_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+
+	shader_manager.SetUniform("access_mode", 0); //0 = WRITE, 1 = READ
+
+	for (uint i = 0; i < patch_count; i++) {
+		glm::uvec4 span = patch_span_values[launch_point + i];
+		uint min_x = span.x, max_x = span.y;
+		uint min_y = span.z, max_y = span.w;
+
+		uint size_x = max_x - min_x + 1;
+		uint size_y = max_y - min_y + 1;
+
+		shader_manager.SetUniform("global_patch_id", static_cast<int>(launch_point + i));
+
+		glDispatchCompute(size_x, size_y, 1);
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
+	}
+}
+
+void SurfaceRenderer::ReadDepthBuffer(GLuint patch_depth_buffer, GLuint patch_span_buffer, GLuint patch_shadow_buffer, 
+									GLuint launch_point_buffer, GLuint depth_buffer_texture, int surface_id,
+									int vertex_count, ShaderManager& shader_manager) {
+
+	shader_manager.UseShader("patch_depth_buffer");
+
+	uint patch_count = (vertex_count + 15) / 16;
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_depth_buffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, patch_depth_buffer);
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_span_buffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, patch_span_buffer);
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, launch_point_buffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, launch_point_buffer);
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_shadow_buffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, patch_shadow_buffer);
+
+	GLuint debug_buffer;
+	glGenBuffers(1, &debug_buffer);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, debug_buffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * patch_count, NULL, GL_STATIC_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, debug_buffer);
+
+	glBindImageTexture(0, depth_buffer_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+
+	shader_manager.SetUniform("access_mode", 1); //0 = WRITE, 1 = READ
+	shader_manager.SetUniform("surface", surface_id);
+
+	glDispatchCompute(patch_count, 1, 1);
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
+
+}
 
 void SurfaceRenderer::updateIPASSTexture(Surface* surface, glm::mat4 MVP, float pixel_size)
 {
@@ -84,138 +186,4 @@ void SurfaceRenderer::updateIPASSTexture(Surface* surface, glm::mat4 MVP, float 
 	int numPatches = 4;
 	std::vector<float> data(numPatches);
 	glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, data.size() * sizeof(float), data.data());
-}
-
-
-void SurfaceRenderer::updateIPASSTexture_CS(int num_vertices, int surface_id, GLuint vbuffer_id, GLuint pbuffer_id, GLuint patch_tess_level_texture_id, const glm::mat4& MVP, float pixel_size, ShaderManager& shader_manager, bool read, GLuint depth_texture)
-{
-	shader_manager.UseShader("patch_tess_pass");
-
-	int patch_count = (num_vertices + 15) / 16;
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, vbuffer_id);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vbuffer_id);
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, pbuffer_id);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, pbuffer_id);
-
-	GLuint dbug_id;
-
-	glGenBuffers(1, &dbug_id);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, dbug_id);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * patch_count, NULL, GL_STATIC_DRAW);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, dbug_id);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, dbug_id);
-
-	glBindImageTexture(0, depth_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
-
-
-	shader_manager.SetUniform("num_vertices", num_vertices);
-	shader_manager.SetUniform("pixel_size", pixel_size);
-	shader_manager.SetUniform("MVP", MVP);
-	shader_manager.SetUniform("light_pass", 0);
-
-	int groupSize = 32;
-	shader_manager.SetUniform("surface_id", surface_id);
-
-	glDispatchCompute(num_vertices / groupSize + 1, 1, 1);
-	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-	
-	bool debug = false;
-	//debug = true;
-
-	if (debug) {
-		std::cout << "-- Render Pass Debug --" << std::endl;
-		if (num_vertices > 16) std::cout << "test_surface: " << std::endl;
-		else std::cout << "floor: " << std::endl;
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, dbug_id);
-		glm::vec4* test_values = (glm::vec4*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-		for (int i = 0; i < patch_count; ++i) {
-			std::cout << "Patch " << i << ":\n";
-			std::cout << "  X:    " << test_values[i].x << "\n";
-			std::cout << "  Y:  " << test_values[i].y << "\n";
-			std::cout << "  Z:    " << test_values[i].z << "\n";
-			std::cout << "  W:    " << test_values[i].w << "\n";
-		}
-		std::cout << std::endl;
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	}
-}
-
-void SurfaceRenderer::iPASSLightPass(int num_vertices, int surface_id, GLuint vbuffer_id, GLuint pbuffer_id, GLuint sbuffer_id, GLuint launch_point_id, GLuint depth_texture, float pixel_size, ShaderManager& shader_manager)
-{
-	
-	shader_manager.UseShader("patch_tess_pass");
-
-	uint patch_count = (num_vertices + 15) / 16;
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, vbuffer_id);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vbuffer_id);
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, pbuffer_id);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, pbuffer_id);
-
-	GLuint dbug_id;
-	glGenBuffers(1, &dbug_id);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, dbug_id);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::vec4) * patch_count, NULL, GL_STATIC_DRAW);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, dbug_id);
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, sbuffer_id);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, sbuffer_id);
-
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, launch_point_id);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, launch_point_id);
-
-	GLuint dvals_id;
-	glGenBuffers(1, &dvals_id);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, dvals_id);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(uint) * patch_count, NULL, GL_STATIC_DRAW);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, dvals_id);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-	GLuint span_id;
-	glGenBuffers(1, &span_id);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, span_id);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::uvec4) * patch_count, NULL, GL_STATIC_DRAW);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, span_id);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-	glBindImageTexture(0, depth_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
-
-	shader_manager.SetUniform("num_vertices", num_vertices);
-	shader_manager.SetUniform("pixel_size", pixel_size);
-	shader_manager.SetUniform("light_pass", 1);
-	shader_manager.SetUniform("surface_id", surface_id);
-
-	int groupSize = 32;
-
-	glDispatchCompute(num_vertices / groupSize + 1, 1, 1);
-	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-	bool debug = false;
-	//debug = true;
-
-	if (debug) {
-		std::cout << "-- Light Pass Debug --" << std::endl;
-		if (num_vertices > 16) std::cout << "test_surface: " << std::endl;
-		else std::cout << "floor: " << std::endl;
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, dbug_id);
-		glm::vec4* test_values = (glm::vec4*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-		for (int i = 0; i < patch_count; ++i) {
-			std::cout << "Patch " << i << ":\n";
-			std::cout << "  X:    " << test_values[i].x << "\n";
-			std::cout << "  Y:    " << test_values[i].y << "\n";
-			std::cout << "  Z:    " << test_values[i].z << "\n";
-			std::cout << "  W:    " << test_values[i].w << "\n";
-		}
-		std::cout << std::endl;
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-	}
-
-
 }

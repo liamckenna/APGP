@@ -24,6 +24,9 @@
     },
     "patch_tess_pass": {
       "compute": "patch_tess_pass.cs.glsl"
+    },
+    "patch_depth_buffer": {
+      "compute": "patch_depth_buffer.cs.glsl"
     }
   },
   "uniforms": {

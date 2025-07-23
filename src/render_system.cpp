@@ -36,7 +36,6 @@ void RenderSystem::Clear() {
 }
 
 void RenderSystem::UpdateProjection(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
-    
     for (auto entity : component_manager.GetEntitiesWithComponent<CameraComponent>()) {
         if (component_manager.HasComponent<PrimaryCameraComponent>(entity)) {
             auto& transform = component_manager.GetComponent<TransformComponent>(entity);
@@ -97,11 +96,14 @@ void RenderSystem::RenderScreenQuad(EntityManager& entity_manager, ComponentMana
 }
 
 void RenderSystem::RenderSurfaceLighting(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
-    
     for (auto entity : component_manager.GetEntitiesWithComponents<DirectionalLightComponent, TransformComponent>()) {
         auto& light_transform = component_manager.GetComponent<TransformComponent>(entity);
         auto& directional_light = component_manager.GetComponent<DirectionalLightComponent>(entity);
         
+        if (is_first_frame) {
+            glGenBuffers(1, &light_mvp_buffer);
+        }
+
         glBindTexture(GL_TEXTURE_2D, directional_light.depth_texture);
         GLuint clearVal = glm::floatBitsToUint(1.0f);
         glClearTexImage(directional_light.depth_texture, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &clearVal);
@@ -138,11 +140,10 @@ void RenderSystem::RenderSurfaceLighting(EntityManager& entity_manager, Componen
             light_mvps.push_back(light_MVP);
         }
 
-        GLuint lightMatrixSSBO;
-        glGenBuffers(1, &lightMatrixSSBO);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, lightMatrixSSBO);
+        
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, light_mvp_buffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, light_mvps.size() * sizeof(glm::mat4), light_mvps.data(), GL_STATIC_DRAW);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, lightMatrixSSBO);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, light_mvp_buffer);
 
     }
     
@@ -208,12 +209,11 @@ void RenderSystem::RenderSurfaceLighting(EntityManager& entity_manager, Componen
                 launch_point_data.data()
             );
             std::cout << "-- LAUNCH POINT DATA --" << std::endl;
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < launch_point_data.size(); i++) {
                 std::cout << i << ": " << launch_point_data[i] << std::endl;
             }
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
         }
-        
 
         int i = 0;
         for (auto entity : component_manager.GetEntitiesWithComponents<SurfaceComponent, TransformComponent>()) {
@@ -225,11 +225,23 @@ void RenderSystem::RenderSurfaceLighting(EntityManager& entity_manager, Componen
                 transform.SetDirection(glm::vec3(0, 1, 0));
             }
 
-            surface_renderer.iPASSLightPass(surface.vertices.size(), i, surface.vbo, directional_light.patch_buffer, directional_light.shadow_buffer, launch_point_buffer, directional_light.depth_texture, 2.0f / 1080, shader_manager);
+            surface_renderer.WriteDepthBuffer(surface.vbo, launch_point_buffer, directional_light.depth_texture,
+                directional_light.patch_depth_buffer, directional_light.patch_span_buffer, light_mvp_buffer,
+                surface.vertices.size(), i, 2.0f / 1080, shader_manager);
+            i++;
+        }
+
+        i = 0;
+        for (auto entity : component_manager.GetEntitiesWithComponents<SurfaceComponent, TransformComponent>()) {
+            auto& transform = component_manager.GetComponent<TransformComponent>(entity);
+            auto& surfaceComp = component_manager.GetComponent<SurfaceComponent>(entity);
+            Surface& surface = resource_manager.GetSurface(surfaceComp.surface_name);
+                
+            surface_renderer.ReadDepthBuffer(directional_light.patch_depth_buffer, directional_light.patch_span_buffer, directional_light.patch_shadow_buffer,
+                launch_point_buffer, directional_light.depth_texture, i, surface.vertices.size(), shader_manager);
             i++;
         }
     }
-
 }
 
 void RenderSystem::RenderSurfaces(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
@@ -238,12 +250,12 @@ void RenderSystem::RenderSurfaces(EntityManager& entity_manager, ComponentManage
     glDisable(GL_CULL_FACE);
     GLuint depth_texture;
 
-    GLuint shadow_buffer;
+    GLuint patch_shadow_buffer;
 
     for (auto entity : component_manager.GetEntitiesWithComponents<DirectionalLightComponent, TransformComponent>()) {
         auto& directional_light = component_manager.GetComponent<DirectionalLightComponent>(entity);
         depth_texture = directional_light.depth_texture;
-        shadow_buffer = directional_light.shadow_buffer;
+        patch_shadow_buffer = directional_light.patch_shadow_buffer;
     }
 
     int i = 0;
@@ -261,12 +273,9 @@ void RenderSystem::RenderSurfaces(EntityManager& entity_manager, ComponentManage
 
         glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
-        bool debug = false;
-        if (surfaceComp.surface_name == "floor") debug = !debug;
-        surface_renderer.renderSurface(&surface, i, 1080, is_first_frame, use_compute, false, 
-            glm::vec3(0.2, 0.2, 0.2), glm::vec3(0.9, 0.8, 0.2), glm::vec3(0.5, 0.5, 0.5), shadow_buffer, launch_point_buffer, depth_texture, MVP,
-            ViewMatrix * ModelMatrix, ProjectionMatrix, shader_manager, debug);
-
+        surface_renderer.UpdatePatchTessLevels(surface.vbo, surface.patch_buffer, MVP, surface.vertices.size(), i, 2.0f / 1080, shader_manager);
+        surface_renderer.RenderSurface(ModelMatrix, ViewMatrix, ProjectionMatrix, glm::vec3(0.2, 0.2, 0.2), glm::vec3(0.9, 0.8, 0.2), glm::vec3(0.5, 0.5, 0.5),
+            surface.vao, surface.vbo, surface.ebo, surface.patch_buffer, patch_shadow_buffer, launch_point_buffer, surface.vertices.size(), i, shader_manager);
         i++;
     }
     is_first_frame = false;

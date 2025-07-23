@@ -57,15 +57,20 @@ public:
 
 	}
 
-	void renderSurface(Surface* surface, int surface_id, int CurrentWidth, bool is_first_frame, bool use_compute, bool light_pass,
-		glm::vec3 Ka, glm::vec3 Kd, glm::vec3 Ks, GLuint shadow_buffer, GLuint launch_point_buffer, GLuint depth_texture, glm::mat4 mvp,
-		const glm::mat4& ModelViewMatrix, const glm::mat4& ProjectionMatrix, ShaderManager& shader_manager, bool debug);
-
-	void iPASSLightPass(int num_vertices, int surface_id, GLuint vbuffer_id, GLuint pbuffer_id, GLuint sbuffer_id, GLuint launch_point_id, GLuint depth_texture, float pixel_size, ShaderManager& shader_manager);
-
+	void WriteDepthBuffer(GLuint vertex_buffer, GLuint launch_point_buffer, GLuint depth_buffer_texture,
+						GLuint patch_depth_buffer, GLuint patch_span_buffer, GLuint light_mvp_buffer,
+						int vertex_count, int surface_id, float pixel_size, ShaderManager& shader_manager);
+	void ReadDepthBuffer(GLuint patch_depth_buffer, GLuint patch_span_buffer, GLuint patch_shadow_buffer,
+						GLuint launch_point_buffer, GLuint depth_buffer_texture, int surface_id,
+						int vertex_count, ShaderManager& shader_manager);
+	void UpdatePatchTessLevels(GLuint vertex_buffer, GLuint patch_buffer, glm::mat4 MVP,
+							int vertex_count, int surface_id, float pixel_size, ShaderManager& shader_manager);
+	void RenderSurface(glm::mat4 model_matrix, glm::mat4 view_matrix, glm::mat4 projection_matrix,
+						glm::vec3 Ka, glm::vec3 Kd, glm::vec3 Ks, GLuint vao, GLuint vbo, GLuint ebo,
+						GLuint patch_buffer, GLuint patch_shadow_buffer, GLuint launch_point_buffer,
+						uint vertex_count, int surface_id, ShaderManager& shader_manager);
 private:
 
 	void updateIPASSTexture(Surface* surface, glm::mat4 MVP, float pixel_size);
-	void updateIPASSTexture_CS(int num_vertices, int surface_id, GLuint vbuffer_id, GLuint pbuffer_id, GLuint patch_tess_level_texture_id, const glm::mat4& MVP, float pixel_size, ShaderManager& shader_manager, bool read, GLuint depth_texture);
 
 };

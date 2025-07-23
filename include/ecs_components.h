@@ -104,18 +104,15 @@ struct LightComponent {
 
 struct DirectionalLightComponent {
 
-    GLuint patch_buffer;
+    GLuint patch_shadow_buffer;
 
-    GLuint shadow_buffer;
+    GLuint patch_depth_buffer;
+    
+    GLuint patch_span_buffer;
 
     GLuint depth_texture;
 
     DirectionalLightComponent() {
-
-        glGenBuffers(1, &patch_buffer);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_buffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(PatchBuffer), NULL, GL_STATIC_DRAW);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
         glGenTextures(1, &depth_texture);
         glBindTexture(GL_TEXTURE_2D, depth_texture);
@@ -130,9 +127,19 @@ struct DirectionalLightComponent {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-        glGenBuffers(1, &shadow_buffer);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, shadow_buffer);
+        glGenBuffers(1, &patch_shadow_buffer);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_shadow_buffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(uint) * 65536, NULL, GL_STATIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        glGenBuffers(1, &patch_depth_buffer);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_depth_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(uint) * 65536, NULL, GL_STATIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        glGenBuffers(1, &patch_span_buffer);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_span_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::uvec4) * 65536, NULL, GL_STATIC_DRAW);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     }
