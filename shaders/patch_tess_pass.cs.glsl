@@ -12,12 +12,12 @@ precision highp float;
 layout( local_size_x = 32,  local_size_y = 1, local_size_z = 1 ) in;
 
 struct Vertex { 
-	vec3 position;	// position
-	float pad0;		// pad after vec3
-	vec2 texcoord;	// texcoord
-	vec2 pad1;      // pad after vec2
-	vec3 normal;	// normal
-	float pad2;     // pad after vec3
+	vec3 position;	//position
+	float pad0;		//pad after vec3
+	vec2 texcoord;	//texcoord
+	vec2 pad1;      //pad after vec2
+	vec3 normal;	//normal
+	float pad2;     //pad after vec3
 };
 
 layout(std430, binding = 0) readonly buffer VertexBuffer {
@@ -25,33 +25,16 @@ layout(std430, binding = 0) readonly buffer VertexBuffer {
 };
 
 layout(std430, binding = 1) writeonly buffer PatchBuffer { 
-	float patch_tess_levels[ ]; // unsized array allowed at end of buffer 
+	float patch_tess_levels[];
 };
 
-layout(std430, binding = 2) writeonly buffer PatchDepthBuffer { 
-	uint patch_depth[ ]; // unsized array allowed at end of buffer 
+layout(std430, binding = 2) buffer IndicesBuffer {
+	int indices[];
 };
 
-layout(std430, binding = 3) writeonly buffer PatchSpanBuffer { 
-	uvec4 patch_span[ ]; // unsized array allowed at end of buffer 
+layout(std430, binding = 3) writeonly buffer DebugBuffer { 
+	vec4 debug[];
 };
-
-layout(std430, binding = 4) buffer LightMVPBuffer {
-    mat4 light_mvps[];
-};
-
-layout(std430, binding = 5) buffer LaunchPointBuffer {
-    uint launch_points[];
-};
-
-layout(std430, binding = 6) writeonly buffer DebugBuffer { 
-	vec4 debug[ ]; // unsized array allowed at end of buffer 
-};
-
-uniform int surface_id;
-//mat4 light_MVP = light_MVPs[surface_id];
-mat4 light_MVP = light_mvps[surface_id];
-uint launch_point = launch_points[surface_id];
 
 uniform int num_vertices;
 uniform float pixel_size;
@@ -116,7 +99,6 @@ shared int local_tess_level[NUM_PATCH_PER_GROUP];
 shared int local_panel_width_upper[3*NUM_PATCH_PER_GROUP];
 shared int local_panel_width_lower[3*NUM_PATCH_PER_GROUP];
 
-
 const float MAX_FLOAT = 10000.0f;
 
 void add_up_basis(inout vec4 seg_lower, inout vec4 seg_upper, in vec4 d2b, in float lcoeff, in float ucoeff)
@@ -159,10 +141,8 @@ void add_up_basis(inout vec4 seg_lower, inout vec4 seg_upper, in vec4 d2b, in fl
 // ouput: bounding box in screen space
 void calculate_bb(in vec4 sb_min, in vec4 sb_max, in mat4 mvp_matrix, out vec3 cube_min, out vec3 cube_max)
 {
-
 	cube_min = vec3(MAX_FLOAT, MAX_FLOAT, MAX_FLOAT);
 	cube_max = vec3(-MAX_FLOAT, -MAX_FLOAT, -MAX_FLOAT);
-
 	
 	vec3 p;
 	
@@ -182,17 +162,16 @@ void calculate_bb(in vec4 sb_min, in vec4 sb_max, in mat4 mvp_matrix, out vec3 c
 		cube_max = max(cube_max, ntp);
 	}
 
-
-	if (light_pass == 1 || mvp_matrix == light_MVP) {
+	if (light_pass == 1) { //only relevant for light pass
 		vec3 extent = cube_max - cube_min;
 		uint tid = gl_GlobalInvocationID.x;
 		int patch_id = int(tid / NUM_THREAD_PER_PATCH);
 		int group_patch_id = int(patch_id % NUM_PATCH_PER_GROUP);
 		int patch_base_idx = group_patch_id * NUM_THREAD_PER_PATCH;
-		if (all(lessThanEqual(abs(extent), vec3(1e-6)))) {
+		if (all(lessThanEqual(abs(extent), vec3(1e-6)))) { //base case if curvature is entirely absent (derivs are 0), still need a BB
 		    cube_min = vec3(MAX_FLOAT);
 		    cube_max = vec3(-MAX_FLOAT);
-		
+			
 		    for (int i = 0; i < 16; ++i) {
 		        vec4 tp = mvp_matrix * cpts[patch_base_idx + i];
 		        vec3 ntp = (tp / tp.w).xyz;
@@ -201,8 +180,6 @@ void calculate_bb(in vec4 sb_min, in vec4 sb_max, in mat4 mvp_matrix, out vec3 c
 		    }
 		}
 	}
-
-	
 }
 
 vec4 cal_second_deriv (in vec4 src[GROUP_SIZE], int base_idx, int major_idx, int minor_idx, int row_maj)
@@ -279,10 +256,7 @@ void update_tess_level(vec3 bb_min, vec3 bb_max, float pixel_size, int group_pat
 	atomicMax(local_tess_level[group_patch_id], int(10000.0 * tess));
 }
 
-void check_patch_offscreen (
-    int local_thread_id,
-    int patch_base_idx,
-    int patch_id)
+void check_patch_offscreen (int local_thread_id, int patch_base_idx, int patch_id)
 {
     if (local_thread_id != 0) return;
 
@@ -302,13 +276,12 @@ void check_patch_offscreen (
 
     if (offscreen)
     {
-        patch_tess_levels[patch_id] = 0.0; // force minimum tess
+        patch_tess_levels[patch_id] = 0.0; //force minimum tess
     }
 }
 
 void main(void)
 {
-	
 	uint tid = gl_GlobalInvocationID.x;
 	
 	int patch_id = int(tid / NUM_THREAD_PER_PATCH);
@@ -319,14 +292,13 @@ void main(void)
 	int row = local_thread_id / 4;
 	int column = local_thread_id % 4;
 
-	// convert raw data to ctrl point info
-	vec3 position = vec3(
+	vec3 position = vec3( //convert raw data to ctrl point info
 	    raw_data[tid * 8 + 0],
 	    raw_data[tid * 8 + 1],
 	    raw_data[tid * 8 + 2]
 	);
 	
-	// optional if needed
+	//optional if needed
 	/*
 	vec2 texcoord = vec2(
 	    raw_data[tid * 8 + 3],
@@ -339,10 +311,6 @@ void main(void)
 	    raw_data[tid * 8 + 7]
 	);
 	*/
-
-
-
-
 	
 	vec4 seg_lower, seg_upper;
 	vec4 final_lower, final_upper;
@@ -362,74 +330,73 @@ void main(void)
 	int cpu_style_idx = patch_vertex_base + row * 4 + column;
 	cpts[local_thread_id + patch_base_idx] = vec4(position, 1.0);
 
+	barrier();
+
+	if (light_pass == 0)
+	{
+		// calc 2nd derivative on u direction
+		// input vertices are row major
+
+		bool do_deriv = column < 2;
+		float u = float(column) / 3.0f;
+		slefe_segment_pass(
+		    cpts,
+		    patch_base_idx,
+		    row, column,
+		    1,                              //row-major
+		    float(column) / 3.0f,
+		    D2b,
+		    column < 2,
+		    row * 4,
+		    lower[local_thread_id + patch_base_idx],
+		    upper[local_thread_id + patch_base_idx]
+		);
+
+		barrier();
+
+		// calculate upper slefe of upper
+		// calc 2nd derivative on u direction on v direction
+
+		bool do_deriv_v = row < 2;
+		float v = float(row) / 3.0f;
+		
+		slefe_segment_pass(
+		    lower,
+		    patch_base_idx,
+		    row, column,
+		    0,                              //column-major
+		    float(row) / 3.0f,
+		    D2b,
+		    row < 2,
+		    column,
+		    final_lower,
+		    final_upper
+		);
+
+		/* 
+		* note that for bivariate the bound is bi-linear instead of linear
+		* the width of the flat enclosure (triangle) of bi-linear bound 
+		* should also be taken into account
+		*/
+
+		// write the upper and lower of each thread(vertex) 
+		// back into the upper/lower array, which is used later
+		// when computing tile center vertex. This is not necessary if 
+		// only estimate width at tile corner.
+
+		upper[local_thread_id + patch_base_idx] = final_upper;
+		lower[local_thread_id + patch_base_idx] = final_lower;
+
+		barrier();
+
 	
-
-	barrier();
-
-	// calc 2nd derivative on u direction
-	// input vertices are row major
-
-	bool do_deriv = column < 2;
-	float u = float(column) / 3.0f;
-	slefe_segment_pass(
-	    cpts,
-	    patch_base_idx,
-	    row, column,
-	    1,                              // row-major
-	    float(column) / 3.0f,
-	    D2b,
-	    column < 2,
-	    row * 4,
-	    lower[local_thread_id + patch_base_idx],
-	    upper[local_thread_id + patch_base_idx]
-	);
-
-	barrier();
-
-
-	// calculate upper slefe of upper
-	// calc 2nd derivative on u direction on v direction
-
-	bool do_deriv_v = row < 2;
-	float v = float(row) / 3.0f;
-	
-	slefe_segment_pass(
-	    lower,
-	    patch_base_idx,
-	    row, column,
-	    0,                              // column-major
-	    float(row) / 3.0f,
-	    D2b,
-	    row < 2,
-	    column,
-	    final_lower,
-	    final_upper
-	);
-
-	/* 
-	* note that for bivariate the bound is bi-linear instead of linear
-	* the width of the flat enclosure (triangle) of bi-linear bound 
-	* should also be taken into account
-	*/
-
-
-
-	// write the upper and lower of each thread(vertex) 
-	// back into the upper/lower array, which is used later
-	// when computing tile center vertex. This is not necessary if 
-	// only estimate width at tile coner.
-
-	upper[local_thread_id + patch_base_idx] = final_upper;
-	lower[local_thread_id + patch_base_idx] = final_lower;
-
-	barrier();
-	if (light_pass == 0) {
 
 		float max_upper_panel_width[3] = {0,0,0};
 		float max_lower_panel_width[3] = {0,0,0};
 
 		vec4 tile_upper[2];
 		vec4 tile_lower[2];
+
 		if(local_thread_id < 9) // for each tile
 		{
 
@@ -455,22 +422,40 @@ void main(void)
 		     *
 		     * This is determined purely by the MVP matrix.
 		     */ 
+
 			int x_range, y_range, z_range;
-			if (light_pass == 0) {
-				x_range = MVP[0][2] < 0 ? 1 : 0;
-				y_range = MVP[1][2] < 0 ? 1 : 0;
-				z_range = MVP[2][2] < 0 ? 1 : 0;
-			} else {
-				x_range = light_MVP[0][2] < 0 ? 1 : 0;
-				y_range = light_MVP[1][2] < 0 ? 1 : 0;
-				z_range = light_MVP[2][2] < 0 ? 1 : 0;
-			}
+			x_range = MVP[0][2] < 0 ? 1 : 0;
+			y_range = MVP[1][2] < 0 ? 1 : 0;
+			z_range = MVP[2][2] < 0 ? 1 : 0;
 
 		    vec4 center_upper = vec4(tile_upper[x_range].x, tile_upper[y_range].y, tile_upper[z_range].z, 0.0);
 			vec4 center_lower = vec4(tile_lower[x_range].x, tile_lower[y_range].y, tile_lower[z_range].z, 0.0);
 
 			vec3 center_bb_min, center_bb_max;
 			calculate_bb(center_lower, center_upper, MVP, center_bb_min, center_bb_max);
+
+			for (int j = 0; j < 8; ++j) {
+				vec3 p;
+				p.x = (j & 0x01) != 0 ? center_bb_max.x : center_bb_min.x;
+				p.y = (j & 0x02) != 0 ? center_bb_max.y : center_bb_min.y;
+				p.z = (j & 0x04) != 0 ? center_bb_max.z : center_bb_min.z;
+			}
+
+			vec2 uv_min = center_bb_min.xy * 0.5 + 0.5;
+			vec2 uv_max = center_bb_max.xy * 0.5 + 0.5;
+			
+			if (local_thread_id == 0) {
+				
+				vec3 error_p = center_bb_max - center_bb_min;
+				float max_error = max(error_p.x, max(error_p.y, error_p.z));
+				float tess = min(max(3.0 * sqrt(2.0 * max_error / pixel_size), 1.0), 64.0);
+				atomicMax(local_tess_level[group_patch_id], int(10000.0 * tess));
+				
+				debug[patch_id].x = 5;
+				debug[patch_id].y = 5;
+				debug[patch_id].z = 5;
+				debug[patch_id].w = 5;
+			}
 
 			update_tess_level(center_bb_min, center_bb_max, pixel_size, group_patch_id);
 		}
@@ -481,48 +466,20 @@ void main(void)
 			patch_tess_levels[patch_id] = max(1.0f, local_tess_level[group_patch_id]/10000.0f);
 			check_patch_offscreen(local_thread_id, patch_base_idx, patch_id);
 		}
-	} else if (local_thread_id == 0) {
-	
-		vec3 light_bb_min, light_bb_max;
-		calculate_bb(final_lower, final_upper, light_MVP, light_bb_min, light_bb_max);
 
-		float min_ndc_z = MAX_FLOAT;
+	} else if (local_thread_id < 9) {
 
-		for (int j = 0; j < 8; ++j) {
-		    vec3 p;
-		    p.x = (j & 0x01) != 0 ? light_bb_max.x : light_bb_min.x;
-		    p.y = (j & 0x02) != 0 ? light_bb_max.y : light_bb_min.y;
-		    p.z = (j & 0x04) != 0 ? light_bb_max.z : light_bb_min.z;
-		
-		    min_ndc_z = min(min_ndc_z, p.z);
-		}
+		int i1 = tile_indices[local_thread_id][0];
+		int i2 = tile_indices[local_thread_id][1];
+		int i3 = tile_indices[local_thread_id][2];
+		int i4 = tile_indices[local_thread_id][3];
 
-		vec2 uv_min = light_bb_min.xy * 0.5 + 0.5;
-		vec2 uv_max = light_bb_max.xy * 0.5 + 0.5;
+		indices[(patch_id * 54) + (local_thread_id * 6) + 0] = (patch_id * 16) + i1;
+		indices[(patch_id * 54) + (local_thread_id * 6) + 1] = (patch_id * 16) + i2;
+		indices[(patch_id * 54) + (local_thread_id * 6) + 2] = (patch_id * 16) + i3;
+		indices[(patch_id * 54) + (local_thread_id * 6) + 3] = (patch_id * 16) + i3;
+		indices[(patch_id * 54) + (local_thread_id * 6) + 4] = (patch_id * 16) + i2;
+		indices[(patch_id * 54) + (local_thread_id * 6) + 5] = (patch_id * 16) + i4;
 
-		ivec2 px_min = ivec2(floor(uv_min * vec2(shadow_res)));
-		ivec2 px_max = ivec2(ceil(uv_max * vec2(shadow_res)));
-
-		px_min = clamp(px_min, ivec2(0), shadow_res - 1);
-		px_max = clamp(px_max, ivec2(0), shadow_res - 1);
-		
-		float current_depth = min_ndc_z + 1.0;
-		
-		uint depth_bits = floatBitsToUint(current_depth);
-
-		patch_depth[launch_point + patch_id] = depth_bits;
-
-		patch_span[launch_point + patch_id].x = px_min.x;
-		patch_span[launch_point + patch_id].y = px_max.x;
-		patch_span[launch_point + patch_id].z = px_min.y;
-		patch_span[launch_point + patch_id].w = px_max.y;
-
-		debug[patch_id].x = 0;
-		debug[patch_id].y = 0;
-		debug[patch_id].z = 0;
-		debug[patch_id].w = 0;
-
-	}	
-
+	}
 }
-

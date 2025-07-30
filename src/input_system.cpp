@@ -19,18 +19,25 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	TransformComponent& transform = component_manager.GetComponent<TransformComponent>(camera);
 	Entity surface = component_manager.GetEntitiesWithComponent<SurfaceComponent>()[0];
 	TransformComponent* surface_transform = nullptr;
+	TransformComponent* other_floor_transform = nullptr;
+
 	for (auto entity : component_manager.GetEntitiesWithComponent<SurfaceComponent>()) {
 		if (component_manager.GetComponent<SurfaceComponent>(entity).surface_name == "test_surface") {
 			surface_transform = &component_manager.GetComponent<TransformComponent>(entity);
 		}
+		if (component_manager.GetComponent<SurfaceComponent>(entity).surface_name == "other_floor") {
+			other_floor_transform = &component_manager.GetComponent<TransformComponent>(entity);
+		}
 	}
 	
+	//surface_transform->SetDirection(glm::vec3(0, 0, 1));
 
 	byte esc = input_manager.GetKeyState(GLFW_KEY_ESCAPE);
 	byte space = input_manager.GetKeyState(GLFW_KEY_SPACE);
 	byte tab = input_manager.GetKeyState(GLFW_KEY_TAB);
 	byte lshift = input_manager.GetKeyState(GLFW_KEY_LEFT_SHIFT);
 	byte lctrl = input_manager.GetKeyState(GLFW_KEY_LEFT_CONTROL);
+	byte caps_lock = input_manager.GetKeyState(GLFW_KEY_CAPS_LOCK);
 
 	byte up = input_manager.GetKeyState(GLFW_KEY_UP);
 	byte down = input_manager.GetKeyState(GLFW_KEY_DOWN);
@@ -150,7 +157,9 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	case PRESSED:
 		break;
 	case DOWN:
-		surface_transform->TranslateUp(3.0, delta_time);
+		if (lshift == DOWN) other_floor_transform->TranslateUp(3.0, delta_time);
+		else if (caps_lock == DOWN) surface_transform->TranslateForward(3.0, delta_time);
+		else surface_transform->TranslateUp(3.0, delta_time);
 		break;
 	case RELEASED:
 		break;
@@ -161,7 +170,9 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	case PRESSED:
 		break;
 	case DOWN:
-		surface_transform->TranslateDown(3.0, delta_time);
+		if (lshift == DOWN) other_floor_transform->TranslateDown(3.0, delta_time);
+		else if (caps_lock == DOWN) surface_transform->TranslateBackward(3.0, delta_time);
+		else surface_transform->TranslateDown(3.0, delta_time);
 		break;
 	case RELEASED:
 		break;
@@ -172,7 +183,8 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	case PRESSED:
 		break;
 	case DOWN:
-		surface_transform->TranslateLeft(3.0, delta_time);
+		if (lshift == DOWN) other_floor_transform->TranslateLeft(3.0, delta_time);
+		else surface_transform->TranslateLeft(3.0, delta_time);
 		break;
 	case RELEASED:
 		break;
@@ -183,7 +195,8 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	case PRESSED:
 		break;
 	case DOWN:
-		surface_transform->TranslateRight(3.0, delta_time);
+		if (lshift == DOWN) other_floor_transform->TranslateRight(3.0, delta_time);
+		else surface_transform->TranslateRight(3.0, delta_time);
 		break;
 	case RELEASED:
 		break;

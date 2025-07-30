@@ -5,6 +5,10 @@
 
 // input data
 
+layout(std430, binding = 3) buffer LightMVPBuffer {
+    mat4 light_mvps[];
+};
+
 layout(std430, binding = 5) readonly buffer InShadow {
 	uint in_shadow[];
 };
@@ -13,8 +17,10 @@ layout(std430, binding = 6) readonly buffer LaunchPoint {
 	uint launch_points[];
 };
 
+layout(r32ui, binding = 0) uniform uimage2D depth_texture;
+
 uniform int surface_id;
-uint launch_point = launch_points[surface_id];
+//uint launch_point = launch_points[surface_id];
 
 in vec4 tePosition;
 in vec4 teDu;
@@ -23,6 +29,8 @@ flat in uint tePatch;
 
 uniform mat4 ProjectionMatrix;
 uniform mat3 NormalMatrix;
+
+uniform mat4 ModelViewInverse;
 
 // lighting
 uniform vec4 light_pos = vec4(0,10,0,1.0);
@@ -40,7 +48,25 @@ uniform float Shininess = 50;
 // Ouput data
 layout(location = 0) out vec4 outColor;
 
+bool inShadow (mat4 light_mvp) {
+    vec4 worldPos = ModelViewInverse * tePosition;
+    vec4 light_clip_pos = light_mvps[surface_id] * worldPos;
+    vec3 light_ndc = light_clip_pos.xyz / light_clip_pos.w;
+    vec2 shadow_uv = light_ndc.xy * 0.5 + 0.5;
+    shadow_uv = clamp(shadow_uv, 0.0, 1.0);
 
+    ivec2 texSize = imageSize(depth_texture);
+    ivec2 texel_coord = ivec2(shadow_uv * texSize);
+    texel_coord = clamp(texel_coord, ivec2(0), texSize - 1);
+
+    uint raw_depth = imageLoad(depth_texture, texel_coord).r;
+    float closestDepth = uintBitsToFloat(raw_depth);
+    float currentDepth = light_ndc.z * 0.5 + 0.5;
+    float bias = 0.0025;
+    bool shadow = currentDepth - bias > closestDepth;
+    return shadow;
+}
+ 
 vec3 phongModelDiffAndSpec(vec3 in_normal, vec3 kd)
 {
     vec3 n = normalize(in_normal);
@@ -55,28 +81,20 @@ vec3 phongModelDiffAndSpec(vec3 in_normal, vec3 kd)
     if( sDotN > 0.0 )
         spec = light_intensity * Ks *
             pow( max( dot(r,v), 0.0 ), Shininess );
-
-    bool shadow = in_shadow[launch_point + tePatch] == 1;
     
-    if (shadow) {
+    if (inShadow(light_mvps[surface_id])) {
         diffuse = vec3(0);
         spec = vec3(0);
     }
 
     return diffuse + spec + Ka;
 }
-
-
  
-void main(){
-
-	//outColor = gColor;
-
+void main()
+{
 	vec3 tan_v = teDv.xyz;
 	vec3 tan_u = teDu.xyz;
 	vec3 normal = NormalMatrix * normalize(cross(tan_v,tan_u));
 
 	outColor = vec4(phongModelDiffAndSpec(normal, Kd), 1.0);	
-    //if (tePatch == 0) outColor = vec4(1.0, 0.0, 0.0, 1.0);
-    //if (tePatch == 1) outColor = vec4(0.0, 1.0, 0.0, 1.0);
 }

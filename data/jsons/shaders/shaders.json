@@ -25,8 +25,13 @@
     "patch_tess_pass": {
       "compute": "patch_tess_pass.cs.glsl"
     },
-    "patch_depth_buffer": {
-      "compute": "patch_depth_buffer.cs.glsl"
+    "patch_shadow": {
+      "vertex": "patch_shadow.vs.glsl",
+      "fragment": "patch_shadow.fs.glsl"
+    },
+    "visualize_tiles": {
+      "vertex": "visualize_tiles.vs.glsl",
+      "fragment": "visualize_tiles.fs.glsl"
     }
   },
   "uniforms": {

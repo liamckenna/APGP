@@ -58,19 +58,16 @@ public:
 	}
 
 	void WriteDepthBuffer(GLuint vertex_buffer, GLuint launch_point_buffer, GLuint depth_buffer_texture,
-						GLuint patch_depth_buffer, GLuint patch_span_buffer, GLuint light_mvp_buffer,
+						GLuint light_mvp_buffer, GLuint vao, GLuint ebo, glm::mat4 mvp,
 						int vertex_count, int surface_id, float pixel_size, ShaderManager& shader_manager);
-	void ReadDepthBuffer(GLuint patch_depth_buffer, GLuint patch_span_buffer, GLuint patch_shadow_buffer,
-						GLuint launch_point_buffer, GLuint depth_buffer_texture, int surface_id,
-						int vertex_count, ShaderManager& shader_manager);
 	void UpdatePatchTessLevels(GLuint vertex_buffer, GLuint patch_buffer, glm::mat4 MVP,
 							int vertex_count, int surface_id, float pixel_size, ShaderManager& shader_manager);
 	void RenderSurface(glm::mat4 model_matrix, glm::mat4 view_matrix, glm::mat4 projection_matrix,
 						glm::vec3 Ka, glm::vec3 Kd, glm::vec3 Ks, GLuint vao, GLuint vbo, GLuint ebo,
-						GLuint patch_buffer, GLuint patch_shadow_buffer, GLuint launch_point_buffer,
-						uint vertex_count, int surface_id, ShaderManager& shader_manager);
+						GLuint patch_buffer, uint vertex_count, int surface_id, ShaderManager& shader_manager, 
+						GLuint depth_buffer_texture, GLuint light_mvp_buffer);
 private:
 
-	void updateIPASSTexture(Surface* surface, glm::mat4 MVP, float pixel_size);
+	void UpdateTessNonCompute(Surface* surface, glm::mat4 MVP, float pixel_size);
 
 };
