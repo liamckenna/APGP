@@ -11,7 +11,6 @@ GraphicsConfig::GraphicsConfig() {
 
 GraphicsConfig::GraphicsConfig(const std::string& filepath) {
 
-
     nlohmann::json settings = ReadJsonFromFile(filepath);
 
     if (settings.contains("gl")) OpenGLConfig(settings["gl"]);

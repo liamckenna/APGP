@@ -27,7 +27,6 @@
 #undef GLM_ENABLE_EXPERIMENTAL
 #include "callbacks.h"
 
-
 int main() {
 	
 	//----------		LOAD CALL			----------//
