@@ -9,14 +9,6 @@ layout(std430, binding = 3) buffer LightMVPBuffer {
     mat4 light_mvps[];
 };
 
-layout(std430, binding = 5) readonly buffer InShadow {
-	uint in_shadow[];
-};
-
-layout(std430, binding = 6) readonly buffer LaunchPoint {
-	uint launch_points[];
-};
-
 layout(r32ui, binding = 0) uniform uimage2D depth_texture;
 
 uniform int surface_id;
