@@ -12,7 +12,6 @@ layout(std430, binding = 3) buffer LightMVPBuffer {
 layout(r32ui, binding = 0) uniform uimage2D depth_texture;
 
 uniform int surface_id;
-//uint launch_point = launch_points[surface_id];
 
 in vec4 tePosition;
 in vec4 teDu;
