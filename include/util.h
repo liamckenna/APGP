@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <typeindex>
 #include <glm/glm.hpp>
+#include <random>
 
 typedef unsigned int uint;
 
@@ -120,4 +121,13 @@ inline int FetchGLFWenum(std::string key) {
     ToLowerCase(key);
     auto it = GLFW_ENUMS.find(key);
     return (it != GLFW_ENUMS.end()) ? it->second : GLFW_INVALID_ENUM;
+}
+
+inline int RandomInt(int min, int max) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distrib(min, max);
+
+    int random_number = distrib(gen);
+    return random_number;
 }

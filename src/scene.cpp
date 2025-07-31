@@ -2,14 +2,16 @@
 #include "mesh.h"
 #include "material.h"
 #include "texture.h"
-#include <iostream>
-#include <cctype>
 #include "program.h"
 #include "ecs_manager.h"
 #include "light_system.h"
 #include "render_system.h"
 #include "input_system.h"
 #include "window.h"
+#include "util.h"
+#include <iostream>
+#include <cctype>
+
 
 Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resource_manager(), program(program) {
 
@@ -51,13 +53,15 @@ Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resou
 	scene_ecs.AddComponent(floor_entity, TransformComponent{ .position = glm::vec3(0.f, 0.f, 0.f), .scale = glm::vec3(0.5f) });
 	scene_ecs.AddComponent(floor_entity, SurfaceComponent{ .surface_name = "floor" }, resource_manager);
 
+	
+
 	//if you wanted to stress test
-	//for (int i = 0; i < 100; i++) {
-	//	std::string name = "surface_" + std::to_string(i);
-	//	Entity e = scene_ecs.CreateEntity();
-	//	scene_ecs.AddComponent(e, TransformComponent{ .position = glm::vec3(i / 20.f, i/20.f, 0), .scale = glm::vec3(20) });
-	//	scene_ecs.AddComponent(e, SurfaceComponent{ .surface_name = "test_surface" }, resource_manager);
-	//}
+	for (int i = 0; i < 10; i++) {
+		std::string name = "surface_" + std::to_string(i);
+		Entity e = scene_ecs.CreateEntity();
+		scene_ecs.AddComponent(e, TransformComponent{ .position = glm::vec3(RandomInt(-8, 8), RandomInt(0, 9), RandomInt(-8, 8)), .scale = glm::vec3(20)});
+		scene_ecs.AddComponent(e, SurfaceComponent{ .surface_name = "test_surface" }, resource_manager);
+	}
 	
 	std::cout << "scene generation completed" << std::endl;
 }

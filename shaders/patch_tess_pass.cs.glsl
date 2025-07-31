@@ -212,13 +212,12 @@ void slefe_segment_pass(
     out vec4 seg_upper
 )
 {
-    if (compute_deriv) {
-        D2b[col + row * 4 + patch_base_idx] = cal_second_deriv(src, patch_base_idx, row, col, row_maj);
-    }
+    if (compute_deriv) D2b[col + row * 4 + patch_base_idx] = cal_second_deriv(src, patch_base_idx, row, col, row_maj);
 
     barrier();
 
-    vec4 seg = mix(
+    vec4 seg = mix
+	(
         src[row_maj == 1 ? row * 4 + patch_base_idx : col + patch_base_idx],
         src[row_maj == 1 ? row * 4 + 3 + patch_base_idx : row * 4 + col + patch_base_idx],
         interp
@@ -227,15 +226,18 @@ void slefe_segment_pass(
     vec4 segment_upper = seg;
     vec4 segment_lower = seg;
 
-	float segment_length = length(
+	float segment_length = length
+	(
 	    src[row_maj == 1 ? row * 4 + 3 + patch_base_idx : row * 4 + col + patch_base_idx].xyz -
 	    src[row_maj == 1 ? row * 4 + patch_base_idx : col + patch_base_idx].xyz
 	);
 
 	float basis_scale = segment_length * segment_length;
 
-    for (int j = 0; j < 2; j++) {
-		add_up_basis(
+    for (int j = 0; j < 2; j++) 
+	{
+		add_up_basis
+		(
 		    segment_lower, segment_upper,
 		    D2b[d2b_offset + j * (row_maj == 1 ? 1 : 4) + patch_base_idx] * basis_scale,
 		    slefe_lower_3_3[col + 4 * j],
@@ -245,14 +247,6 @@ void slefe_segment_pass(
 
     seg_lower = segment_lower;
 	seg_upper = segment_upper;
-}
-
-void update_tess_level(vec3 bb_min, vec3 bb_max, float pixel_size, int group_patch_id)
-{
-	vec3 error_p = bb_max - bb_min;
-	float max_error = max(error_p.x, max(error_p.y, error_p.z));
-	float tess = min(max(3.0 * sqrt(2.0 * max_error / pixel_size), 1.0), 64.0);
-	atomicMax(local_tess_level[group_patch_id], int(10000.0 * tess));
 }
 
 void check_patch_offscreen (int local_thread_id, int patch_base_idx, int patch_id)
@@ -297,20 +291,6 @@ void main(void)
 	    raw_data[tid * 8 + 2]
 	);
 	
-	//optional if needed
-	/*
-	vec2 texcoord = vec2(
-	    raw_data[tid * 8 + 3],
-	    raw_data[tid * 8 + 4]
-	);
-	
-	vec3 normal = vec3(
-	    raw_data[tid * 8 + 5],
-	    raw_data[tid * 8 + 6],
-	    raw_data[tid * 8 + 7]
-	);
-	*/
-	
 	vec4 seg_lower, seg_upper;
 	vec4 final_lower, final_upper;
 	vec4 extra_lower, extra_upper;
@@ -338,7 +318,9 @@ void main(void)
 
 		bool do_deriv = column < 2;
 		float u = float(column) / 3.0f;
-		slefe_segment_pass(
+
+		slefe_segment_pass
+		(
 		    cpts,
 		    patch_base_idx,
 		    row, column,
@@ -359,7 +341,8 @@ void main(void)
 		bool do_deriv_v = row < 2;
 		float v = float(row) / 3.0f;
 		
-		slefe_segment_pass(
+		slefe_segment_pass
+		(
 		    lower,
 		    patch_base_idx,
 		    row, column,
@@ -388,17 +371,14 @@ void main(void)
 
 		barrier();
 
-	
-
 		float max_upper_panel_width[3] = {0,0,0};
 		float max_lower_panel_width[3] = {0,0,0};
 
 		vec4 tile_upper[2];
 		vec4 tile_lower[2];
 
-		if(local_thread_id < 9) // for each tile
+		if (local_thread_id < 9) // for each tile
 		{
-
 			int i1 = tile_indices[local_thread_id][0];
 			int i2 = tile_indices[local_thread_id][1];
 			int i3 = tile_indices[local_thread_id][2];
@@ -436,18 +416,19 @@ void main(void)
 			vec3 error_p = center_bb_max - center_bb_min;
 			float center_point_max_error = max(error_p.x,max(error_p.y, error_p.z));
 			atomicMax(local_tess_level[group_patch_id], int(10000*min(max(3*sqrt(2*center_point_max_error/pixel_size), 1.0f), 64.0f)));
-
 		}
 
 		barrier();
 
-		if(local_thread_id == 0) {
+		if (local_thread_id == 0) 
+		{
 			patch_tess_levels[patch_id] = max(1.0f, local_tess_level[group_patch_id]/10000.0f);
 			check_patch_offscreen(local_thread_id, patch_base_idx, patch_id);
 		}
 
-	} else if (local_thread_id < 9) {
-
+	} 
+	else if (local_thread_id < 9) 
+	{
 		int i1 = tile_indices[local_thread_id][0];
 		int i2 = tile_indices[local_thread_id][1];
 		int i3 = tile_indices[local_thread_id][2];
