@@ -2,6 +2,8 @@
 
 Relevant Files are as follows:
 
+# Header/Source Files
+
 ## scene.cpp
 Where surface and light entities are added into the scene. Entities must be created, then populated with relevant components.
 
@@ -31,6 +33,41 @@ UpdateTessNonCompute() uses the afformentioned c++ code to compute tessellation 
 ## universal_vars.h/.cpp
 Used to easily pass variables across files.
 
+# Shader Files
+
+## patch_tess_pass.cs.glsl
+Responsible for two things:
+1. Computing the tessellation factors for each patch during the tess pass
+2. Feeding an EBO the proper indexing to triangulate the control vertices for coarse shadowing
+
+## patch_shadow.vs/.fs.glsl
+Fills the depth buffer with coarse surface data to be used for shadowing.
+
+## visualize_tiles.vs/.fs.glsl
+Rudimentary shader for the purpose of viewing the coarse mesh versions of surfaces used for shadowing.
+
+## render_pass.vs/.tes/.tcs/.fs.glsl
+Main render loop for surfaces. Tess Engine applies tess factor levels determined by patch_tess_pass, and frag shader applies depth buffer for shadowing.
+
+# Json Files
+
+## graphics_config.json
+Allows certian gl/glfw settings to be done without recompilation.
+
+## program.json
+Tells program what json files to look for when getting program data.
+
+## shaders.json
+Defines all shader program names and their files for use in c++ code.
+
+## windows.json
+Defines window qualities such as resolution, title, display mode, etc..
+
+# Surface Files
+
+## *.srf
+
+A custom spec based on .obj. v x y z defines vertex position, vt x y defines texture coordinate, and cv v1/vt1 v2/vt2 v3/vt3 v4/vt4 defines one tile of a patch. Each set of four cv lines defines a surface patch. Everything is zero-indexed.     
 
 ## Contributions
 
