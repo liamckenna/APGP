@@ -37,9 +37,7 @@ int main() {
 	
 	nlohmann::json program_json = ReadJsonFromFile(program_filepath);
 
-	std::string scene_filepath = "/data/jsons/scenes/" + std::string(program_json["scene"]);
-
-	program.scene = new Scene(scene_filepath, program);
+	program.scene = new Scene(program);
 
 	std::cout << "finished loading scene" << std::endl;
 

@@ -16,5 +16,5 @@ struct Scene {
 
 	ResourceManager resource_manager;
 	
-	Scene(const std::string& filepath, Program& program);
+	Scene(Program& program);
 };

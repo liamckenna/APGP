@@ -13,7 +13,7 @@
 #include <cctype>
 
 
-Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resource_manager(), program(program) {
+Scene::Scene(Program& program) : scene_ecs(), resource_manager(), program(program) {
 
 	
 	name = "My Scene";
