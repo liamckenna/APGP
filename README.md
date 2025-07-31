@@ -1,87 +1,75 @@
-# All-Purpose Graphics Playground (APGP)
+# All-Purpose Graphics Playground (APGP) iPASS Shadowing
 
-![Screenshot](assets/screenshot.png)
+Render pass diagram and accompanying psuedocode are available in the assets folder.
 
-APGP serves as my custom environment to test and implement various aspects of real-time 3D graphics rendering. As a repository, it serves as a personal exercise in making a publicly-accessible codebase that can easily run in a system-agnostic manner, along with simply being an archive of my efforts.
+Relevant Files are as follows:
 
-## Getting Started
+# Header/Source Files
 
-### Dependencies
+## scene.cpp
+Where surface and light entities are added into the scene. Entities must be created, then populated with relevant components.
 
-APGP requires a handful of external libraries to function. Some of these (specifically all header-only libraries) are included within the repo. Other than those, it is recommended you use the package manager [vckpg](https://github.com/microsoft/vcpkg) to install **GLFW3** and **GLEW**.
+## input_system.cpp
+All controls and inputs are registered and defined in this file. 
+Move camera with wasd, look around with mouse.
+Move the current object with arrow keys, holding shift to move forwards and back rather than up and down.
+'u' changes the current object to control, 'i' turns off and on shadowing, 'o' changes how we calculate tess factors from the compute shader to c++ code, and 'p' enables/disables a wireframe of the coarse surface approximation used to generate shadows.
 
-```bash
-vcpkg install glfw3
-vcpkg install glew
-```
+## patch.cpp
+Contains functions used when iPASS algorithm is calcultated without the compute shader.
 
-### Installation
+## render_system.cpp
+Second most relevant source file. Handles the general render loop.
+Clear() clears the screen and depth buffer.
+UpdateProjection() updates the matrices related to the primary camera and viewing frustrum.
+RenderSurfaceLighting() clears the light's depth texture, writes the MVPs of each surface relative to the light, then calls WriteDepthBuffer() in surface_renderer.cpp.
+RenderSurfaces() calls a function to update the patch tess levels (UpdatePatchTessLevels() when done through the compute file, UpdateTessNonCompute() otherwise), and then calls RenderSurface() in surface_renderer.cpp.
 
-Clone the repo using Visual Studio's built-in codebase manager.
+## surface_renderer.cpp
+Most relevant source file. Handles the rendering of surfaces.
+WriteDepthBuffer() writes coarse surface shadows to the depth buffer.
+UpdatePatchTessLevels() dispatches the iPASS compute shader to inform proper tessellation levels for each patch.
+RenderSurface() renders the surface.
+UpdateTessNonCompute() uses the afformentioned c++ code to compute tessellation factors.
 
-```powershell
-git clone https://github.com/liamckenna/APGP.git
-cd APGP
-```
+## universal_vars.h/.cpp
+Used to easily pass variables across files.
 
-Once cloned, you should be able to launch the program in debug mode. APGP should run properly so long as you downloaded glfw3 and glew first. 
+# Shader Files
 
-## Usage 
+## patch_tess_pass.cs.glsl
+Responsible for two things:
+1. Computing the tessellation factors for each patch during the tess pass
+2. Feeding an EBO the proper indexing to triangulate the control vertices for coarse shadowing
 
-Build and see the explanation of the json format below.
+## patch_shadow.vs/.fs.glsl
+Fills the depth buffer with coarse surface data to be used for shadowing.
 
-## Repository Breakdown
+## visualize_tiles.vs/.fs.glsl
+Rudimentary shader for the purpose of viewing the coarse mesh versions of surfaces used for shadowing.
 
-### build
+## render_pass.vs/.tes/.tcs/.fs.glsl
+Main render loop for surfaces. Tess Engine applies tess factor levels determined by patch_tess_pass, and frag shader applies depth buffer for shadowing.
 
-Properly building the folder will create the executable **APGP.exe** which will launch the program. This executable should be located in the **build** folder after a successful compilation.
+# Json Files
 
-### data
+## graphics_config.json
+Allows certian gl/glfw settings to be done without recompilation.
 
-Opening the **data** folder, you'll find a handful of nested directories that work together to describe the scene being generated when APGP is run.
+## program.json
+Tells program what json files to look for when getting program data.
 
-### data/jsons
+## shaders.json
+Defines all shader program names and their files for use in c++ code.
 
-The **jsons** folder contains a handful of json files by default. **program.json** tells our program the names of the user and scene jsons, respectively. By default, APGP loads **user.json** for the user data and **scene.json** for the scene because program.json directs it their way. APGP expects a standard format from these json files, which can be seen in the files loaded by default. 
+## windows.json
+Defines window qualities such as resolution, title, display mode, etc..
 
-The benefit of this approach is that rebuilding is **not required** to change what APGP loads. By following the formats described by user.json and scene.json, you can create your own json files for APGP to load without having to hard-code any of the data.
+# Surface Files
 
-### data/jsons/scenes
+## *.srf
 
-This folder should contain any json files that describe the **scene** you want APGP to load. 
-
-Scene descriptions should first detail the use of any given shaders or meshes (.obj files) that you want to load. Camera, light, and object data should all be described within this json, along with the default material you want meshes to use in the case they are not directly given a material.
-
-See **scene.json** for a demonstration of the formatting APGP expects from a scene description.
-
-### data/jsons/users
-
-This folder should contain any json files that describe the **user** you want APGP to load. 
-
-User data is a catch-all for the following information: OpenGL, GLFW, and GLEW-specific settings, window descriptions, and APGP-specific settings.
-
-See **user.json** for a demonstration of the formatting APGP expects from a user description.
-
-### data/materials
-
-The **materials** directory holds all .mtl files requested by the objects held in the objects folder. These are loaded as-needed, from any objects that request them.
-
-### data/objects
-
-The **objects** folder holds all .obj files requested by the scene.
-
-### include
-
-The **include** directory holds all header files used by APGP. There are a handful of header files that either don't yet have or simply don't require source counterparts. 
-
-### libs
-
-**libs** contains all the external libraries that are included within APGP. As stated prior, these consist of the header-only libraries **glm** for vector and matrix calculations, **nlohmann's json parser** for, well, parsing jsons, and **stb_image** for texture implementation.
-
-### src
-
-The **src** folder contains all of the cpp source files I have created for APGP. All of these source files have complementary header files in the **include** folder with the exception of **main.cpp**.
-
+A custom spec based on .obj. v x y z defines vertex position, vt x y defines texture coordinate, and cv v1/vt1 v2/vt2 v3/vt3 v4/vt4 defines one tile of a patch. Each set of four cv lines defines a surface patch. Everything is zero-indexed.     
 
 ## Contributions
 
