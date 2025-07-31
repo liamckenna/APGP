@@ -1,7 +1,6 @@
 #pragma once
 #include <chrono>
 #include <vector>
-#include "timer.h"
 
 using Timestamp = std::chrono::steady_clock::time_point;
 
@@ -15,15 +14,11 @@ struct Clock {
     float delta_time;
     long long frames;
     long long seconds;
-    std::vector<Timer> timers;
 
     Clock();
     void Tick();
     void UpdateTime();
     void CalculateFrameRate();
-
-    void AddTimer(float length_seconds, bool auto_dispose = true, bool auto_dismiss = true);
-    void PollTimers();
     
     float GetElapsedTime() const;
     float GetDeltaTime() const;

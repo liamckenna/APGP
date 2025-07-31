@@ -2,7 +2,6 @@
 #include "vertex.h"
 #define GLM_FORCE_SWIZZLE
 #include <glm/glm.hpp>
-
 #include <vector>
 
 const float MAX_FLOAT = 10000.0f;

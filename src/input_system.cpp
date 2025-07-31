@@ -6,9 +6,8 @@
 #include "byte.h"
 #include "window.h"
 #include "render_system.h"
-#define SPEED 3
-
 #include "universal_vars.h"
+#define SPEED 3
 
 
 InputSystem::InputSystem(InputManager& im) : input_manager(im) {};
@@ -17,20 +16,10 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	
 	Entity camera = component_manager.GetEntitiesWithComponent<PrimaryCameraComponent>()[0];
 	TransformComponent& transform = component_manager.GetComponent<TransformComponent>(camera);
-	Entity surface = component_manager.GetEntitiesWithComponent<SurfaceComponent>()[0];
-	TransformComponent* surface_transform = nullptr;
-	TransformComponent* other_floor_transform = nullptr;
+	Entity surface = component_manager.GetEntitiesWithComponent<SurfaceComponent>()[moving_surface];
+	TransformComponent* surface_transform = &component_manager.GetComponent<TransformComponent>(surface);
+	if (component_manager.GetComponent<SurfaceComponent>(surface).surface_name == "test_surface") surface_transform->SetDirection(glm::vec3(0, 0, -1));
 
-	for (auto entity : component_manager.GetEntitiesWithComponent<SurfaceComponent>()) {
-		if (component_manager.GetComponent<SurfaceComponent>(entity).surface_name == "test_surface") {
-			surface_transform = &component_manager.GetComponent<TransformComponent>(entity);
-		}
-		if (component_manager.GetComponent<SurfaceComponent>(entity).surface_name == "other_floor") {
-			other_floor_transform = &component_manager.GetComponent<TransformComponent>(entity);
-		}
-	}
-	
-	//surface_transform->SetDirection(glm::vec3(0, 0, 1));
 
 	byte esc = input_manager.GetKeyState(GLFW_KEY_ESCAPE);
 	byte space = input_manager.GetKeyState(GLFW_KEY_SPACE);
@@ -64,6 +53,8 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	byte mmb = input_manager.GetKeyState(GLFW_MOUSE_BUTTON_MIDDLE);
 
 	byte f = input_manager.GetKeyState(GLFW_KEY_F);
+	byte u = input_manager.GetKeyState(GLFW_KEY_U);
+	byte i = input_manager.GetKeyState(GLFW_KEY_I);
 	byte o = input_manager.GetKeyState(GLFW_KEY_O);
 	byte p = input_manager.GetKeyState(GLFW_KEY_P);
 
@@ -157,8 +148,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	case PRESSED:
 		break;
 	case DOWN:
-		if (lshift == DOWN) other_floor_transform->TranslateUp(3.0, delta_time);
-		else if (caps_lock == DOWN) surface_transform->TranslateForward(3.0, delta_time);
+		if (lshift == DOWN) surface_transform->TranslateForward(3.0, delta_time);
 		else surface_transform->TranslateUp(3.0, delta_time);
 		break;
 	case RELEASED:
@@ -170,8 +160,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	case PRESSED:
 		break;
 	case DOWN:
-		if (lshift == DOWN) other_floor_transform->TranslateDown(3.0, delta_time);
-		else if (caps_lock == DOWN) surface_transform->TranslateBackward(3.0, delta_time);
+		if (lshift == DOWN) surface_transform->TranslateBackward(3.0, delta_time);
 		else surface_transform->TranslateDown(3.0, delta_time);
 		break;
 	case RELEASED:
@@ -183,8 +172,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	case PRESSED:
 		break;
 	case DOWN:
-		if (lshift == DOWN) other_floor_transform->TranslateLeft(3.0, delta_time);
-		else surface_transform->TranslateLeft(3.0, delta_time);
+		surface_transform->TranslateLeft(3.0, delta_time);
 		break;
 	case RELEASED:
 		break;
@@ -195,14 +183,14 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	case PRESSED:
 		break;
 	case DOWN:
-		if (lshift == DOWN) other_floor_transform->TranslateRight(3.0, delta_time);
-		else surface_transform->TranslateRight(3.0, delta_time);
-		break;
+		surface_transform->TranslateRight(3.0, delta_time);
 	case RELEASED:
 		break;
 	case UP:
 		break;
 	}
+
+	if (component_manager.GetComponent<SurfaceComponent>(surface).surface_name == "test_surface") surface_transform->SetDirection(glm::vec3(0, 1, 0));
 
 	switch (lmb) { //left mouse button/mouse button 1
 	case PRESSED:
@@ -224,15 +212,6 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	case UP:
 		break;
 	}
-	if (glfwGetInputMode(input_manager.cursor.current_window->glfw_window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
-		if (input_manager.cursor.dx != 0 || input_manager.cursor.dy != 0) {
-			transform.RotateYaw(-input_manager.cursor.dx, 1);
-			transform.RotatePitch(input_manager.cursor.dy, 1);
-			input_manager.cursor.dx = 0;
-			input_manager.cursor.dy = 0;
-		}
-	}
-	
 	switch (rmb) {  //right mouse button/mouse button 3
 	case PRESSED:
 		break;
@@ -347,9 +326,38 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 		break;
 	}
 
+
+	switch (u) { //u
+	case PRESSED:
+		moving_surface++;
+		if (moving_surface == component_manager.GetEntitiesWithComponent<SurfaceComponent>().size()) moving_surface = 0;
+		std::cout << "moving_surface set to " << moving_surface << std::endl;
+		break;
+	case DOWN:
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+	switch (i) { //i
+	case PRESSED:
+		cast_shadows = !cast_shadows;
+		if (cast_shadows) std::cout << "cast_shadows set to true" << std::endl;
+		else std::cout << "cast_shadows set to false" << std::endl;
+		break;
+	case DOWN:
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
 	switch (o) { //o
 	case PRESSED:
-		use_compute = false;
+		use_compute = !use_compute;
+		if (use_compute) std::cout << "use_compute set to true" << std::endl;
+		else std::cout << "use_compute set to false" << std::endl;
 		break;
 	case DOWN:
 		break;
@@ -360,7 +368,9 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	}
 	switch (p) { //p
 	case PRESSED:
-		use_compute = true;
+		visualize_tiles = !visualize_tiles;
+		if (visualize_tiles) std::cout << "visualize_tiles set to true" << std::endl;
+		else std::cout << "visualize_tiles set to false" << std::endl;
 		break;
 	case DOWN:
 		break;
@@ -369,7 +379,15 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	case UP:
 		break;
 	}
-	
+
+	if (glfwGetInputMode(input_manager.cursor.current_window->glfw_window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
+		if (input_manager.cursor.dx != 0 || input_manager.cursor.dy != 0) {
+			transform.RotateYaw(-input_manager.cursor.dx, 1);
+			transform.RotatePitch(input_manager.cursor.dy, 1);
+			input_manager.cursor.dx = 0;
+			input_manager.cursor.dy = 0;
+		}
+	}
 	if (input_manager.wheel.active) {
 		if (input_manager.wheel.dy != 0) {
 			for (auto entity : component_manager.GetEntitiesWithComponent<LightComponent>()) {

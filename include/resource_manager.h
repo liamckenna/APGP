@@ -62,7 +62,7 @@ public:
         glBindBufferBase(GL_UNIFORM_BUFFER, MATERIAL_BINDING_POINT, material_ubo);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-        LoadObjectFile("default");
+        //LoadObjectFile("default");
         
     };
 

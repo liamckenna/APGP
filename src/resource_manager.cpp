@@ -277,15 +277,6 @@ void ResourceManager::LoadSurfaceFile(const std::string& filename) {
             }
         }
     }
-    //just in case
-    if (normals.empty()) {
-        std::cout << "Generating Normals for " << surface.name << std::endl;
-        for (size_t i = 0; i < surface.vertices.size(); i++) {
-
-            surface.vertices[i].normal = glm::vec3(0.f);
-
-        }   
-    }
 
     surface.SetupBuffers();
 

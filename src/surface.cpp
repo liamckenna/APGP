@@ -5,16 +5,15 @@
 #include "glm/gtx/string_cast.hpp"
 #undef GLM_ENABLE_EXPERIMENTAL
 
-void Surface::SetupBuffers() {
+void Surface::SetupBuffers()
+{
 	GenerateBuffers();
-	std::cout << "buffers generated" << std::endl;
 	PopulateBuffers(Flatten());
-	std::cout << "buffers populated" << std::endl;
 	CreatePatches();
-	std::cout << "patches created" << std::endl;
 }
 
-void Surface::GenerateBuffers() {
+void Surface::GenerateBuffers()
+{
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
 	glGenBuffers(1, &ebo);
@@ -22,7 +21,8 @@ void Surface::GenerateBuffers() {
 	glGenBuffers(1, &patch_buffer);
 }
 
-void Surface::PopulateBuffers(std::vector<FlatVertex> flat_vertices) {
+void Surface::PopulateBuffers(std::vector<FlatVertex> flat_vertices)
+{
 
 	glBindVertexArray(vao);
 
@@ -54,7 +54,8 @@ void Surface::PopulateBuffers(std::vector<FlatVertex> flat_vertices) {
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
-std::vector<FlatVertex> Surface::Flatten() {
+std::vector<FlatVertex> Surface::Flatten()
+{
 	std::vector<FlatVertex> flat_vertices;
 	flat_vertices.reserve(vertices.size());
 
@@ -71,9 +72,6 @@ std::vector<FlatVertex> Surface::Flatten() {
 
 void Surface::CreatePatches()
 {
-
-	
-	 
 	num_patches = vertices.size() / patch_size;
 
 	// update bounding box

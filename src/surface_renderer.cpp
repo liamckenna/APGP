@@ -1,15 +1,15 @@
 #include "surface_renderer.h"
 #include "patch.h"
 #include "surface.h"
+#include "universal_vars.h"
 #include <numeric>
 #include <fstream>
 #include <glm/gtc/matrix_inverse.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
-using std::vector;
 
-void SurfaceRenderer::WriteDepthBuffer(GLuint vertex_buffer, GLuint launch_point_buffer, GLuint depth_buffer_texture,
-	 GLuint light_mvp_buffer, GLuint vao, GLuint ebo, glm::mat4 mvp,
+void SurfaceRenderer::WriteDepthBuffer(GLuint vertex_buffer, GLuint launch_point_buffer,
+	GLuint depth_buffer_texture, GLuint light_mvp_buffer, GLuint vao, GLuint ebo, glm::mat4 mvp,
 	int vertex_count, int surface_id, float pixel_size, ShaderManager& shader_manager)
 {
 	//get tile indices
@@ -64,16 +64,20 @@ void SurfaceRenderer::WriteDepthBuffer(GLuint vertex_buffer, GLuint launch_point
 	glDrawElements(GL_TRIANGLES, index_values.size(), GL_UNSIGNED_INT, 0);
 	
 	//visualize tiling with lines
-	shader_manager.UseShader("visualize_tiles");
-	
-	shader_manager.SetUniform("MVP_MATRIX", mvp);
-	
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
-	glDrawElements(GL_TRIANGLES, index_values.size(), GL_UNSIGNED_INT, 0);
+	if (visualize_tiles)
+	{
+		shader_manager.UseShader("visualize_tiles");
+
+		shader_manager.SetUniform("MVP_MATRIX", mvp);
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+		glBindVertexArray(vao);
+		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+		glDrawElements(GL_TRIANGLES, index_values.size(), GL_UNSIGNED_INT, 0);
+	}
+
 }
 
 void SurfaceRenderer::UpdatePatchTessLevels(GLuint vertex_buffer, GLuint patch_buffer, glm::mat4 MVP,
@@ -105,10 +109,10 @@ void SurfaceRenderer::UpdatePatchTessLevels(GLuint vertex_buffer, GLuint patch_b
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 }
 
-void SurfaceRenderer::RenderSurface(glm::mat4 model_matrix, glm::mat4 view_matrix, glm::mat4 projection_matrix,
-									glm::vec3 Ka, glm::vec3 Kd, glm::vec3 Ks, GLuint vao, GLuint vbo, GLuint ebo,
-									GLuint patch_buffer, uint vertex_count, int surface_id, ShaderManager& shader_manager,
-									GLuint depth_buffer_texture, GLuint light_mvp_buffer) 
+void SurfaceRenderer::RenderSurface(glm::mat4 model_matrix, glm::mat4 view_matrix, 
+	glm::mat4 projection_matrix, glm::vec3 Ka, glm::vec3 Kd, glm::vec3 Ks, GLuint vao, 
+	GLuint vbo, GLuint ebo, GLuint patch_buffer, uint vertex_count, int surface_id, 
+	ShaderManager& shader_manager, GLuint depth_buffer_texture, GLuint light_mvp_buffer) 
 {
 	shader_manager.UseShader("render_pass");
 
@@ -132,7 +136,15 @@ void SurfaceRenderer::RenderSurface(glm::mat4 model_matrix, glm::mat4 view_matri
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, light_mvp_buffer);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, light_mvp_buffer);
 
-	glBindImageTexture(0, depth_buffer_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+	if (cast_shadows)
+	{
+		glBindImageTexture(0, depth_buffer_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32UI);
+		shader_manager.SetUniform("cast_shadows", 1);
+	}
+	else
+	{
+		shader_manager.SetUniform("cast_shadows", 0);
+	}
 
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -147,7 +159,7 @@ void SurfaceRenderer::RenderSurface(glm::mat4 model_matrix, glm::mat4 view_matri
 
 void SurfaceRenderer::UpdateTessNonCompute(Surface* surface, glm::mat4 MVP, float pixel_size)
 {
-	vector<float> patch_tess_levels = determine_patch_tess_levels(&surface->vertices[0], surface->num_patches, 3, 3, MVP, pixel_size);
+	std::vector<float> patch_tess_levels = determine_patch_tess_levels(&surface->vertices[0], surface->num_patches, 3, 3, MVP, pixel_size);
 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, surface->patch_buffer);
 	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, patch_tess_levels.size() * sizeof(float), &patch_tess_levels[0]);

@@ -15,7 +15,6 @@ Clock::Clock() {
 void Clock::Tick() {
     UpdateTime();
     CalculateFrameRate();
-    PollTimers();
 }
 
 void Clock::UpdateTime() {
@@ -34,34 +33,6 @@ void Clock::CalculateFrameRate() {
         frame_count = 0;
         seconds += 1;
         frames += fps;
-    }
-}
-
-void Clock::AddTimer(float length_seconds, bool auto_dispose, bool auto_dismiss) {
-    timers.emplace_back(length_seconds, current_time, auto_dispose, auto_dismiss);
-}
-
-
-
-void Clock::PollTimers() {
-
-    for (auto it = timers.begin(); it != timers.end();) {
-        TIMER_STATE state = it->Evaluate(current_time);
-        switch (state) {
-        case RINGING:
-            std::cout << "ring!" << std::endl;
-            ++it;
-            break;
-        case SCRAP:
-            it = timers.erase(it);
-            break;
-        case TICKING:
-        case PAUSED:
-        case IDLE:
-            ++it;
-            break;
-
-        }
     }
 }
 

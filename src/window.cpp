@@ -4,9 +4,13 @@
 #include "callbacks.h"
 #include "program.h"
 #include "graphics_config.h"
+#include "universal_vars.h"
+
 Window::Window(const nlohmann::json& settings, Program& program) : program(program), cursor(program.input_manager.cursor) {
 	this->width = (settings.contains("width")) ? int(settings["width"]) : 1280;
+	window_width = this->width;
 	this->height = (settings.contains("height")) ? int(settings["height"]) : 720;
+	window_height = this->height;
 	this->msaa = (settings.contains("msaa")) ? int(settings["msaa"]) : 0;
 	this->pos_x = (settings.contains("pos_x")) ? int(settings["pos_x"]) : 0;
 	this->pos_y = (settings.contains("pos_y")) ? int(settings["pos_y"]) : 0;

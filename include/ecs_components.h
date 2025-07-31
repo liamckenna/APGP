@@ -9,6 +9,7 @@
 #include <glm/gtx/vector_angle.hpp>
 #undef GLM_ENABLE_EXPERIMENTAL
 #include "surface_renderer.h"
+#include "universal_vars.h"
 
 struct TransformComponent {
     glm::vec3 position = glm::vec3(0.f);
@@ -104,19 +105,13 @@ struct LightComponent {
 
 struct DirectionalLightComponent {
 
-    GLuint patch_shadow_buffer;
-
-    GLuint patch_depth_buffer;
-    
-    GLuint patch_span_buffer;
-
     GLuint depth_texture;
 
     DirectionalLightComponent() {
 
         glGenTextures(1, &depth_texture);
         glBindTexture(GL_TEXTURE_2D, depth_texture);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, 1080, 1080);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32UI, shadow_width, shadow_height);
 
         GLuint clearVal = glm::floatBitsToUint(1.0f);
         glClearTexImage(depth_texture, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, &clearVal);
@@ -126,21 +121,6 @@ struct DirectionalLightComponent {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-        glGenBuffers(1, &patch_shadow_buffer);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_shadow_buffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(uint) * 65536, NULL, GL_STATIC_DRAW);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-        glGenBuffers(1, &patch_depth_buffer);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_depth_buffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(uint) * 65536, NULL, GL_STATIC_DRAW);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-        glGenBuffers(1, &patch_span_buffer);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, patch_span_buffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(glm::uvec4) * 65536, NULL, GL_STATIC_DRAW);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     }
 
@@ -172,7 +152,6 @@ struct iPASSComponent {
     glm::vec3 Kd;
     glm::vec3 Ks;
     
-    bool use_compute;
 };
 
 struct DebugComponent {

@@ -11,6 +11,7 @@ layout(std430, binding = 3) buffer LightMVPBuffer {
 
 layout(r32ui, binding = 0) uniform uimage2D depth_texture;
 
+uniform int cast_shadows;
 uniform int surface_id;
 
 in vec4 tePosition;
@@ -72,10 +73,13 @@ vec3 phongModelDiffAndSpec(vec3 in_normal, vec3 kd)
     if( sDotN > 0.0 )
         spec = light_intensity * Ks *
             pow( max( dot(r,v), 0.0 ), Shininess );
-    
-    if (inShadow(light_mvps[surface_id])) {
-        diffuse = vec3(0);
-        spec = vec3(0);
+    if (cast_shadows == 1)
+    {
+        if (inShadow(light_mvps[surface_id]))
+        {
+            diffuse = vec3(0);
+            spec = vec3(0);
+        }
     }
 
     return diffuse + spec + Ka;

@@ -40,7 +40,6 @@ uniform int num_vertices;
 uniform float pixel_size;
 uniform mat4 MVP;
 uniform int light_pass;
-uniform ivec2 shadow_res = ivec2(1080, 1080);
 
 uniform float slefe_lower_3_3[] = {
 	// base 1

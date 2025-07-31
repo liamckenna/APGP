@@ -4,7 +4,7 @@
 #include "program.h"
 #include <algorithm>
 #include <iostream>
-InputManager::InputManager(Program& program) : program(program), cursor(), idle_mouse(0.2f) {
+InputManager::InputManager(Program& program) : program(program), cursor() {
 	std::memset(key_states, 0, sizeof(key_states));
 }
 

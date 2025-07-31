@@ -121,5 +121,3 @@ inline int FetchGLFWenum(std::string key) {
     auto it = GLFW_ENUMS.find(key);
     return (it != GLFW_ENUMS.end()) ? it->second : GLFW_INVALID_ENUM;
 }
-
-std::string GetExecutableDirectory();

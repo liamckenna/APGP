@@ -1,17 +1,6 @@
 {
-  "active_shader":  "default",
+  "active_shader": "render_pass",
   "shader_programs": {
-    "default": {
-      "vertex": "default.vs.glsl",
-
-      "fragment": "default.fs.glsl"
-    },
-    "surface": {
-      "vertex": "default.vs.glsl",
-      "tess_control": "default.tcs.glsl",
-      "tess_eval": "default.tes.glsl",
-      "fragment": "default.fs.glsl"
-    },
     "debug_quad": {
       "vertex": "debug_quad.vs.glsl",
       "fragment": "debug_quad.fs.glsl"
@@ -33,8 +22,5 @@
       "vertex": "visualize_tiles.vs.glsl",
       "fragment": "visualize_tiles.fs.glsl"
     }
-  },
-  "uniforms": {
-    "ambient_intensity": 0.02
   }
 }

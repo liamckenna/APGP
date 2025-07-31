@@ -30,8 +30,6 @@ public:
 	// GL constant
 	static int max_group_count_x;
 
-	static void init_shaders();
-
 	GLuint patch_buffer;	    // store the per patch tessellation level
 
 private:
@@ -57,17 +55,16 @@ public:
 
 	}
 
-	void WriteDepthBuffer(GLuint vertex_buffer, GLuint launch_point_buffer, GLuint depth_buffer_texture,
-						GLuint light_mvp_buffer, GLuint vao, GLuint ebo, glm::mat4 mvp,
-						int vertex_count, int surface_id, float pixel_size, ShaderManager& shader_manager);
+	void WriteDepthBuffer(GLuint vertex_buffer, GLuint launch_point_buffer,
+		GLuint depth_buffer_texture, GLuint light_mvp_buffer, GLuint vao, GLuint ebo, glm::mat4 mvp,
+		int vertex_count, int surface_id, float pixel_size, ShaderManager& shader_manager);
+
 	void UpdatePatchTessLevels(GLuint vertex_buffer, GLuint patch_buffer, glm::mat4 MVP,
-							int vertex_count, int surface_id, float pixel_size, ShaderManager& shader_manager);
-	void RenderSurface(glm::mat4 model_matrix, glm::mat4 view_matrix, glm::mat4 projection_matrix,
-						glm::vec3 Ka, glm::vec3 Kd, glm::vec3 Ks, GLuint vao, GLuint vbo, GLuint ebo,
-						GLuint patch_buffer, uint vertex_count, int surface_id, ShaderManager& shader_manager, 
-						GLuint depth_buffer_texture, GLuint light_mvp_buffer);
-private:
+		int vertex_count, int surface_id, float pixel_size, ShaderManager& shader_manager);
 
+	void RenderSurface(glm::mat4 model_matrix, glm::mat4 view_matrix,
+		glm::mat4 projection_matrix, glm::vec3 Ka, glm::vec3 Kd, glm::vec3 Ks, GLuint vao,
+		GLuint vbo, GLuint ebo, GLuint patch_buffer, uint vertex_count, int surface_id,
+		ShaderManager& shader_manager, GLuint depth_buffer_texture, GLuint light_mvp_buffer);
 	void UpdateTessNonCompute(Surface* surface, glm::mat4 MVP, float pixel_size);
-
 };

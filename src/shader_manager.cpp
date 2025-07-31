@@ -10,21 +10,17 @@ ShaderManager::~ShaderManager() {
 
 int max_group_count_x = 65536;
 
-
 void ShaderManager::LoadFromJSON(const std::string& filepath) {
     nlohmann::json data = ReadJsonFromFile(filepath);
 
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &max_group_count_x);
-    std::cout << "GL_MAX_COMPUTE_WORK_GROUP_COUNT[0]: " << max_group_count_x << std::endl;
 
     int max_texture_size = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
-    std::cout << "GL_MAX_TEXTURE_SIZE: " << max_texture_size << std::endl;
 
     GLint64  msize;
     glGetInteger64i_v(GL_SHADER_STORAGE_BUFFER_SIZE, 1, &msize);
     glGetInteger64v(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &msize);
-    std::cout << "GL_SHADER_STORAGE_BUFFER_SIZE: " << msize << std::endl;
 
     if (!data.contains("shader_programs")) {
         std::cerr << "Error: No shader programs defined in JSON." << std::endl;
@@ -32,10 +28,6 @@ void ShaderManager::LoadFromJSON(const std::string& filepath) {
     }
 
     for (const auto& [name, shaderData] : data["shader_programs"].items()) {
-        /*if (!shaderData.contains("vertex") || !shaderData.contains("fragment")) {
-            std::cerr << "Skipping shader program '" << name << "' (missing vertex or fragment shader)." << std::endl;
-            continue;
-        }*/
 
         std::string vertexPath = shaderData.contains("vertex") ? "shaders/" + shaderData["vertex"].get<std::string>() : "";
         std::string fragmentPath = shaderData.contains("fragment") ? "shaders/" + shaderData["fragment"].get<std::string>() : "";
@@ -54,10 +46,6 @@ void ShaderManager::LoadFromJSON(const std::string& filepath) {
     }
     std::string default_shader = Fetch(data, "active_shader", "");
     UseShader(default_shader);
-    
-    SetUniform("ambient_intensity", static_cast<float>(Fetch(data["uniforms"], "ambient_intensity", 0.02f)));
-    SetUniform("debug_mode", 0);
-
 }
 
 void ShaderManager::CacheUniforms(const std::string& shaderName) {
@@ -95,7 +83,6 @@ void ShaderManager::UseShader(GLuint program) {
         active_shader = program;
     }
 }
-
 
 void ShaderManager::UseShader(const std::string& name) {
     if (shader_programs.find(name) == shader_programs.end()) {
@@ -169,8 +156,6 @@ GLuint ShaderManager::CompileShaderProgram(const std::string& vertexPath, const 
 
     return program;
 }
-
-
 
 GLuint ShaderManager::GetShaderID(const std::string& name) {
     return shader_programs.count(name) ? shader_programs[name] : 0;

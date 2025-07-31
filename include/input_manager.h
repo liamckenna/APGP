@@ -1,7 +1,6 @@
 #pragma once
 #include "cursor.h"
 #include "byte.h"
-#include "timer.h"
 #include <unordered_set>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -28,8 +27,6 @@ struct InputManager {
 		float dy = 0;
 		bool active = false;
 	} wheel;
-
-	Timer idle_mouse;
 
 	InputManager(Program& program);
 
