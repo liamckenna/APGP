@@ -1,5 +1,7 @@
 # All-Purpose Graphics Playground (APGP) iPASS Shadowing
 
+Render pass diagram and accompanying psuedocode are available in the assets folder.
+
 Relevant Files are as follows:
 
 # Header/Source Files
