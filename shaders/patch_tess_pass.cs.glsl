@@ -420,7 +420,7 @@ void main(void)
 		     * that closest to the camera.
 		     *
 		     * This is determined purely by the MVP matrix.
-		     */ 
+		     */
 
 			int x_range, y_range, z_range;
 			x_range = MVP[0][2] < 0 ? 1 : 0;
@@ -432,31 +432,11 @@ void main(void)
 
 			vec3 center_bb_min, center_bb_max;
 			calculate_bb(center_lower, center_upper, MVP, center_bb_min, center_bb_max);
-
-			for (int j = 0; j < 8; ++j) {
-				vec3 p;
-				p.x = (j & 0x01) != 0 ? center_bb_max.x : center_bb_min.x;
-				p.y = (j & 0x02) != 0 ? center_bb_max.y : center_bb_min.y;
-				p.z = (j & 0x04) != 0 ? center_bb_max.z : center_bb_min.z;
-			}
-
-			vec2 uv_min = center_bb_min.xy * 0.5 + 0.5;
-			vec2 uv_max = center_bb_max.xy * 0.5 + 0.5;
 			
-			if (local_thread_id == 0) {
-				
-				vec3 error_p = center_bb_max - center_bb_min;
-				float max_error = max(error_p.x, max(error_p.y, error_p.z));
-				float tess = min(max(3.0 * sqrt(2.0 * max_error / pixel_size), 1.0), 64.0);
-				atomicMax(local_tess_level[group_patch_id], int(10000.0 * tess));
-				
-				debug[patch_id].x = 5;
-				debug[patch_id].y = 5;
-				debug[patch_id].z = 5;
-				debug[patch_id].w = 5;
-			}
+			vec3 error_p = center_bb_max - center_bb_min;
+			float center_point_max_error = max(error_p.x,max(error_p.y, error_p.z));
+			atomicMax(local_tess_level[group_patch_id], int(10000*min(max(3*sqrt(2*center_point_max_error/pixel_size), 1.0f), 64.0f)));
 
-			update_tess_level(center_bb_min, center_bb_max, pixel_size, group_patch_id);
 		}
 
 		barrier();
