@@ -49,7 +49,7 @@ Fills the depth buffer with coarse surface data to be used for shadowing.
 Rudimentary shader for the purpose of viewing the coarse mesh versions of surfaces used for shadowing.
 
 ## render_pass.vs/.tes/.tcs/.fs.glsl
-Main render loop for surfaces. Tess Engine applies tess factor levels determined by patch_tess_pass, and frag shader applies depth buffer for shadowing.
+Main render loop for surfaces. Tess Control applies tess factor levels determined by patch_tess_pass, and frag shader applies depth buffer for shadowing.
 
 # Json Files
 
