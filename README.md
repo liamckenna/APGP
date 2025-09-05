@@ -2,6 +2,8 @@
 
 Render pass diagram and accompanying pseudocode are available in the assets folder.
 
+Please run in Debug x64! Not guaranteed to work otherwise :)
+
 Relevant Files are as follows:
 
 # Header/Source Files
