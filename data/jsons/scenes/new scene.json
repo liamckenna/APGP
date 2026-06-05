@@ -1,0 +1,51 @@
+{
+  "name": "New Scene",
+  "entities": [
+    {
+      "transform": {
+        "position": [ 0.0, 0.0, 0.0 ],
+        "rotation": [ 0.0, 0.0, 0.0 ],
+        "scale": [ 1.0, 1.0, 1.0 ]
+      },
+      "mesh": "floor"
+    },
+    {
+      "transform": {
+        "position": [ 0.0, 1.0, 5.0 ],
+        "scale": [ 0.1, 0.1, 0.1 ]
+      },
+      "mesh": "castle"
+    },
+    {
+      "transform": {
+        "position": [ 0.0, 1.0, -5.0 ],
+        "rotation": [ 0.0, 180.0, 0.0 ]
+      },
+      "mesh": "pokeball"
+    },
+    {
+      "transform": {
+        "position": [ 5.0, 0.0, 0.0 ],
+        "rotation": [ 0.0, 0.0, 0.0 ]
+      },
+      "mesh": "Face"
+    },
+    {
+      "transform": {
+        "position": [ 0.0, 10.0, 0.0 ],
+        "rotation": [ 0.0, 0.0, 0.0 ],
+        "scale": [ 1.0, 1.0, 1.0 ]
+      },
+      "light": "spot"
+    },
+    {
+      "transform": {
+        "position": [ 0.0, 1.0, 0.0 ]
+      },
+      "camera": {
+        "primary": true,
+        "fov": 90.0
+      }
+    }
+  ]
+}

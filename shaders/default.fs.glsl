@@ -2,7 +2,7 @@
 #version 450 core
 
 #define MAX_LIGHTS 10
-#define MAX_MATERIALS 20
+#define MAX_MATERIALS 100
 #define MAX_TEXTURES 10
 
 struct Light {
@@ -25,29 +25,31 @@ struct Material {
     int index;
     float shininess;
     float alpha;
-    int pad1;
-
-    vec3 ambient;
-    float pad2;
+    float pad1;
 
     vec3 diffuse;
-    float pad3;
+    float metallic;
 
     vec3 specular;
-    float pad4;
+    float roughness;
 
     vec3 emissive;
-    float pad5;
+    float pad4;
 
-    int ambient_tex;
     int diffuse_tex;
     int specular_tex;
     int emissive_tex;
-    
     int shininess_tex;
+
+    int normal_tex;
+    int roughness_tex;
+    int metallic_tex;
+    int ao_tex;
+
     int bump_tex;
     int displacement_tex;
     int reflection_tex;
+    int opacity_tex;
 };
 
 
@@ -138,11 +140,11 @@ void main() {
 
         int frag_material_index = material_index[gl_PrimitiveID];
 
-        vec3    amb_mat =   materials[frag_material_index].ambient      * GrabTextureCoordinateColor(materials[frag_material_index].ambient_tex,    vec3(1.0));
         vec3    dif_mat =   materials[frag_material_index].diffuse      * GrabTextureCoordinateColor(materials[frag_material_index].diffuse_tex,    vec3(1.0));
+        vec3    amb_mat =   dif_mat;
         vec3    spc_mat =   materials[frag_material_index].specular     * GrabTextureCoordinateColor(materials[frag_material_index].specular_tex,   vec3(1.0));
         vec3    ems_mat =   materials[frag_material_index].emissive     * GrabTextureCoordinateColor(materials[frag_material_index].emissive_tex,   vec3(1.0));
-        float   shn_mat =   materials[frag_material_index].shininess    * GrabTextureCoordinateValue(materials[frag_material_index].shininess_tex,  1.0);
+        float   shn_mat =   max(materials[frag_material_index].shininess * GrabTextureCoordinateValue(materials[frag_material_index].shininess_tex,  1.0), 1.0);
         float   alf_mat =   materials[frag_material_index].alpha;
 
         vec3 amb_lgt = vec3(0);
@@ -180,7 +182,7 @@ void main() {
         vec3 clr_end = vec3(0);
 
         //ambient
-        vec3 amb_end = amb_lgt * amb_mat * dif_mat * ambient_intensity;
+        vec3 amb_end = amb_lgt * amb_mat * ambient_intensity;
         clr_end += amb_end;
 
         //diffuse

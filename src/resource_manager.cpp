@@ -115,21 +115,10 @@ void ResourceManager::LoadObjectFile(const std::string& filename) {
                 vertexIndices.push_back(mesh.unique_vertices[key]);
             }
 
-            if (vertexIndices.size() == 3) {
+            for (size_t i = 1; i + 1 < vertexIndices.size(); i++) {
                 mesh.indices.push_back(vertexIndices[0]);
-                mesh.indices.push_back(vertexIndices[1]);
-                mesh.indices.push_back(vertexIndices[2]);
-                mesh.material_index.push_back(material_index);
-            }
-            else if (vertexIndices.size() == 4) {
-                mesh.indices.push_back(vertexIndices[0]);
-                mesh.indices.push_back(vertexIndices[1]);
-                mesh.indices.push_back(vertexIndices[2]);
-                mesh.material_index.push_back(material_index);
-
-                mesh.indices.push_back(vertexIndices[0]);
-                mesh.indices.push_back(vertexIndices[2]);
-                mesh.indices.push_back(vertexIndices[3]);
+                mesh.indices.push_back(vertexIndices[i]);
+                mesh.indices.push_back(vertexIndices[i + 1]);
                 mesh.material_index.push_back(material_index);
             }
         }
@@ -328,9 +317,6 @@ void ResourceManager::LoadMaterialFile(const std::string& filename) {
             current_material.name = current_material_name;
             current_material.index = materials.size();
         }
-        else if (keyword == "Ka") { // Ambient color
-            iss >> current_material.colors.ambient.x >> current_material.colors.ambient.y >> current_material.colors.ambient.z;
-        }
         else if (keyword == "Kd") { // Diffuse color
             iss >> current_material.colors.diffuse.x >> current_material.colors.diffuse.y >> current_material.colors.diffuse.z;
         }
@@ -346,44 +332,82 @@ void ResourceManager::LoadMaterialFile(const std::string& filename) {
         else if (keyword == "d") { // Opacity
             iss >> current_material.alpha;
         }
-        else if (keyword == "map_Ka") { // Ambient texture
-            std::string texture_name;
-            iss >> texture_name;
-            current_material.textures.ambient = TextureQuery(texture_name);
+        else if (keyword == "Pr") { // Roughness (PBR)
+            iss >> current_material.roughness;
+        }
+        else if (keyword == "Pm") { // Metallic (PBR)
+            iss >> current_material.metallic;
         }
         else if (keyword == "map_Kd") { // Diffuse texture
             std::string texture_name;
-            iss >> texture_name;
+            std::getline(iss, texture_name);
+            texture_name.erase(0, texture_name.find_first_not_of(" \t"));
             current_material.textures.diffuse = TextureQuery(texture_name);
         }
         else if (keyword == "map_Ks") { // Specular texture
             std::string texture_name;
-            iss >> texture_name;
+            std::getline(iss, texture_name);
+            texture_name.erase(0, texture_name.find_first_not_of(" \t"));
             current_material.textures.specular = TextureQuery(texture_name);
         }
         else if (keyword == "map_Ke") { // Emissive texture
             std::string texture_name;
-            iss >> texture_name;
+            std::getline(iss, texture_name);
+            texture_name.erase(0, texture_name.find_first_not_of(" \t"));
             current_material.textures.emissive = TextureQuery(texture_name);
         }
         else if (keyword == "map_Ns") { // Shininess texture
             std::string texture_name;
-            iss >> texture_name;
+            std::getline(iss, texture_name);
+            texture_name.erase(0, texture_name.find_first_not_of(" \t"));
             current_material.textures.shininess = TextureQuery(texture_name);
+        }
+        else if (keyword == "norm") { // Normal map (PBR)
+            std::string texture_name;
+            std::getline(iss, texture_name);
+            texture_name.erase(0, texture_name.find_first_not_of(" \t"));
+            current_material.textures.normal = TextureQuery(texture_name);
+        }
+        else if (keyword == "map_Pr") { // Roughness texture (PBR)
+            std::string texture_name;
+            std::getline(iss, texture_name);
+            texture_name.erase(0, texture_name.find_first_not_of(" \t"));
+            current_material.textures.roughness = TextureQuery(texture_name);
+        }
+        else if (keyword == "map_Pm") { // Metallic texture (PBR)
+            std::string texture_name;
+            std::getline(iss, texture_name);
+            texture_name.erase(0, texture_name.find_first_not_of(" \t"));
+            current_material.textures.metallic = TextureQuery(texture_name);
+        }
+        else if (keyword == "map_ao") { // Ambient occlusion texture
+            std::string texture_name;
+            std::getline(iss, texture_name);
+            texture_name.erase(0, texture_name.find_first_not_of(" \t"));
+            current_material.textures.ao = TextureQuery(texture_name);
+        }
+        else if (keyword == "map_d") { // Opacity texture
+            std::string texture_name;
+            std::getline(iss, texture_name);
+            texture_name.erase(0, texture_name.find_first_not_of(" \t"));
+            current_material.textures.opacity = TextureQuery(texture_name);
         }
         else if (keyword == "map_bump" || keyword == "bump") {
             std::string texture_name;
-            iss >> texture_name;
+            std::getline(iss, texture_name);
+            texture_name.erase(0, texture_name.find_first_not_of(" \t"));
             current_material.textures.bump = TextureQuery(texture_name);
         }
         else if (keyword == "disp") {
             std::string texture_name;
-            iss >> texture_name;
+            std::getline(iss, texture_name);
+            texture_name.erase(0, texture_name.find_first_not_of(" \t"));
             current_material.textures.displacement = TextureQuery(texture_name);
         }
         else if (keyword == "refl") {
             std::string texture_name;
-            iss >> texture_name;
+            std::getline(iss, texture_name);
+            texture_name.erase(0, texture_name.find_first_not_of(" \t"));
             current_material.textures.reflection = TextureQuery(texture_name);
         }
     }
@@ -407,8 +431,7 @@ void ResourceManager::LoadTextureFile(const std::string& filename) {
     Texture texture;
     texture.name = filename;
     texture.index = textures.size();
-    // Begin STB loading
-    stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(false);
     unsigned char* data = stbi_load(file_path.c_str(),
         &texture.width,
         &texture.height,
@@ -419,32 +442,26 @@ void ResourceManager::LoadTextureFile(const std::string& filename) {
         return; // bail out
     }
 
-    // Generate and bind an OpenGL texture
     glGenTextures(1, &texture.id);
     glActiveTexture(GL_TEXTURE2 + texture.index);
     glBindTexture(GL_TEXTURE_2D, texture.id);
 
-    // Determine pixel format
     GLenum format = GL_RGBA;
     if (texture.channels == 1)       format = GL_RED;
     else if (texture.channels == 3)  format = GL_RGB;
     else if (texture.channels == 4)  format = GL_RGBA;
-    // ...if you want more checks, do so here...
 
-    // Upload to OpenGL
     glTexImage2D(GL_TEXTURE_2D, 0, format,
         texture.width, texture.height,
         0, format, GL_UNSIGNED_BYTE, data);
 
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    // Clean up STB data + unbind
     stbi_image_free(data);
 
-    // Mark as loaded
     texture.is_loaded = true;
     std::cout << "texture loaded: " << texture.name << std::endl;
-    // Add it to our resource arrays/maps
+
     texture_map[filename] = textures.size();
     textures.emplace_back(std::move(texture));
 }

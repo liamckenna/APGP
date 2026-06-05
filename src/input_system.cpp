@@ -46,6 +46,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	byte f = input_manager.GetKeyState(GLFW_KEY_F);
 	byte o = input_manager.GetKeyState(GLFW_KEY_O);
 	byte p = input_manager.GetKeyState(GLFW_KEY_P);
+	byte q = input_manager.GetKeyState(GLFW_KEY_Q);
 
 
 	switch (esc) { //escape
@@ -290,6 +291,16 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	switch (p) { //p
 	case PRESSED:
 		use_compute = false;
+		break;
+	case DOWN:
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+	switch (q) { //q
+	case PRESSED:
 		break;
 	case DOWN:
 		break;

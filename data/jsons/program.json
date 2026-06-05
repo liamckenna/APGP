@@ -2,9 +2,9 @@
   "windows": "windows.json",
   "graphics_config": "graphics_config.json",
   "shaders": "shaders.json",
-  "scene": "sample scene.json",
-  "hardcoded": true,
-  "limit_fps": true,
+  "scene": "new scene.json",
+  "hardcoded": false,
+  "limit_fps": false,
   "use_compute":  false,
   "fps_cap":  1000
 }

@@ -10,16 +10,15 @@ RenderSystem::RenderSystem(ResourceManager& rm, ShaderManager& sm)
 }
 
 void RenderSystem::Update(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
-    if (shader_manager.GetActiveShader() != shader_manager.GetShaderID("surface")) shader_manager.UseShader("surface");
     Clear();
 
     UpdateProjection(entity_manager, component_manager, system_manager, delta_time);
 
-    //RenderMeshes(entity_manager, component_manager, system_manager, delta_time);
+    RenderMeshes(entity_manager, component_manager, system_manager, delta_time);
     
     //RenderScreenQuad(entity_manager, component_manager, system_manager, delta_time);
 
-    RenderSurfaces(entity_manager, component_manager, system_manager, delta_time);
+    //RenderSurfaces(entity_manager, component_manager, system_manager, delta_time);
 
 
     //std::cout << "Main render update has finished!" << std::endl;
@@ -76,7 +75,7 @@ void RenderSystem::RenderMeshes(EntityManager& entity_manager, ComponentManager&
             glm::mat4_cast(transform.orientation) *
             glm::scale(glm::mat4(1.0f), transform.scale);
 
-        if (shader_manager.GetActiveShader() == shader_manager.GetShaderID("default")) shader_manager.SetUniform("model", meshComp.model);
+        shader_manager.SetUniform("model", meshComp.model);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_BINDING_POINT, mesh.ssbo);
         glBindVertexArray(mesh.vao);
         glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);

@@ -74,26 +74,28 @@ public:
         for (const auto& material : materials) {
             FlatMaterial flat_material{};
 
-            flat_material.index = material.index;
+            flat_material.index     = material.index;
             flat_material.shininess = material.shininess;
-            flat_material.alpha = material.alpha;
+            flat_material.alpha     = material.alpha;
+            flat_material.metallic  = material.metallic;
+            flat_material.roughness = material.roughness;
 
-            flat_material.ambient = material.colors.ambient;
-
-            flat_material.diffuse = material.colors.diffuse;
-            
+            flat_material.diffuse  = material.colors.diffuse;
             flat_material.specular = material.colors.specular;
-
             flat_material.emissive = material.colors.emissive;
 
-            flat_material.ambient_tex = material.textures.ambient;
-            flat_material.diffuse_tex = material.textures.diffuse;
-            flat_material.specular_tex = material.textures.specular;
-            flat_material.emissive_tex = material.textures.emissive;
-            flat_material.shininess_tex = material.textures.shininess;
-            flat_material.bump_tex = material.textures.bump;
+            flat_material.diffuse_tex     = material.textures.diffuse;
+            flat_material.specular_tex    = material.textures.specular;
+            flat_material.emissive_tex    = material.textures.emissive;
+            flat_material.shininess_tex   = material.textures.shininess;
+            flat_material.normal_tex      = material.textures.normal;
+            flat_material.roughness_tex   = material.textures.roughness;
+            flat_material.metallic_tex    = material.textures.metallic;
+            flat_material.ao_tex          = material.textures.ao;
+            flat_material.bump_tex        = material.textures.bump;
             flat_material.displacement_tex = material.textures.displacement;
-            flat_material.reflection_tex = material.textures.reflection;
+            flat_material.reflection_tex  = material.textures.reflection;
+            flat_material.opacity_tex     = material.textures.opacity;
             flat_materials.push_back(flat_material);
         }
 

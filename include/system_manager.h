@@ -20,10 +20,11 @@ public:
 
     void Update(EntityManager& entity_manager, ComponentManager& component_manager, float delta_time) {
         if (systems.size() > 0) {
-            for (int i = 1; i < systems.size(); i++) {
+            for (int i = 0; i < systems.size(); i++) {
+                if (i == 1) continue;
                 systems[i]->Update(entity_manager, component_manager, *this, delta_time);
             }
-            systems[0]->Update(entity_manager, component_manager, *this, delta_time); //render system must go last but be index 0
+            systems[1]->Update(entity_manager, component_manager, *this, delta_time); //render system must go last but be index 1
         }
         
     }

@@ -52,10 +52,14 @@ void ShaderManager::LoadFromJSON(const std::string& filepath) {
 
         std::cout << "Compiled shader program: " << name << std::endl;
     }
+    float ambient_intensity = static_cast<float>(Fetch(data["uniforms"], "ambient_intensity", 0.02f));
+    for (auto& [name, program] : shader_programs) {
+        UseShader(program);
+        SetUniform("ambient_intensity", ambient_intensity);
+    }
+
     std::string default_shader = Fetch(data, "active_shader", "");
     UseShader(default_shader);
-    
-    SetUniform("ambient_intensity", static_cast<float>(Fetch(data["uniforms"], "ambient_intensity", 0.02f)));
     SetUniform("debug_mode", 0);
 
 }

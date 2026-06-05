@@ -16,13 +16,45 @@ Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resou
 	nlohmann::json data = ReadJsonFromFile(filepath);
 	name = Fetch(data, "name", "My Scene");
 
-	scene_ecs.AddSystem<RenderSystem>(resource_manager, program.shader_manager);
 	scene_ecs.AddSystem<LightSystem>(program.shader_manager);
+	scene_ecs.AddSystem<RenderSystem>(resource_manager, program.shader_manager);
 	scene_ecs.AddSystem<InputSystem>(program.input_manager);
 
 	if (!program.hardcoded) {
-		
 
+		for (int i = 0; i < data["entities"].size(); i++)
+		{
+			Entity entity = scene_ecs.CreateEntity();
+			if (data["entities"][i].contains("transform"))
+			{
+				glm::vec3 position = FetchVec3(data["entities"][i]["transform"], "position", glm::vec3(0.f));
+				glm::vec3 rotation = FetchVec3(data["entities"][i]["transform"], "rotation", glm::vec3(0.f));
+				glm::vec3 scale = FetchVec3(data["entities"][i]["transform"], "scale", glm::vec3(1.f));
+				scene_ecs.AddComponent(entity, TransformComponent{ 
+					.position = position, 
+					.orientation = glm::quat(glm::radians(rotation)), 
+					.scale = scale 
+					});
+			}
+			if (data["entities"][i].contains("mesh"))
+			{
+				scene_ecs.AddComponent(entity, MeshComponent{ .mesh_name = Fetch(data["entities"][i], "mesh", "default")}, resource_manager);
+			}
+			if (data["entities"][i].contains("light"))
+			{
+				scene_ecs.AddComponent(entity, LightComponent{});
+				//todo
+			}
+			if (data["entities"][i].contains("camera"))
+			{
+				float fov = Fetch(data["entities"][i]["camera"], "fov", 90.f);
+				scene_ecs.AddComponent(entity, CameraComponent{ .fov = fov });
+				if (Fetch(data["entities"][i]["camera"], "primary", false))
+				{
+					scene_ecs.AddComponent(entity, PrimaryCameraComponent{});
+				}
+			}
+		}
 
 	}
 	else {
@@ -48,9 +80,9 @@ Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resou
 		scene_ecs.AddComponent(floor_entity, TransformComponent{.scale = glm::vec3(5.f)});
 		scene_ecs.AddComponent(floor_entity, SurfaceComponent{ .surface_name = "floor" }, resource_manager);
 
-		Entity surface_entity = scene_ecs.CreateEntity();
-		scene_ecs.AddComponent(surface_entity, TransformComponent{ .position = glm::vec3(0.f, 1.f, 0.f), .scale = glm::vec3(5)});
-		scene_ecs.AddComponent(surface_entity, SurfaceComponent{ .surface_name = "test_surface" }, resource_manager);
+		//Entity surface_entity = scene_ecs.CreateEntity();
+		//scene_ecs.AddComponent(surface_entity, TransformComponent{ .position = glm::vec3(0.f, 1.f, 0.f), .scale = glm::vec3(5)});
+		//scene_ecs.AddComponent(surface_entity, SurfaceComponent{ .surface_name = "test_surface" }, resource_manager);
 
 		Entity screen_entity = scene_ecs.CreateEntity();
 		scene_ecs.AddComponent(screen_entity, ScreenComponent{});

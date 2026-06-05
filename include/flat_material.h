@@ -9,26 +9,28 @@ struct FlatMaterial
     float alpha;
     float pad1;
 
-    glm::vec3 ambient;
-    float pad2;
-
     glm::vec3 diffuse;
-    float pad3;
+    float metallic;
 
     glm::vec3 specular;
-    float pad4;
+    float roughness;
 
     glm::vec3 emissive;
-    float pad5;
+    float pad4;
 
-    int ambient_tex;
     int diffuse_tex;
     int specular_tex;
     int emissive_tex;
-    
     int shininess_tex;
+
+    int normal_tex;
+    int roughness_tex;
+    int metallic_tex;
+    int ao_tex;
+
     int bump_tex;
     int displacement_tex;
     int reflection_tex;
+    int opacity_tex;
 
 };

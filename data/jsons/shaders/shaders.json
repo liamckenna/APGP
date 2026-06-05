@@ -3,8 +3,11 @@
   "shader_programs": {
     "default": {
       "vertex": "default.vs.glsl",
-
       "fragment": "default.fs.glsl"
+    },
+    "pbr": {
+      "vertex": "default.vs.glsl",
+      "fragment": "pbr.fs.glsl"
     },
     "surface": {
       "vertex": "default.vs.glsl",

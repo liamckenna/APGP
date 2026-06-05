@@ -56,6 +56,11 @@ void Program::Run() {
 				
 		glfwSwapBuffers(windows->program_window->glfw_window);
 
+		if (limit_fps && graphics_config->swap_interval == 0) {
+			auto target_time = clock.current_time + std::chrono::duration<double>(target_frame_time);
+			std::this_thread::sleep_until(target_time);
+		}
+
 	} while (!glfwWindowShouldClose(windows->program_window->glfw_window));
 
 }
