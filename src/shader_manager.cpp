@@ -165,8 +165,19 @@ GLuint ShaderManager::CompileShaderProgram(const std::string& vertexPath, const 
     }
 
     glLinkProgram(program);
-    
-    // Cleanup
+
+    GLint success;
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+    if (!success) {
+        char infoLog[1024];
+        glGetProgramInfoLog(program, 1024, nullptr, infoLog);
+        std::cerr << "Shader program linking failed:\n" << infoLog << std::endl;
+        glDeleteProgram(program);
+        for (GLuint shader : shaders)
+            if (shader != 0) glDeleteShader(shader);
+        return 0;
+    }
+
     for (GLuint shader : shaders) {
         if (shader != 0) glDeleteShader(shader);
     }

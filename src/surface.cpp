@@ -40,10 +40,12 @@ void Surface::PopulateBuffers(std::vector<FlatVertex> flat_vertices) {
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(FlatVertex), (void*)offsetof(FlatVertex, normal));
 	glEnableVertexAttribArray(2);
 
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(FlatVertex), (void*)offsetof(FlatVertex, tangent));
+	glEnableVertexAttribArray(3);
+
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, material_index.size() * sizeof(int), material_index.data(), GL_STATIC_DRAW);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_BINDING_POINT, ssbo);
-	glVertexAttribIPointer(3, 1, GL_INT, sizeof(int), (void*)0);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 	glBindVertexArray(0);
@@ -57,7 +59,8 @@ std::vector<FlatVertex> Surface::Flatten() {
 		FlatVertex fv;
 		fv.position = v.position;
 		fv.texcoord = v.texcoord;
-		fv.normal =	v.normal;
+		fv.normal   = v.normal;
+		fv.tangent  = v.tangent;
 		flat_vertices.push_back(fv);
 	}
 

@@ -6,7 +6,7 @@
       "fragment": "default.fs.glsl"
     },
     "pbr": {
-      "vertex": "default.vs.glsl",
+      "vertex": "pbr.vs.glsl",
       "fragment": "pbr.fs.glsl"
     },
     "surface": {

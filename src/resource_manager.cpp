@@ -144,6 +144,22 @@ void ResourceManager::LoadObjectFile(const std::string& filename) {
         }
     }
 
+    for (size_t i = 0; i < mesh.indices.size(); i += 3) {
+        int i0 = mesh.indices[i], i1 = mesh.indices[i + 1], i2 = mesh.indices[i + 2];
+        glm::vec3 edge1 = mesh.vertices[i1].position - mesh.vertices[i0].position;
+        glm::vec3 edge2 = mesh.vertices[i2].position - mesh.vertices[i0].position;
+        glm::vec2 dUV1  = mesh.vertices[i1].texcoord - mesh.vertices[i0].texcoord;
+        glm::vec2 dUV2  = mesh.vertices[i2].texcoord - mesh.vertices[i0].texcoord;
+        float denom = dUV1.x * dUV2.y - dUV2.x * dUV1.y;
+        if (std::abs(denom) < 1e-6f) continue;
+        glm::vec3 t = (1.0f / denom) * (dUV2.y * edge1 - dUV1.y * edge2);
+        mesh.vertices[i0].tangent += t;
+        mesh.vertices[i1].tangent += t;
+        mesh.vertices[i2].tangent += t;
+    }
+    for (auto& v : mesh.vertices)
+        v.tangent = glm::normalize(v.tangent);
+
     mesh.SetupBuffers();
 
     meshes.emplace(mesh.name, std::move(mesh));

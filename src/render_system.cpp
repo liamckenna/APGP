@@ -10,6 +10,15 @@ RenderSystem::RenderSystem(ResourceManager& rm, ShaderManager& sm)
 }
 
 void RenderSystem::Update(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time) {
+    if (pbr)
+    {
+        if (shader_manager.GetActiveShader() != shader_manager.GetShaderID("pbr")) shader_manager.UseShader("pbr");
+    }
+    else
+    {
+        if (shader_manager.GetActiveShader() != shader_manager.GetShaderID("default")) shader_manager.UseShader("default");
+    }
+    
     Clear();
 
     UpdateProjection(entity_manager, component_manager, system_manager, delta_time);
@@ -41,8 +50,6 @@ void RenderSystem::UpdateProjection(EntityManager& entity_manager, ComponentMana
             if (transform.stale) {
                 camera.view = glm::lookAt(transform.position, transform.position + (transform.orientation * glm::vec3(0, 0, -1)),
                     transform.orientation * glm::vec3(0, 1, 0));
-                shader_manager.SetUniform("view", camera.view);
-                shader_manager.SetUniform("view_position", transform.position);
                 ViewMatrix = camera.view;
                 transform.stale = false;
             }
@@ -56,9 +63,11 @@ void RenderSystem::UpdateProjection(EntityManager& entity_manager, ComponentMana
                         -size, size, camera.near, camera.far);
                 }
                 ProjectionMatrix = camera.projection;
-                shader_manager.SetUniform("projection", camera.projection);
                 camera.stale = false;
             }
+            shader_manager.SetUniform("view", camera.view);
+            shader_manager.SetUniform("view_position", transform.position);
+            shader_manager.SetUniform("projection", camera.projection);
         }
     }
 }

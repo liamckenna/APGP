@@ -301,6 +301,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	}
 	switch (q) { //q
 	case PRESSED:
+		pbr = !pbr;
 		break;
 	case DOWN:
 		break;
