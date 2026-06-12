@@ -10,6 +10,7 @@
 #include "render_system.h"
 #include "input_system.h"
 #include "window.h"
+#include "windows.h"
 
 Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resource_manager(), program(program) {
 
@@ -20,8 +21,8 @@ Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resou
 	scene_ecs.AddSystem<RenderSystem>(resource_manager, program.shader_manager);
 	scene_ecs.AddSystem<InputSystem>(program.input_manager);
 
-	if (!program.hardcoded) {
-
+	if (!program.hardcoded) 
+	{
 		for (int i = 0; i < data["entities"].size(); i++)
 		{
 			Entity entity = scene_ecs.CreateEntity();
@@ -55,10 +56,9 @@ Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resou
 				}
 			}
 		}
-
 	}
-	else {
-
+	else 
+	{
 		Entity default_entity = scene_ecs.CreateEntity();
 		scene_ecs.AddComponent(default_entity, TransformComponent{ .position = glm::vec3(-7.f, 1.f, 0.f), .scale = glm::vec3(1.5f)});
 		scene_ecs.AddComponent(default_entity, MeshComponent{ .mesh_name = "default" }, resource_manager);
@@ -70,7 +70,7 @@ Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resou
 
 		Entity light_entity = scene_ecs.CreateEntity();
 		scene_ecs.AddComponent(light_entity, TransformComponent{.position = glm::vec3(5.f, 5.f, 5.f)});
-		scene_ecs.AddComponent(light_entity, LightComponent{});
+		scene_ecs.AddComponent(light_entity, LightComponent{}); 
 
 		Entity pokeball_entity = scene_ecs.CreateEntity();
 		scene_ecs.AddComponent(pokeball_entity, TransformComponent{ .position = glm::vec3(0.f, 1.f, -7.f) });
@@ -84,10 +84,22 @@ Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resou
 		//scene_ecs.AddComponent(surface_entity, TransformComponent{ .position = glm::vec3(0.f, 1.f, 0.f), .scale = glm::vec3(5)});
 		//scene_ecs.AddComponent(surface_entity, SurfaceComponent{ .surface_name = "test_surface" }, resource_manager);
 
-		Entity screen_entity = scene_ecs.CreateEntity();
-		scene_ecs.AddComponent(screen_entity, ScreenComponent{});
-
-
 	}
+
+	Entity screen_entity = scene_ecs.CreateEntity();
+	scene_ecs.AddComponent(screen_entity, ScreenComponent{ (int)program.windows->program_window->width, (int)program.windows->program_window->height, "fxaa" });
+
+	screen_info_entity = scene_ecs.CreateEntity();
+	scene_ecs.AddComponent(screen_info_entity, ScreenInfoComponent{
+		(int)program.windows->program_window->width,
+		(int)program.windows->program_window->height });
+
 	std::cout << "scene generation completed" << std::endl;
+}
+
+void Scene::OnResize(int width, int height)
+{
+	auto& info = scene_ecs.GetComponent<ScreenInfoComponent>(screen_info_entity);
+	info.width = width;
+	info.height = height;
 }

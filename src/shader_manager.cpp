@@ -52,7 +52,7 @@ void ShaderManager::LoadFromJSON(const std::string& filepath) {
 
         std::cout << "Compiled shader program: " << name << std::endl;
     }
-    float ambient_intensity = static_cast<float>(Fetch(data["uniforms"], "ambient_intensity", 0.02f));
+    float ambient_intensity = static_cast<float>(Fetch(data["uniforms"], "ambient_intensity", 0.01f));
     for (auto& [name, program] : shader_programs) {
         UseShader(program);
         SetUniform("ambient_intensity", ambient_intensity);
@@ -71,40 +71,41 @@ void ShaderManager::CacheUniforms(const std::string& shaderName) {
     std::cout << "uniforms cached" << std::endl;
 }
 
-void ShaderManager::SetUniform(const std::string& shaderName, const std::string& uniformName, DataType value) {
+bool ShaderManager::SetUniform(const std::string& shaderName, const std::string& uniformName, DataType value) {
     if (shader_programs.find(shaderName) == shader_programs.end()) {
         std::cout << "Shader not found: " << shaderName << std::endl;
-        return;
+        return false;
     }
     GLuint program = shader_programs[shaderName];
-    shader_uniforms[program].FindAndUpdate(uniformName, value);
+    return shader_uniforms[program].FindAndUpdate(uniformName, value);
 }
 
-void ShaderManager::SetUniform(const std::string& uniformName, DataType value) {
+bool ShaderManager::SetUniform(const std::string& uniformName, DataType value) {
     if (active_shader == 0) {
         std::cerr << "No active shader program set!" << std::endl;
-        return;
+        return false;
     }
-    shader_uniforms[active_shader].FindAndUpdate(uniformName, value);
+    return shader_uniforms[active_shader].FindAndUpdate(uniformName, value);
 }
 
-void ShaderManager::UseShader(GLuint program) {
+bool ShaderManager::UseShader(GLuint program) {
     if (program == 0) {
         std::cerr << "Invalid shader program ID: 0" << std::endl;
-        return;
+        return false;
     }
 
     if (active_shader != program) {
         glUseProgram(program);
         active_shader = program;
     }
+    return true;
 }
 
 
-void ShaderManager::UseShader(const std::string& name) {
+bool ShaderManager::UseShader(const std::string& name) {
     if (shader_programs.find(name) == shader_programs.end()) {
         std::cerr << "Shader program not found: " << name << std::endl;
-        return;
+        return false;
     }
 
     GLuint program = shader_programs[name];
@@ -112,7 +113,7 @@ void ShaderManager::UseShader(const std::string& name) {
         glUseProgram(program);
         active_shader = program;
     }
-    //std::cout << "using shader program \"" << name << "\"" << std::endl;
+    return true;
 }
 
 GLuint ShaderManager::CompileShaderProgram(const std::string& vertexPath, const std::string& fragmentPath, 

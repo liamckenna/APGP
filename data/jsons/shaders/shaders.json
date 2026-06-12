@@ -15,9 +15,13 @@
       "tess_eval": "default.tes.glsl",
       "fragment": "default.fs.glsl"
     },
-    "debug_quad": {
-      "vertex": "debug_quad.vs.glsl",
-      "fragment": "debug_quad.fs.glsl"
+    "default_screen_quad": {
+      "vertex": "default_screen_quad.vs.glsl",
+      "fragment": "default_screen_quad.fs.glsl"
+    },
+    "fxaa": {
+      "vertex": "default_screen_quad.vs.glsl",
+      "fragment": "fxaa.fs.glsl"
     },
     "render_pass": {
       "vertex": "render_pass.vs.glsl",
@@ -30,6 +34,6 @@
     }
   },
   "uniforms": {
-    "ambient_intensity": 0.02
+    "ambient_intensity": 0.001
   }
 }

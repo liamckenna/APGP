@@ -1,4 +1,3 @@
-// debug_quad.vs.glsl
 #version 450 core
 layout(location = 0) in vec2 aPos;
 layout(location = 1) in vec2 aTexCoord;

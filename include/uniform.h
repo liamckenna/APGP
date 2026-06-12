@@ -33,9 +33,9 @@ struct Uniform {
 		//SetDefaultValue(type);
 	};
 
-	void Update(DataType new_value) {
-		if (location == -1) return;
-		if (value == new_value) return;
+	bool Update(DataType new_value) {
+		if (location == -1) return false;
+		if (value == new_value) return false;
 		else value = new_value;
 		switch (type) {
 		case GL_INT:
@@ -68,8 +68,9 @@ struct Uniform {
 			break;
 		default:
 			std::cerr << "Error: Unsupported uniform data type." << std::endl;
-			break;
+			return false;
 		}
+		return true;
 	};
 
 	void SetDefaultValue(GLenum type) {

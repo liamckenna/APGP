@@ -49,22 +49,29 @@ public:
     //gets all entities with a component of type T
     template<typename T>
     std::vector<Entity>& GetEntitiesWithComponent() {
-        return std::any_cast<ComponentPool<T>&>(component_pools[typeid(T)]).GetAllEntities();
+        auto it = component_pools.find(typeid(T));
+        if (it == component_pools.end()) {
+            static std::vector<Entity> empty;
+            return empty;
+        }
+        return std::any_cast<ComponentPool<T>&>(it->second).GetAllEntities();
     }
 
-    // Gets all entities that have *all* components of types T...
+    //gets all entities that have *all* components of types T...
     template<typename... T>
     std::vector<Entity> GetEntitiesWithComponents() {
         std::vector<Entity> result;
         if constexpr (sizeof...(T) == 0) return result; // Return empty if no types provided
 
-        // Get the first component's entity list as a base
-        auto& firstPool = std::any_cast<ComponentPool<std::tuple_element_t<0, std::tuple<T...>>>&>(
-            component_pools[typeid(std::tuple_element_t<0, std::tuple<T...>>)]
-        );
+        //get the first component's entity list as a base
+        using FirstType = std::tuple_element_t<0, std::tuple<T...>>;
+        auto firstIt = component_pools.find(typeid(FirstType));
+        if (firstIt == component_pools.end()) return result; // No pool exists yet
+
+        auto& firstPool = std::any_cast<ComponentPool<FirstType>&>(firstIt->second);
         result = firstPool.GetAllEntities();
 
-        // Filter entities to only those that have *all* components
+        //gilter entities to only those that have *all* components
         for (Entity entity : result) {
             bool hasAll = ((component_pools.find(typeid(T)) != component_pools.end() &&
                 std::any_cast<ComponentPool<T>&>(component_pools[typeid(T)]).Has(entity)) && ...);

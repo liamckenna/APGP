@@ -44,7 +44,7 @@
       },
       "camera": {
         "primary": true,
-        "fov": 90.0
+        "fov": 60.0
       }
     }
   ]

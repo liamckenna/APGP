@@ -12,5 +12,5 @@ struct Uniforms {
     Uniforms(GLuint program);
 
     Uniform& GetByName(const std::string& name);
-    void FindAndUpdate(const std::string& name, DataType value);
+    bool FindAndUpdate(const std::string& name, DataType value);
 };

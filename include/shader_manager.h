@@ -16,14 +16,14 @@ public:
     ~ShaderManager();
 
     void LoadFromJSON(const std::string& filepath);
-    void UseShader(const std::string& name);
-    void UseShader(GLuint program);
+    bool UseShader(const std::string& name);
+    bool UseShader(GLuint program);
     GLuint GetShaderID(const std::string& name);
     GLuint GetActiveShader();
 
     void CacheUniforms(const std::string& shaderName);
-    void SetUniform(const std::string& shaderName, const std::string& uniformName, DataType value);
-    void SetUniform(const std::string& uniformName, DataType value);
+    bool SetUniform(const std::string& shaderName, const std::string& uniformName, DataType value);
+    bool SetUniform(const std::string& uniformName, DataType value);
 
 
 private:

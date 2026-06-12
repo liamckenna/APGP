@@ -2,4 +2,6 @@
 
 bool use_compute = false;
 
-bool pbr = false;
+bool pbr = true;
+
+bool fxaa = true;

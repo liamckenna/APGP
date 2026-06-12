@@ -13,12 +13,14 @@ class RenderSystem : public System {
     ShaderManager& shader_manager;
     SurfaceRenderer surface_renderer;
     bool is_first_frame = true;
+    float render_scale = 1.f;
     glm::mat4 ModelMatrix;
     glm::mat4 ViewMatrix;
     glm::mat4 ProjectionMatrix;
 public:
     RenderSystem(ResourceManager& rm, ShaderManager& sm);
     void Clear();
+    void SetRenderDestination(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
     void Update(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
     void UpdateProjection(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
     void RenderMeshes(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);

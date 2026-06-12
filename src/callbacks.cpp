@@ -1,5 +1,6 @@
 #include "callbacks.h"
 #include "program.h"
+#include "scene.h"
 #include "clock.h"
 #include "windows.h"
 #include "input_manager.h"
@@ -54,6 +55,19 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 	}
 }
 
+void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
+{
+	Window* user_window = static_cast<Window*>(glfwGetWindowUserPointer(window));
+	user_window->width = width;
+	user_window->height = height;
+	glViewport(0, 0, width, height);
+
+	Scene* scene = user_window->program.scene;
+	if (scene) {
+		scene->OnResize(width, height);
+	}
+}
+
 void SetCallbacks(Window* window) {
 	glfwSetWindowUserPointer(window->glfw_window, window);
 	glfwSetScrollCallback(window->glfw_window, ScrollCallback);
@@ -62,4 +76,5 @@ void SetCallbacks(Window* window) {
 	glfwSetCursorPosCallback(window->glfw_window, MouseCallback);
 	glfwSetWindowFocusCallback(window->glfw_window, WindowFocusCallback);
 	glfwSetMouseButtonCallback(window->glfw_window, MouseButtonCallback);
+	glfwSetFramebufferSizeCallback(window->glfw_window, FramebufferSizeCallback);
 }

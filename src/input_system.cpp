@@ -84,6 +84,9 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	}
 	switch (tab) { //left control
 	case PRESSED:
+		fxaa = !fxaa;
+		if (fxaa) std::cout << "enabled fxaa!" << std::endl;
+		else std::cout << "disabled fxaa!" << std::endl;
 		break;
 	case DOWN:
 		break;
@@ -176,8 +179,6 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 
 	switch (one) { //1
 	case PRESSED:
-		if (lshift == DOWN) input_manager.program.shader_manager.UseShader("debug_quad");
-		input_manager.program.shader_manager.SetUniform("debug_mode", 0);
 		break;
 	case DOWN:
 		break;
@@ -188,8 +189,6 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	}
 	switch (two) { //2
 	case PRESSED:
-		if (lshift == DOWN) input_manager.program.shader_manager.UseShader("debug_quad");
-		input_manager.program.shader_manager.SetUniform("debug_mode", 1);
 		break;
 	case DOWN:
 		break;
@@ -200,8 +199,6 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	}
 	switch (three) { //3
 	case PRESSED:
-		if (lshift == DOWN) input_manager.program.shader_manager.UseShader("debug_quad");
-		input_manager.program.shader_manager.SetUniform("debug_mode", 2);
 		break;
 	case DOWN:
 		break;
@@ -212,8 +209,6 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	}
 	switch (four) { //4
 	case PRESSED:
-		if (lshift == DOWN) input_manager.program.shader_manager.UseShader("debug_quad");
-		input_manager.program.shader_manager.SetUniform("debug_mode", 3);
 		break;
 	case DOWN:
 		break;
@@ -224,8 +219,6 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	}
 	switch (five) { //5
 	case PRESSED:
-		if (lshift == DOWN) input_manager.program.shader_manager.UseShader("debug_quad");
-		input_manager.program.shader_manager.SetUniform("debug_mode", 4);
 		break;
 	case DOWN:
 		break;

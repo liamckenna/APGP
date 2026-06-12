@@ -63,14 +63,10 @@ Uniform& Uniforms::GetByName(const std::string& name) {
 	return it->second;
 }
 
-void Uniforms::FindAndUpdate(const std::string& name, DataType value) {
+bool Uniforms::FindAndUpdate(const std::string& name, DataType value) {
     if (uniforms.find(name) == uniforms.end()) {
         std::cerr << "Uniform not found: " << name << std::endl;
-        std::cerr << "too bad cuh" << std::endl;
-        for (auto& uniform : uniforms) {
-            //std::cout << uniform.second.name << std::endl;
-        }
-        return;
+        return false;
     }
-    uniforms[name].Update(value);
+    return uniforms[name].Update(value);
 }
