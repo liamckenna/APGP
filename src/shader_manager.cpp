@@ -12,6 +12,7 @@ int max_group_count_x = 65536;
 
 
 void ShaderManager::LoadFromJSON(const std::string& filepath) {
+    this->filepath = filepath;
     nlohmann::json data = ReadJsonFromFile(filepath);
 
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &max_group_count_x);

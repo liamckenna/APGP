@@ -6,5 +6,5 @@
   "hardcoded": false,
   "limit_fps": false,
   "use_compute":  false,
-  "fps_cap":  1000
+  "fps_cap":  60
 }

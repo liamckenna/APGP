@@ -29,8 +29,8 @@ void MouseCallback(GLFWwindow* window, double xpos, double ypos) {
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
 	Window* user_window = static_cast<Window*>(glfwGetWindowUserPointer(window));
 	user_window->program.input_manager.wheel.active = true;
-	user_window->program.input_manager.wheel.dx = xoffset;
-	user_window->program.input_manager.wheel.dy = yoffset;
+	user_window->program.input_manager.wheel.dx = (float)xoffset;
+	user_window->program.input_manager.wheel.dy = (float)yoffset;
 }
 
 void WindowFocusCallback(GLFWwindow* window, int focused)

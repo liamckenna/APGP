@@ -56,6 +56,18 @@ Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resou
 				}
 			}
 		}
+
+		nlohmann::json shader_data = ReadJsonFromFile(program.shader_manager.filepath);
+
+		for (int i = 0; i < data["shaders"].size(); i++)
+		{
+			std::string shader_name = data["shaders"][i];
+			std::vector<std::string> shader_inputs = Fetch(shader_data["shader_programs"][shader_name], "inputs", std::vector<std::string>{});
+			
+			Entity screen_entity = scene_ecs.CreateEntity();
+			scene_ecs.AddComponent(screen_entity, ScreenComponent{ (int)program.windows->program_window->width, (int)program.windows->program_window->height, shader_name, shader_inputs});
+
+		}
 	}
 	else 
 	{
@@ -86,8 +98,8 @@ Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resou
 
 	}
 
-	Entity screen_entity = scene_ecs.CreateEntity();
-	scene_ecs.AddComponent(screen_entity, ScreenComponent{ (int)program.windows->program_window->width, (int)program.windows->program_window->height, "fxaa" });
+	Entity scene_target_entity = scene_ecs.CreateEntity();
+	scene_ecs.AddComponent(scene_target_entity, SceneTargetComponent{(int)program.windows->program_window->width, (int)program.windows->program_window->height});
 
 	screen_info_entity = scene_ecs.CreateEntity();
 	scene_ecs.AddComponent(screen_info_entity, ScreenInfoComponent{

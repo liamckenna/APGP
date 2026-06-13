@@ -3,6 +3,7 @@
 #include "json.h"
 
 Windows::Windows(const std::string& filepath, Program& program) : program(program) {
+    this->filepath = filepath;
     it = 0;
     nlohmann::json data = ReadJsonFromFile(filepath);
     Initialize(data);

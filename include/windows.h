@@ -13,6 +13,8 @@ struct Windows {
     Program& program;
     int it;
 
+    std::string filepath;
+
     Windows(const std::string& filepath, Program& program);
     ~Windows();
 

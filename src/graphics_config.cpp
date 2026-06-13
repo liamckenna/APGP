@@ -4,6 +4,7 @@
 #include <iostream>
 
 GraphicsConfig::GraphicsConfig() {
+    filepath = "";
     DefaultOpenGLConfig();
     DefaultGLFWConfig();
     ApplyGLFWSettings();
@@ -11,7 +12,7 @@ GraphicsConfig::GraphicsConfig() {
 
 GraphicsConfig::GraphicsConfig(const std::string& filepath) {
 
-
+    this->filepath = filepath;
     nlohmann::json settings = ReadJsonFromFile(filepath);
 
     if (settings.contains("gl")) OpenGLConfig(settings["gl"]);

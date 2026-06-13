@@ -25,7 +25,7 @@ public:
     bool SetUniform(const std::string& shaderName, const std::string& uniformName, DataType value);
     bool SetUniform(const std::string& uniformName, DataType value);
 
-
+    std::string filepath;
 private:
     GLuint CompileShaderProgram(const std::string& vertexPath, const std::string& fragmentPath,
         const std::string& geometryPath = "",

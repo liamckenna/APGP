@@ -9,6 +9,7 @@
 #include "windows.h"
 #include "graphics_config.h"
 #include "universal_vars.h"
+#include "precise_timer.h"
 
 
 Program::Program(const std::string& filepath) : clock(), input_manager(*this) {
@@ -46,19 +47,27 @@ Program::Program(const std::string& filepath) : clock(), input_manager(*this) {
 }
 
 void Program::Run() {
-	
+
+	const auto period = std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+		std::chrono::duration<double>(target_frame_time));
+	auto next_present = std::chrono::steady_clock::now() + period;
+
 	do {
 		clock.Tick();
 
 		glfwPollEvents();
-		
+
 		scene->scene_ecs.Update(clock.GetDeltaTime());
-				
+
 		glfwSwapBuffers(windows->program_window->glfw_window);
 
 		if (limit_fps && graphics_config->swap_interval == 0) {
-			auto target_time = clock.current_time + std::chrono::duration<double>(target_frame_time);
-			std::this_thread::sleep_until(target_time);
+			precise_timer.WaitUntil(next_present);
+			next_present += period;
+
+			auto now = std::chrono::steady_clock::now();
+			if (now - next_present > period)
+				next_present = now + period;
 		}
 
 	} while (!glfwWindowShouldClose(windows->program_window->glfw_window));

@@ -3,5 +3,3 @@
 bool use_compute = false;
 
 bool pbr = true;
-
-bool fxaa = true;

@@ -23,6 +23,8 @@ struct GraphicsConfig {
     int gl_version_minor;
     int swap_interval;
 
+    std::string filepath;
+
     GraphicsConfig();
     GraphicsConfig(const std::string& filepath);
 

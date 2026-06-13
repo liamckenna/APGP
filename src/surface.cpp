@@ -72,7 +72,7 @@ void Surface::CreatePatches()
 
 	
 	 
-	num_patches = vertices.size() / patch_size;
+	num_patches = (int)vertices.size() / patch_size;
 
 	// update bounding box
 	bbox[0] = glm::vec3(10000.f, 10000.f, 10000.f);
@@ -88,14 +88,14 @@ void Surface::CreatePatches()
 	// calculate connectivity
 	//calConnectivityOfPatches
 
-	float eps = 0.00001;
+	float eps = 0.00001f;
 	int edge_point_idices[4][4] = { {0,1,2,3},		// top row
 									{12,13,14,15},	// bottom row
 									{0,4,8,12},		// left column
 									{3,7,11,15}		// right column
 	};
 
-	int num_patches = indices.size() / patch_size;
+	int num_patches = (int)indices.size() / patch_size;
 
 	std::vector<glm::ivec4> conn(num_patches, glm::ivec4(-1, -1, -1, -1));
 
@@ -129,7 +129,7 @@ void Surface::CreatePatches()
 				{
 					vertex_table.push_back(pos);
 					vertices_location.push_back(std::vector<std::pair<int, int> >());
-					found_idx = vertex_table.size() - 1;
+					found_idx = (int)vertex_table.size() - 1;
 				}
 
 				vertices_location[found_idx].push_back(std::make_pair(patch_idx, edge_idx));
@@ -212,5 +212,5 @@ void Surface::CreatePatches()
 	glBindTexture(GL_TEXTURE_1D, 0);
 
 	glBindTexture(GL_TEXTURE_1D, connectivity_texture);
-	glTexSubImage1D(GL_TEXTURE_1D, 0, 0, patches.size(), GL_RGBA_INTEGER, GL_INT, &patches[0]);
+	glTexSubImage1D(GL_TEXTURE_1D, 0, 0, (GLsizei)patches.size(), GL_RGBA_INTEGER, GL_INT, &patches[0]);
 }

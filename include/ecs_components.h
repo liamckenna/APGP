@@ -131,13 +131,82 @@ struct ScreenComponent {
     GLuint vbo;
     GLuint fbo;
     GLuint colorTexture;
-    GLuint rbo;
     int width;
     int height;
     std::string shader_name = "default_screen_quad";
+    bool enabled = true;
+    std::vector<std::string> scene_inputs; //generalize needed inputs by passing them in from the scene description
+                                           //since not all screen components need all inputs
 
-    ScreenComponent(int width, int height, std::string shader_name) {
+    ScreenComponent(int width, int height, std::string shader_name, std::vector<std::string> scene_inputs)
+    {
         this->shader_name = shader_name;
+        this->width = width;
+        this->height = height;
+        this->scene_inputs = scene_inputs;
+        float quadVertices[] = {
+            //positions   //texCoords
+            -1.0f,  1.0f,  0.0f, 1.0f,
+            -1.0f, -1.0f,  0.0f, 0.0f,
+             1.0f,  1.0f,  1.0f, 1.0f,
+             1.0f, -1.0f,  1.0f, 0.0f,
+        };
+        glGenVertexArrays(1, &vao);
+        glGenBuffers(1, &vbo);
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+
+        glGenFramebuffers(1, &fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+
+        //lets assume all post-processing effects need colorTexture
+        glActiveTexture(GL_TEXTURE0);
+        glGenTextures(1, &colorTexture);
+        glBindTexture(GL_TEXTURE_2D, colorTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);      
+    }
+
+    //reallocate the color/depth attachments to match a new framebuffer size
+    void Resize(int new_width, int new_height)
+    {
+        width = new_width;
+        height = new_height;
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, colorTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    }
+};
+
+struct SceneTargetComponent
+{
+    GLuint vao;
+    GLuint vbo;
+    GLuint fbo;
+    GLuint colorTexture;
+    GLuint depthTexture;
+    int width;
+    int height;
+
+    glm::mat4 view_proj = glm::mat4(1.0f);
+    glm::mat4 prev_view_proj = glm::mat4(1.0f);
+    glm::mat4 inv_view_proj = glm::mat4(1.0f);
+
+    SceneTargetComponent(int width, int height)
+    {
         this->width = width;
         this->height = height;
         float quadVertices[] = {
@@ -169,18 +238,25 @@ struct ScreenComponent {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
 
-        glGenRenderbuffers(1, &rbo);
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+        glGenTextures(1, &depthTexture);
+        glBindTexture(GL_TEXTURE_2D, depthTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, width, height, 0,
+                     GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    //reallocate the color/depth attachments to match a new framebuffer size
-    void Resize(int new_width, int new_height) {
+    void Resize(int new_width, int new_height)
+    {
         width = new_width;
         height = new_height;
 
@@ -188,7 +264,8 @@ struct ScreenComponent {
         glBindTexture(GL_TEXTURE_2D, colorTexture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+        glBindTexture(GL_TEXTURE_2D, depthTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, width, height, 0,
+                     GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
     }
 };

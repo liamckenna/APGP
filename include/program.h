@@ -6,6 +6,7 @@
 #include "input_manager.h"
 #include "clock.h"
 #include "graphics_config.h"
+#include "precise_timer.h"
 
 struct Windows;
 struct Scene;
@@ -16,6 +17,7 @@ struct Program {
 	
 	std::optional<GraphicsConfig> graphics_config;
 	Clock clock;
+	PreciseTimer precise_timer;
 
 	ECSManager core_ecs;
 	ShaderManager shader_manager;

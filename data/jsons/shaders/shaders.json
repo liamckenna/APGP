@@ -21,7 +21,21 @@
     },
     "fxaa": {
       "vertex": "default_screen_quad.vs.glsl",
-      "fragment": "fxaa.fs.glsl"
+      "fragment": "fxaa.fs.glsl",
+      "inputs": [
+        "screenSize"
+      ]
+    },
+    "motion_blur": {
+      "vertex": "default_screen_quad.vs.glsl",
+      "fragment": "motion_blur.fs.glsl",
+      "inputs": [
+        "screenWidth",
+        "depthTexture",
+        "invViewProj",
+        "prevViewProj",
+        "deltaTime"
+      ]
     },
     "render_pass": {
       "vertex": "render_pass.vs.glsl",

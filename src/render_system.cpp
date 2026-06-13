@@ -25,33 +25,30 @@ void RenderSystem::Update(EntityManager& entity_manager, ComponentManager& compo
 
 void RenderSystem::SetRenderDestination(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time)
 {
-    auto screen_entities = component_manager.GetEntitiesWithComponents<ScreenComponent>();
-    auto info_entities = component_manager.GetEntitiesWithComponent<ScreenInfoComponent>();
-    if (!info_entities.empty())
+    auto scene_target_entity = component_manager.GetEntitiesWithComponent<SceneTargetComponent>()[0];
+    auto screen_entitites = component_manager.GetEntitiesWithComponent<ScreenComponent>();
+    auto info_entity = component_manager.GetEntitiesWithComponent<ScreenInfoComponent>()[0];
+    
+    auto& info_component = component_manager.GetComponent<ScreenInfoComponent>(info_entity);
+    int render_w = (int)(info_component.width * render_scale);
+    int render_h = (int)(info_component.height * render_scale);
+
+    auto& scene_target_component = component_manager.GetComponent<SceneTargetComponent>(scene_target_entity);
+    if (scene_target_component.width != render_w || scene_target_component.height != render_h)
     {
-        auto& info = component_manager.GetComponent<ScreenInfoComponent>(info_entities[0]);
-        int render_w = (int)(info.width * render_scale);
-        int render_h = (int)(info.height * render_scale);
-        for (auto entity : screen_entities)
+        scene_target_component.Resize(render_w, render_h);
+    }
+    for (auto screen_entity : screen_entitites)
+    {
+        auto& screen_component = component_manager.GetComponent<ScreenComponent>(screen_entity);
+        if (screen_component.width != render_w || screen_component.height != render_h)
         {
-            auto& screen = component_manager.GetComponent<ScreenComponent>(entity);
-            if (screen.width != render_w || screen.height != render_h)
-            {
-                screen.Resize(render_w, render_h);
-            }
+            screen_component.Resize(render_w, render_h);
         }
     }
 
-    if (screen_entities.empty())
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
-    else
-    {
-        auto& first = component_manager.GetComponent<ScreenComponent>(screen_entities[0]);
-        glBindFramebuffer(GL_FRAMEBUFFER, first.fbo);
-        glViewport(0, 0, first.width, first.height);
-    }
+    glBindFramebuffer(GL_FRAMEBUFFER, scene_target_component.fbo);
+    glViewport(0, 0, scene_target_component.width, scene_target_component.height);
 }
 
 void RenderSystem::Clear()
@@ -93,6 +90,13 @@ void RenderSystem::UpdateProjection(EntityManager& entity_manager, ComponentMana
             shader_manager.SetUniform("view", camera.view);
             shader_manager.SetUniform("view_position", transform.position);
             shader_manager.SetUniform("projection", camera.projection);
+
+            auto scene_target_entity = component_manager.GetEntitiesWithComponent<SceneTargetComponent>()[0];
+            auto& scene_target = component_manager.GetComponent<SceneTargetComponent>(scene_target_entity);
+            glm::mat4 current_view_proj = camera.projection * camera.view;
+            scene_target.prev_view_proj = scene_target.view_proj;
+            scene_target.view_proj = current_view_proj;
+            scene_target.inv_view_proj = glm::inverse(current_view_proj);
         }
     }
 }
@@ -114,7 +118,7 @@ void RenderSystem::RenderMeshes(EntityManager& entity_manager, ComponentManager&
         shader_manager.SetUniform("model", meshComp.model);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_BINDING_POINT, mesh.ssbo);
         glBindVertexArray(mesh.vao);
-        glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, (GLsizei)mesh.indices.size(), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }
 }
@@ -122,8 +126,11 @@ void RenderSystem::RenderMeshes(EntityManager& entity_manager, ComponentManager&
 
 void RenderSystem::RenderScreenQuad(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time)
 {
+    auto scene_target_entity = component_manager.GetEntitiesWithComponent<SceneTargetComponent>()[0];
+    auto& scene_target_component = component_manager.GetComponent<SceneTargetComponent>(scene_target_entity);
     auto screen_entities = component_manager.GetEntitiesWithComponents<ScreenComponent>();
-    if (screen_entities.empty()) return;
+
+    glDisable(GL_DEPTH_TEST);
 
     int window_w = 0, window_h = 0;
     auto info_entities = component_manager.GetEntitiesWithComponent<ScreenInfoComponent>();
@@ -133,8 +140,30 @@ void RenderSystem::RenderScreenQuad(EntityManager& entity_manager, ComponentMana
         window_w = info.width;
         window_h = info.height;
     }
+    
+    if (!screen_entities.empty())
+    {
+        auto& first_screen_component = component_manager.GetComponent<ScreenComponent>(screen_entities[0]);
+        glBindFramebuffer(GL_FRAMEBUFFER, first_screen_component.fbo);
+        glViewport(0, 0, first_screen_component.width, first_screen_component.height);
+    }
+    else
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, window_w, window_h);
+    }
 
-    glDisable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT);
+    shader_manager.UseShader("default_screen_quad");
+    
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, scene_target_component.colorTexture);
+    shader_manager.SetUniform("screenTexture", 0);
+    glBindVertexArray(scene_target_component.vao);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
+
+    if (screen_entities.empty()) return;
 
     for (size_t i = 0; i < screen_entities.size(); i++)
     {
@@ -153,15 +182,44 @@ void RenderSystem::RenderScreenQuad(EntityManager& entity_manager, ComponentMana
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
-        if (!shader_manager.UseShader(curr.shader_name)) shader_manager.UseShader("default_screen_quad");
-        if (shader_manager.GetActiveShader() == shader_manager.GetShaderID("fxaa"))
+
+        if (!shader_manager.UseShader(curr.shader_name) || !curr.enabled) shader_manager.UseShader("default_screen_quad");
+        else
         {
-            if (!fxaa) shader_manager.UseShader("default_screen_quad");
-            else 
+            for (auto input : curr.scene_inputs)
             {
-                shader_manager.SetUniform("screenWidth", curr.width);
-                shader_manager.SetUniform("screenHeight", curr.height);
-            } 
+                if (input == "depthTexture")
+                {
+                    glActiveTexture(GL_TEXTURE1);
+                    glBindTexture(GL_TEXTURE_2D, scene_target_component.depthTexture);
+                    shader_manager.SetUniform("depthTexture", 1);
+                }
+                else if (input == "prevViewProj")
+                {
+                    shader_manager.SetUniform("prevViewProj", scene_target_component.prev_view_proj);
+                }
+                else if (input == "invViewProj")
+                {
+                    shader_manager.SetUniform("invViewProj", scene_target_component.inv_view_proj);
+                }
+                else if (input == "deltaTime")
+                {
+                    shader_manager.SetUniform("deltaTime", delta_time);
+                }
+                else if (input == "screenSize")
+                {
+                    shader_manager.SetUniform("screenWidth", curr.width);
+                    shader_manager.SetUniform("screenHeight", curr.height);
+                }
+                else if (input == "screenWidth")
+                {
+                    shader_manager.SetUniform("screenWidth", curr.width);
+                }
+                else if (input == "screenHeight")
+                {
+                    shader_manager.SetUniform("screenHeight", curr.height);
+                }
+            }
         }
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, curr.colorTexture);

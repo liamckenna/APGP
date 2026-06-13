@@ -21,6 +21,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	byte esc = input_manager.GetKeyState(GLFW_KEY_ESCAPE);
 	byte space = input_manager.GetKeyState(GLFW_KEY_SPACE);
 	byte tab = input_manager.GetKeyState(GLFW_KEY_TAB);
+	byte caps = input_manager.GetKeyState(GLFW_KEY_CAPS_LOCK);
 	byte lshift = input_manager.GetKeyState(GLFW_KEY_LEFT_SHIFT);
 	byte lctrl = input_manager.GetKeyState(GLFW_KEY_LEFT_CONTROL);
 
@@ -82,12 +83,46 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	case UP:
 		break;
 	}
-	switch (tab) { //left control
+	switch (tab) { //tab
 	case PRESSED:
-		fxaa = !fxaa;
-		if (fxaa) std::cout << "enabled fxaa!" << std::endl;
-		else std::cout << "disabled fxaa!" << std::endl;
+	{
+		auto screen_entities = component_manager.GetEntitiesWithComponent<ScreenComponent>();
+		for (auto entity : screen_entities)
+		{
+			auto& screen_component = component_manager.GetComponent<ScreenComponent>(entity);
+			if (screen_component.shader_name == "fxaa")
+			{
+				screen_component.enabled = !screen_component.enabled;
+				if (screen_component.enabled) std::cout << "enabled fxaa!" << std::endl;
+				else std::cout << "disabled fxaa!" << std::endl;
+			}
+		}
 		break;
+	}
+	case DOWN:
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+
+	switch (caps){ //caps lock
+	case PRESSED:
+	{
+		auto screen_entities = component_manager.GetEntitiesWithComponent<ScreenComponent>();
+		for (auto entity : screen_entities)
+		{
+			auto& screen_component = component_manager.GetComponent<ScreenComponent>(entity);
+			if (screen_component.shader_name == "motion_blur")
+			{
+				screen_component.enabled = !screen_component.enabled;
+				if (screen_component.enabled) std::cout << "enabled motion_blur!" << std::endl;
+				else std::cout << "disabled motion_blur!" << std::endl;
+			}
+		}
+		break;
+	}
 	case DOWN:
 		break;
 	case RELEASED:

@@ -47,5 +47,9 @@
         "fov": 60.0
       }
     }
+  ],
+  "shaders": [
+    "fxaa",
+    "motion_blur"
   ]
 }
