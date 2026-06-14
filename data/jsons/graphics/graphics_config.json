@@ -9,13 +9,12 @@
     "line_width": 2.0,
     "blend": true,
     "default_draw_mode": "triangles",
-    "polygon_mode": "fill",
-    "polygon_mode_side": "front and back"
+    "polygon_mode": "fill"
   },
   "glfw": {
     "profile": "core",
-    "version_major": 3,
-    "version_minor": 3,
+    "version_major": 4,
+    "version_minor": 6,
     "swap_interval": 0
   }
 }

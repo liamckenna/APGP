@@ -9,10 +9,16 @@
       "vertex": "pbr.vs.glsl",
       "fragment": "pbr.fs.glsl"
     },
+    "pbr_tess": {
+      "vertex": "pbr.vs.glsl",
+      "tess_control": "pn_triangles.tcs.glsl",
+      "tess_eval": "pn_triangles.tes.glsl",
+      "fragment": "pbr.fs.glsl"
+    },
     "surface": {
       "vertex": "default.vs.glsl",
-      "tess_control": "default.tcs.glsl",
-      "tess_eval": "default.tes.glsl",
+      "tess_control": "pn_triangles.tcs.glsl",
+      "tess_eval": "pn_triangles.tes.glsl",
       "fragment": "default.fs.glsl"
     },
     "default_screen_quad": {

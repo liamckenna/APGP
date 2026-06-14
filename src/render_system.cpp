@@ -13,8 +13,10 @@ void RenderSystem::Update(EntityManager& entity_manager, ComponentManager& compo
 {
     SetRenderDestination(entity_manager, component_manager, system_manager, delta_time);
 
-    if (pbr) shader_manager.UseShader("pbr");
-    else     shader_manager.UseShader("default");
+    if (use_tessellation && pbr) shader_manager.UseShader("pbr_tess");
+    else if (use_tessellation)   shader_manager.UseShader("surface");
+    else if (pbr)                shader_manager.UseShader("pbr");
+    else                         shader_manager.UseShader("default");
 
     Clear();
     UpdateProjection(entity_manager, component_manager, system_manager, delta_time);
@@ -118,7 +120,15 @@ void RenderSystem::RenderMeshes(EntityManager& entity_manager, ComponentManager&
         shader_manager.SetUniform("model", meshComp.model);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_BINDING_POINT, mesh.ssbo);
         glBindVertexArray(mesh.vao);
-        glDrawElements(GL_TRIANGLES, (GLsizei)mesh.indices.size(), GL_UNSIGNED_INT, 0);
+        if (use_tessellation)
+        {
+            glPatchParameteri(GL_PATCH_VERTICES, 3);
+            glDrawElements(GL_PATCHES, (GLsizei)mesh.indices.size(), GL_UNSIGNED_INT, 0);
+        }
+        else
+        {
+            glDrawElements(GL_TRIANGLES, (GLsizei)mesh.indices.size(), GL_UNSIGNED_INT, 0);
+        }
         glBindVertexArray(0);
     }
 }
@@ -129,6 +139,11 @@ void RenderSystem::RenderScreenQuad(EntityManager& entity_manager, ComponentMana
     auto scene_target_entity = component_manager.GetEntitiesWithComponent<SceneTargetComponent>()[0];
     auto& scene_target_component = component_manager.GetComponent<SceneTargetComponent>(scene_target_entity);
     auto screen_entities = component_manager.GetEntitiesWithComponents<ScreenComponent>();
+
+    //avoid fullscreen quads being drawn as lines or points
+    GLint prev_polygon_mode[2];
+    glGetIntegerv(GL_POLYGON_MODE, prev_polygon_mode);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDisable(GL_DEPTH_TEST);
 
@@ -163,7 +178,11 @@ void RenderSystem::RenderScreenQuad(EntityManager& entity_manager, ComponentMana
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
 
-    if (screen_entities.empty()) return;
+    if (screen_entities.empty())
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, (GLenum)prev_polygon_mode[0]);
+        return;
+    }
 
     for (size_t i = 0; i < screen_entities.size(); i++)
     {
@@ -229,6 +248,8 @@ void RenderSystem::RenderScreenQuad(EntityManager& entity_manager, ComponentMana
         glBindVertexArray(0);
     }
     glEnable(GL_DEPTH_TEST);
+
+    glPolygonMode(GL_FRONT_AND_BACK, (GLenum)prev_polygon_mode[0]);
 }
 
 void RenderSystem::RenderSurfaces(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time)

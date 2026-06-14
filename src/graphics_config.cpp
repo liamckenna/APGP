@@ -41,13 +41,12 @@ void GraphicsConfig::OpenGLConfig(const nlohmann::json& settings) {
     blend = Fetch(settings, "blend", true);
     
     polygon_mode = FetchGLenum(Fetch(settings, "polygon_mode", "fill"));
-    polygon_mode_side = FetchGLenum(Fetch(settings, "polygon_mode_side", "front and back"));
 }
 
 void GraphicsConfig::GLFWConfig(const nlohmann::json& settings) {
     profile = FetchGLFWenum(Fetch(settings, "profile", "core"));
-    gl_version_major = Fetch(settings, "version_major", 3);
-    gl_version_minor = Fetch(settings, "version_minor", 3);
+    gl_version_major = Fetch(settings, "version_major", 4);
+    gl_version_minor = Fetch(settings, "version_minor", 6);
     swap_interval = Fetch(settings, "swap_interval", 0);
 }
 
@@ -62,13 +61,12 @@ void GraphicsConfig::DefaultOpenGLConfig() {
     line_width = 1.f;
     blend = true;
     polygon_mode = GL_FILL;
-    polygon_mode_side = GL_FRONT_AND_BACK;
 }
 
 void GraphicsConfig::DefaultGLFWConfig() {
     profile = GLFW_OPENGL_CORE_PROFILE;
-    gl_version_major = 3;
-    gl_version_minor = 3;
+    gl_version_major = 4;
+    gl_version_minor = 6;
     swap_interval = 0;
 }
 
@@ -105,7 +103,7 @@ void GraphicsConfig::ApplyOpenGLSettings() const {
     else {
         glDisable(GL_DEPTH_TEST);
     }
-    glPolygonMode(polygon_mode_side, polygon_mode);
+    glPolygonMode(GL_FRONT_AND_BACK, polygon_mode);
 
 }
 

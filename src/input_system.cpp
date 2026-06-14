@@ -48,6 +48,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	byte o = input_manager.GetKeyState(GLFW_KEY_O);
 	byte p = input_manager.GetKeyState(GLFW_KEY_P);
 	byte q = input_manager.GetKeyState(GLFW_KEY_Q);
+	byte e = input_manager.GetKeyState(GLFW_KEY_E);
 
 
 	switch (esc) { //escape
@@ -288,14 +289,8 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 
 	switch (f) { //f
 	case PRESSED:
-		for (auto entity : component_manager.GetEntitiesWithComponent<LightComponent>()) {
-			TransformComponent& light_transform = component_manager.GetComponent<TransformComponent>(entity);
-			light_transform.SetPosition(transform.position);
-			LightComponent& light = component_manager.GetComponent<LightComponent>(entity);
-			light.stale = true;
-			
-			break;
-		}
+		light_attached = !light_attached;
+		std::cout << (light_attached ? "light attached!" : "light detached!") << std::endl;
 		break;
 	case DOWN:
 		break;
@@ -303,6 +298,16 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 		break;
 	case UP:
 		break;
+	}
+
+	if (light_attached) {
+		for (auto entity : component_manager.GetEntitiesWithComponent<LightComponent>()) {
+			TransformComponent& light_transform = component_manager.GetComponent<TransformComponent>(entity);
+			light_transform.SetPosition(transform.position);
+			LightComponent& light = component_manager.GetComponent<LightComponent>(entity);
+			light.stale = true;
+			break;
+		}
 	}
 
 	switch (o) { //o
@@ -330,6 +335,19 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	switch (q) { //q
 	case PRESSED:
 		pbr = !pbr;
+		std::cout << (pbr ? "enabled pbr!" : "disabled pbr!") << std::endl;
+		break;
+	case DOWN:
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+	switch (e) { //e
+	case PRESSED:
+		use_tessellation = !use_tessellation;
+		std::cout << (use_tessellation ? "enabled tessellation!" : "disabled tessellation!") << std::endl;
 		break;
 	case DOWN:
 		break;

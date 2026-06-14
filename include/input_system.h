@@ -7,6 +7,7 @@
 
 class InputSystem : public System {
     InputManager& input_manager;
+    bool light_attached = true;
 public:
     InputSystem(InputManager& im);
     void Update(EntityManager& entity_manager, ComponentManager& component_manager, SystemManager& system_manager, float delta_time);
