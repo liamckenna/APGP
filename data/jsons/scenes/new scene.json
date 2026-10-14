@@ -76,7 +76,8 @@
       },
       "camera": {
         "primary": true,
-        "fov": 60.0
+        "fov": 90.0,
+        "orthographic": true
       }
     }
   ],

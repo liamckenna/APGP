@@ -216,6 +216,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 
 	switch (one) { //1
 	case PRESSED:
+		transform.SetPosition(glm::vec3(6.40706, 4.28256, 0.0258763));
 		break;
 	case DOWN:
 		break;

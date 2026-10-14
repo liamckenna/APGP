@@ -49,7 +49,8 @@ Scene::Scene(const std::string& filepath, Program& program) : scene_ecs(), resou
 			if (data["entities"][i].contains("camera"))
 			{
 				float fov = Fetch(data["entities"][i]["camera"], "fov", 90.f);
-				scene_ecs.AddComponent(entity, CameraComponent{ .fov = fov });
+				bool perspective = !Fetch(data["entities"][i]["camera"], "orthographic", false);
+				scene_ecs.AddComponent(entity, CameraComponent{ .fov = fov, .perspective = perspective });
 				if (Fetch(data["entities"][i]["camera"], "primary", false))
 				{
 					scene_ecs.AddComponent(entity, PrimaryCameraComponent{});

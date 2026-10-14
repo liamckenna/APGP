@@ -82,7 +82,7 @@ void RenderSystem::UpdateProjection(EntityManager& entity_manager, ComponentMana
                 }
                 else
                 {
-                    float size = camera.fov * 0.5f;
+                    float size = camera.fov * 0.0125f;
                     camera.projection = glm::ortho(-size * camera.aspect_ratio, size * camera.aspect_ratio,
                         -size, size, camera.near, camera.far);
                 }
