@@ -38,6 +38,7 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 
 	byte f1 = input_manager.GetKeyState(GLFW_KEY_F1);
 	byte f2 = input_manager.GetKeyState(GLFW_KEY_F2);
+	byte f3 = input_manager.GetKeyState(GLFW_KEY_F3);
 
 		
 	byte lmb = input_manager.GetKeyState(GLFW_MOUSE_BUTTON_LEFT);
@@ -278,6 +279,18 @@ void InputSystem::Update(EntityManager& entity_manager, ComponentManager& compon
 	switch (f2) { //F2
 	case PRESSED:
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		break;
+	case DOWN:
+		break;
+	case RELEASED:
+		break;
+	case UP:
+		break;
+	}
+	switch (f3) { //F3
+	case PRESSED:
+		glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+		glPointSize(5.f);
 		break;
 	case DOWN:
 		break;

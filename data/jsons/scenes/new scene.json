@@ -11,10 +11,42 @@
     },
     {
       "transform": {
-        "position": [ 0.0, 1.0, 5.0 ],
-        "scale": [ 0.1, 0.1, 0.1 ]
+        "position": [ 0.0, 1.0, 2.0 ],
+        "rotation": [ 0.0, 0.0, 0.0 ],
+        "scale": [ 0.25, 0.25, 0.25 ]
+      },
+      "mesh": "cow"
+    },
+    {
+      "transform": {
+        "position": [ 0.0, 4.0, 0.0 ],
+        "rotation": [ 0.0, 0.0, 0.0 ],
+        "scale": [ 0.25, 0.25, 0.25 ]
+      },
+      "mesh": "eagle"
+    },
+    {
+      "transform": {
+        "position": [ 2.0, 0.25, -2.0 ],
+        "rotation": [ 0.0, 0.0, -30.0 ],
+        "scale": [ 0.025, 0.025, 0.025 ]
+      },
+      "mesh": "shark"
+    },
+    {
+      "transform": {
+        "position": [ 0.0, 1.0, 7.0 ],
+        "scale": [ 0.25, 0.25, 0.25]
       },
       "mesh": "castle"
+    },
+    {
+      "transform": {
+        "position": [ -2.0, 1.25, 0.0 ],
+        "rotation": [ 0.0, 0.0, 0.0 ],
+        "scale": [ 0.1, 0.1, 0.1 ]
+      },
+      "mesh": "flowers"
     },
     {
       "transform": {
@@ -28,7 +60,7 @@
         "position": [ 5.0, 0.0, 0.0 ],
         "rotation": [ 0.0, 0.0, 0.0 ]
       },
-      "mesh": "LowPolyFace"
+      "mesh": "Face"
     },
     {
       "transform": {
